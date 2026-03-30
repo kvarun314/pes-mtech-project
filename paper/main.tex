@@ -194,65 +194,80 @@ Do not use \texttt{trust\_remote\_code} for this dataset.
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}[
-  node distance = 0.55cm and 0.4cm,
-  box/.style     = {rectangle, rounded corners=3pt, draw=black!70, fill=blue!8,
-                    minimum width=2.2cm, minimum height=0.72cm,
-                    font=\small, align=center, text width=2.1cm},
-  modelbox/.style= {rectangle, rounded corners=3pt, draw=black!70, fill=orange!15,
-                    minimum width=2.5cm, minimum height=0.72cm,
-                    font=\small\bfseries, align=center, text width=2.4cm},
-  evalbox/.style = {rectangle, rounded corners=3pt, draw=black!70, fill=green!12,
-                    minimum width=2.2cm, minimum height=0.72cm,
-                    font=\small, align=center, text width=2.1cm},
-  arr/.style     = {-{Stealth[length=4pt]}, thick, black!70},
-  label/.style   = {font=\footnotesize\itshape, text=black!60}
+  node distance = 1.1cm and 1.4cm,
+  box/.style    = {rectangle, rounded corners=5pt,
+                   draw=blue!50!black, fill=blue!7,
+                   minimum width=2.6cm, minimum height=1.0cm,
+                   font=\small, align=center, text width=2.5cm},
+  wide/.style   = {rectangle, rounded corners=5pt,
+                   draw=orange!60!black, fill=orange!10,
+                   minimum width=3.4cm, minimum height=1.0cm,
+                   font=\small\bfseries, align=center, text width=3.3cm},
+  eval/.style   = {rectangle, rounded corners=5pt,
+                   draw=green!50!black, fill=green!8,
+                   minimum width=3.4cm, minimum height=1.0cm,
+                   font=\small, align=center, text width=3.3cm},
+  split/.style  = {rectangle, rounded corners=5pt,
+                   draw=gray!60, fill=gray!8,
+                   minimum width=2.2cm, minimum height=0.9cm,
+                   font=\small, align=center, text width=2.1cm},
+  arr/.style    = {-{Stealth[length=5pt]}, thick, black!65},
+  lbl/.style    = {font=\footnotesize\itshape, text=black!55}
 ]
-% ── Row 1: Data pipeline ─────────────────────────────────────────────────────
-\node[box]  (raw)    {Raw CSV\\$\sim$500k rows};
-\node[box, right=of raw]   (tb)     {TextBlob\\DQC};
-\node[box, right=of tb]    (strat)  {Stratified\\Sampling};
-\node[box, right=of strat] (vgst)   {VGST\\Diversity};
-\node[box, right=of vgst]  (os)     {Oversample\\Neutral ($2\times$)};
-\node[box, right=of os]    (cap)    {Cap\\max\_samples};
 
-% ── Row 2: Train / Val split ──────────────────────────────────────────────────
-\node[box,  below=0.9cm of cap,  xshift=-0.8cm]  (train) {Train set\\(80\%)};
-\node[box,  below=0.9cm of cap,  xshift= 1.5cm]  (val)   {Val set\\(20\%)};
+%% ── Row 1: first three preprocessing steps ─────────────────────────────────
+\node[box] (raw)   {Raw CSV\\$\sim$500k rows};
+\node[box, right=of raw]  (tb)    {TextBlob\\DQC};
+\node[box, right=of tb]   (strat) {Stratified\\Sampling};
 
-% ── Row 3: Model ──────────────────────────────────────────────────────────────
-\node[modelbox, below=0.9cm of train, xshift=1.15cm] (model)
-      {LLaMA-3-8B\\+ LoRA ($r$=16, $\alpha$=128)};
+%% ── Row 2: last two preprocessing steps (directly below row 1) ─────────────
+\node[box, below=1.3cm of strat] (vgst) {VGST\\Diversity};
+\node[box, left=of vgst]         (os)   {Oversample\\Neutral ($2\times$)};
+\node[box, left=of os]           (cap)  {Cap\\max\_samples};
 
-% ── Row 4: Eval ───────────────────────────────────────────────────────────────
-\node[evalbox, below=0.9cm of model] (eval)
-      {Evaluation\\One-shot + CoT\\Acc / F1 / MAE};
+%% ── Row 3: split ─────────────────────────────────────────────────────────────
+\node[split, below=1.3cm of os, xshift=-1.4cm] (train) {Train\\(80\%)};
+\node[split, below=1.3cm of os, xshift= 1.4cm] (val)   {Val\\(20\%)};
 
-% ── Arrows: data pipeline ────────────────────────────────────────────────────
+%% ── Row 4: model ─────────────────────────────────────────────────────────────
+\node[wide, below=1.3cm of os] (model)
+      {LLaMA-3-8B + LoRA\\$r$=16, $\alpha$=128, 5 ep};
+
+%% ── Row 5: evaluation ────────────────────────────────────────────────────────
+\node[eval, below=1.1cm of model] (evbox)
+      {Evaluation\\One-shot + CoT\\Accuracy / F1 / MAE};
+
+%% ── Arrows row 1 ─────────────────────────────────────────────────────────────
 \draw[arr] (raw)   -- (tb);
 \draw[arr] (tb)    -- (strat);
-\draw[arr] (strat) -- (vgst);
-\draw[arr] (vgst)  -- (os);
-\draw[arr] (os)    -- (cap);
 
-% ── Split arrow ───────────────────────────────────────────────────────────────
-\draw[arr] (cap.south) -- ++(0,-0.35) -| (train.north);
-\draw[arr] (cap.south) -- ++(0,-0.35) -| (val.north);
+%% ── Turn: row1 → row2 (right-to-left) ───────────────────────────────────────
+\draw[arr] (strat.south) -- ++(0,-0.55) -| (vgst.north);
+\draw[arr] (vgst) -- (os);
+\draw[arr] (os)   -- (cap);
 
-% ── Train → model ─────────────────────────────────────────────────────────────
-\draw[arr] (train.south) -- ++(0,-0.25) -| (model.north);
-\draw[arr] (val.south)   -- ++(0,-0.25) -| (model.north);
+%% ── Split ────────────────────────────────────────────────────────────────────
+\draw[arr] (cap.south) -- ++(0,-0.5) -| (train.north);
+\draw[arr] (cap.south) -- ++(0,-0.5) -| (val.north);
 
-% ── Model → eval ──────────────────────────────────────────────────────────────
-\draw[arr] (model) -- (eval);
+%% ── → model ──────────────────────────────────────────────────────────────────
+\draw[arr] (train.south) -- ++(0,-0.35) -| (model.west);
+\draw[arr] (val.south)   -- ++(0,-0.35) -| (model.east);
 
-% ── Labels ────────────────────────────────────────────────────────────────────
-\node[label, above=0.12cm of raw]   {Input};
-\node[label, above=0.12cm of cap]   {Output pool};
-\node[label, below=0.12cm of eval]  {Phase 1 metrics};
+%% ── → eval ───────────────────────────────────────────────────────────────────
+\draw[arr] (model) -- (evbox);
+
+%% ── Stage labels ─────────────────────────────────────────────────────────────
+\node[lbl, above=0.25cm of raw]   {(1) Input data};
+\node[lbl, above=0.25cm of strat] {(3) Balanced pool};
+\node[lbl, above=0.25cm of vgst]  {(4) Lexical diversity};
+\node[lbl, below=0.2cm of evbox]  {Phase 1 output metrics};
 \end{tikzpicture}
-\caption{Phase 1 end-to-end data and training flow. Raw CSV reviews pass through five
-preprocessing stages before being split into train/val. LLaMA-3-8B with LoRA is fine-tuned
-on the training set; evaluation uses one-shot + CoT prompting.}
+\caption{Phase~1 end-to-end data and training flow. Raw CSV reviews pass through five
+preprocessing stages (TextBlob DQC, stratified sampling, VGST, neutral oversampling, cap)
+before being split 80/20 into train and validation sets.
+LLaMA-3-8B with LoRA ($r$=16, $\alpha$=128) is fine-tuned for 5 epochs;
+the best checkpoint is evaluated with one-shot + CoT prompting.}
 \label{fig:phase1-flow}
 \end{figure}
 
@@ -383,93 +398,94 @@ Multi-Agent Workflow}. Inputs include review text, product metadata, and product
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}[
-  node distance = 0.6cm and 0.5cm,
-  input/.style  = {rectangle, rounded corners=3pt, draw=black!60, fill=gray!10,
-                   minimum width=2.1cm, minimum height=0.65cm,
-                   font=\small, align=center, text width=2.0cm},
-  agent/.style  = {rectangle, rounded corners=4pt, draw=blue!60!black, fill=blue!10,
-                   minimum width=2.8cm, minimum height=0.75cm,
-                   font=\small\bfseries, align=center, text width=2.7cm},
-  critic/.style = {rectangle, rounded corners=4pt, draw=red!60!black, fill=red!8,
-                   minimum width=2.8cm, minimum height=0.75cm,
-                   font=\small\bfseries, align=center, text width=2.7cm},
-  decision/.style={diamond, aspect=2.2, draw=orange!80!black, fill=orange!12,
+  node distance = 1.2cm and 2.4cm,
+  %% ── shared styles ────────────────────────────────────────────────────────
+  inp/.style    = {rectangle, rounded corners=5pt,
+                   draw=gray!60, fill=gray!9,
                    minimum width=3.0cm, minimum height=0.9cm,
-                   font=\small, align=center, inner sep=1pt},
-  output/.style = {rectangle, rounded corners=4pt, draw=green!50!black, fill=green!10,
-                   minimum width=2.8cm, minimum height=0.75cm,
-                   font=\small\bfseries, align=center, text width=2.7cm},
-  db/.style     = {cylinder, shape border rotate=90, draw=purple!60!black, fill=purple!8,
-                   minimum width=2.0cm, minimum height=0.9cm,
-                   font=\small, align=center, text width=1.9cm},
-  arr/.style    = {-{Stealth[length=4pt]}, thick, black!65},
-  darr/.style   = {-{Stealth[length=4pt]}, thick, red!60},
-  label/.style  = {font=\footnotesize\itshape, text=black!55}
+                   font=\small, align=center, text width=2.9cm},
+  agent/.style  = {rectangle, rounded corners=5pt,
+                   draw=blue!55!black, fill=blue!9,
+                   minimum width=3.8cm, minimum height=1.0cm,
+                   font=\small\bfseries, align=center, text width=3.7cm},
+  critic/.style = {rectangle, rounded corners=5pt,
+                   draw=red!55!black, fill=red!8,
+                   minimum width=3.8cm, minimum height=1.0cm,
+                   font=\small\bfseries, align=center, text width=3.7cm},
+  dec/.style    = {diamond, aspect=2.6,
+                   draw=orange!70!black, fill=orange!10,
+                   minimum width=4.2cm, minimum height=1.1cm,
+                   font=\small, align=center, inner sep=2pt},
+  outbox/.style = {rectangle, rounded corners=5pt,
+                   draw=green!55!black, fill=green!9,
+                   minimum width=3.8cm, minimum height=1.0cm,
+                   font=\small\bfseries, align=center, text width=3.7cm},
+  side/.style   = {rectangle, rounded corners=5pt,
+                   draw=purple!55!black, fill=purple!7,
+                   minimum width=2.6cm, minimum height=0.9cm,
+                   font=\small, align=center, text width=2.5cm},
+  loop/.style   = {rectangle, rounded corners=5pt,
+                   draw=orange!65!black, fill=orange!9,
+                   minimum width=3.0cm, minimum height=1.0cm,
+                   font=\small, align=center, text width=2.9cm},
+  arr/.style    = {-{Stealth[length=5pt]}, thick, black!60},
+  rarr/.style   = {-{Stealth[length=5pt]}, thick, red!55},
+  lbl/.style    = {font=\footnotesize\itshape, text=black!50}
 ]
 
-% ── Inputs (left column) ─────────────────────────────────────────────────────
-\node[input] (rev)  {Review\\Text};
-\node[input, below=0.4cm of rev]  (meta) {Product\\Metadata};
-\node[input, below=0.4cm of meta] (img)  {Product\\Image};
+%% ══ Centre column: agent pipeline (top → bottom) ═══════════════════════════
+\node[agent]  (analyst) {Analyst\\LLaMA-3-8B + LoRA\\Draft rating $H$};
+\node[agent,  below=of analyst] (visual)  {Visual Verifier\\BLIP caption + LLM\\Evidence $E_v$};
+\node[agent,  below=of visual]  (rag)     {RAG Prover\\LanceDB $k$-NN ($k$=3)\\Grounding $G_f$};
+\node[critic, below=of rag]     (critic)  {Critic\\Collect votes $[H,\,E_v,\,G_f]$\\Compute dissonance $D$};
+\node[dec,    below=of critic]  (disc)    {$D \geq 0.4$?};
+\node[outbox, below=of disc]    (final)   {Final Rating (1--5\,$\star$)\\+ Rationale};
 
-% ── BLIP caption box ─────────────────────────────────────────────────────────
-\node[input, right=1.2cm of img, fill=yellow!15] (blip) {BLIP\\Caption};
+%% ══ Left column: inputs ════════════════════════════════════════════════════
+\node[inp,  left=of analyst,  yshift= 1.0cm] (rev)  {Review Text};
+\node[inp,  left=of analyst,  yshift= 0.0cm] (meta) {Product Metadata};
+\node[inp,  left=of analyst,  yshift=-1.0cm] (img)  {Product Image};
 
-% ── LanceDB ──────────────────────────────────────────────────────────────────
-\node[db, right=1.2cm of meta, yshift=0.2cm] (ldb) {LanceDB\\RAG Index};
+%% ══ Right column: side resources ══════════════════════════════════════════
+\node[side, right=of rag,    yshift= 0.0cm] (ldb)  {LanceDB\\RAG Index};
+\node[inp,  right=of visual, yshift= 0.0cm, fill=yellow!12] (blip) {BLIP Caption};
 
-% ── Analyst ──────────────────────────────────────────────────────────────────
-\node[agent, right=3.2cm of rev] (analyst) {Analyst\\(LLaMA-3-8B)\\Draft rating $H$};
+%% ══ Self-correction loop (right of dissonance diamond) ════════════════════
+\node[loop, right=of disc,  xshift=0.6cm] (corr) {Self-Correction\\Critic $\to$ Analyst\\(max 2 iters)};
 
-% ── Visual Verifier ──────────────────────────────────────────────────────────
-\node[agent, below=0.5cm of analyst] (visual) {Visual Verifier\\(LLaMA-3-8B)\\Evidence $E_v$};
+%% ══ Arrows: inputs → analyst ══════════════════════════════════════════════
+\draw[arr] (rev.east)  -- ++(0.4,0) |- (analyst.west);
+\draw[arr] (meta.east) -- ++(0.4,0) |- (analyst.west);
+\draw[arr] (img.east)  -- ++(0.4,0) |- (visual.west);
 
-% ── RAG Prover ───────────────────────────────────────────────────────────────
-\node[agent, below=0.5cm of visual] (rag) {RAG Prover\\(LanceDB $k$-NN)\\Grounding $G_f$};
+%% ══ BLIP → visual verifier ════════════════════════════════════════════════
+\draw[arr] (blip.west) -- (visual.east);
 
-% ── Critic ───────────────────────────────────────────────────────────────────
-\node[critic, below=0.5cm of rag] (critic) {Critic\\Votes: $[H,\,E_v,\,G_f]$};
+%% ══ LanceDB → RAG prover ══════════════════════════════════════════════════
+\draw[arr] (ldb.west) -- (rag.east);
 
-% ── Dissonance decision ───────────────────────────────────────────────────────
-\node[decision, below=0.55cm of critic] (disc)
-      {$D \geq 0.4$?};
-
-% ── Self-correction loop node ────────────────────────────────────────────────
-\node[agent, left=1.8cm of disc, fill=orange!10, draw=orange!70!black]
-     (correct) {Self-Correct\\(Critic feedback\\to Analyst)};
-
-% ── Final output ─────────────────────────────────────────────────────────────
-\node[output, below=0.55cm of disc] (out)
-      {Final Rating\\(1--5 $\star$)\\+ Rationale};
-
-% ── Input arrows ─────────────────────────────────────────────────────────────
-\draw[arr] (rev.east)  -- (analyst.west);
-\draw[arr] (meta.east) -- (ldb.west);
-\draw[arr] (img.east)  -- (blip.west);
-\draw[arr] (blip.north) -- (visual.west |- blip.north) -- (visual.west);
-\draw[arr] (ldb.north)  -- (ldb.north |- analyst.east) -- (analyst.east);
-\draw[arr] (ldb.south)  -- (rag.west |- ldb.south) -- (rag.west);
-
-% ── Agent chain ──────────────────────────────────────────────────────────────
+%% ══ Agent chain ═══════════════════════════════════════════════════════════
 \draw[arr] (analyst) -- (visual);
 \draw[arr] (visual)  -- (rag);
 \draw[arr] (rag)     -- (critic);
 \draw[arr] (critic)  -- (disc);
 
-% ── Dissonance branches ──────────────────────────────────────────────────────
-\draw[arr] (disc.south) -- node[right, label]{No: release} (out.north);
-\draw[darr](disc.west)  -- node[above, label]{Yes} (correct.east);
-\draw[darr](correct.north) -- ++(0,0.4) -| node[above left, label]{re-run (max 2$\times$)}
-            (analyst.west |- correct.north) -- (analyst.west);
+%% ══ Dissonance: No branch (straight down) ══════════════════════════════════
+\draw[arr] (disc.south) -- node[right=3pt, lbl]{No} (final.north);
 
-% ── Iteration counter annotation ─────────────────────────────────────────────
-\node[label, right=0.15cm of correct, yshift=-0.4cm]
-     {iters $\leq 2$};
+%% ══ Dissonance: Yes branch → correction loop ══════════════════════════════
+\draw[rarr] (disc.east) -- node[above=3pt, lbl]{Yes} (corr.west);
+
+%% ══ Correction loop → analyst (back up the right side) ═══════════════════
+\draw[rarr] (corr.north) -- ++(0, 0.5)
+            -- ++(3.5, 0) |- node[near start, above, lbl]{re-run} (analyst.east);
+
 \end{tikzpicture}
-\caption{Phase 2 multi-agent pipeline. Review text, product metadata, and BLIP image
-captions feed three specialised agents. The Critic computes dissonance $D$ from the agent
-votes; if $D \geq 0.4$, a self-correction loop sends critique feedback back to the Analyst
-(up to 2 iterations). Otherwise the majority-vote rating and rationale are released.}
+\caption{Phase~2 multi-agent pipeline. Review text, metadata, and product images enter on
+the left. Three specialised agents produce independent rating estimates ($H$, $E_v$, $G_f$).
+The Critic aggregates the votes and computes dissonance $D$; if $D \geq 0.4$ the
+self-correction loop sends targeted feedback back to the Analyst (up to 2 iterations).
+Otherwise the majority-vote rating and rationale are released as the final prediction.}
 \label{fig:phase2-pipeline}
 \end{figure}
 
