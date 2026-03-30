@@ -645,6 +645,171 @@ Phase~1:
 \end{enumerate}
 
 % ══════════════════════════════════════════════════════════════════════════════
+\section{Why Phase 2 Works Better: Detailed Analysis}
+% ══════════════════════════════════════════════════════════════════════════════
+
+This section presents a data-driven decomposition of the +22.6~pp accuracy gain, using
+direct evidence from the 2\,000-sample Run~1 checkpoint.
+
+\subsection{Phase 1's Core Failure Mode: Rating Collapse}
+
+The most important finding is not that Phase~1 is inaccurate --- it is that Phase~1
+\emph{collapses} to a very narrow prediction range. Despite ground truth spanning all five
+classes, Phase~1 predicts almost exclusively ratings 1 and 3:
+
+\begin{table}[H]
+\centering
+\caption{Prediction Distribution vs Ground Truth (2\,000 samples)}
+\begin{tabular}{lrrrrr}
+\toprule
+ & \textbf{1$\star$} & \textbf{2$\star$} & \textbf{3$\star$} & \textbf{4$\star$} & \textbf{5$\star$} \\
+\midrule
+Ground truth & 147 & 105 & 190 & 377 & 1181 \\
+Phase 1 pred & 349 &  124 & 1261 &  25 &  241 \\
+Phase 2 pred &  51 &   10 & 1289 &  81 &  569 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent Phase~1 predicts 4$\star$ only 25 times despite 377 true 4$\star$ samples
+(recall $\approx 0\%$). It over-predicts 3$\star$ by 6.6$\times$ and generates 349 1$\star$
+predictions where only 147 actually exist. \textbf{Phase~1 errors are overwhelmingly
+under-predictions}: 90.2\% of its mistakes are predicting a rating \emph{lower} than the
+ground truth. Without product context, the model defaults to conservative, non-committal
+scores.
+
+Phase~2 distributes predictions more faithfully --- 5$\star$ predictions increase from 241
+to 569, tracking the true distribution more closely.
+
+\subsection{The Multi-Agent Ensemble Corrects Phase 1's Conservative Bias}
+
+The single biggest recovery pattern reveals the mechanism directly:
+
+\begin{table}[H]
+\centering
+\caption{Top Phase~2 Error Recoveries (Phase~1 wrong $\to$ Phase~2 correct)}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Transition} & \textbf{Count} & \textbf{\% of 491 recoveries} \\
+\midrule
+Phase~1 predicts 3$\star$ $\to$ Phase~2 corrects to 5$\star$ & 288 & 58.7\% \\
+Phase~1 predicts 1$\star$ $\to$ Phase~2 corrects to 3$\star$ & 100 & 20.4\% \\
+Phase~1 predicts 2$\star$ $\to$ Phase~2 corrects to 1$\star$ &  39 &  7.9\% \\
+Phase~1 predicts 1$\star$ $\to$ Phase~2 corrects to 5$\star$ &  26 &  5.3\% \\
+\midrule
+\textbf{Total} & \textbf{491} & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent Nearly 80\% of all Phase~2 recoveries come from two transitions. The dominant
+one --- Phase~1 guesses 3$\star$ (neutral) but the true rating is 5$\star$ --- accounts
+for 288 of 491 recoveries (58.7\%). This is exactly where product context helps most: a
+review that reads ambiguously in isolation becomes clearly positive once the Visual Verifier
+sees a clean product image and the RAG Prover retrieves exemplars of highly-rated similar
+reviews.
+
+\subsection{Agent Specialisation: Each Agent Contributes Differently}
+
+On the 774 samples where Phase~2 is correct, we measure how often each agent's vote
+\emph{also} matched the ground truth:
+
+\begin{table}[H]
+\centering
+\caption{Per-Agent Vote Alignment on Phase~2-Correct Samples ($n=774$)}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Agent} & \textbf{Correct votes} & \textbf{Alignment rate} \\
+\midrule
+Analyst (LLaMA text-only)         & 502 / 774 & 64.9\% \\
+RAG Prover (retrieved exemplars)  & 706 / 774 & 91.2\% \\
+Visual Verifier (BLIP caption)    & 756 / 774 & \textbf{97.7\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent The Analyst is correct only 64.9\% of the time even on samples where the
+final answer is right --- meaning the ensemble \emph{overruled} the Analyst on 35\% of
+ultimately correct predictions. The Visual Verifier (97.7\%) and RAG Prover (91.2\%) act
+as corrective signals that shift the majority vote away from the Analyst's conservative
+text-only estimate. This is the concrete mechanism of Phase~2's advantage: two
+multimodal agents systematically push the conservative Analyst toward the true rating.
+
+\subsection{Dissonance as a Proxy for Difficulty}
+
+Dissonance measures how much the three agents disagree. Grouping samples by dissonance
+level reveals a clear pattern:
+
+\begin{table}[H]
+\centering
+\caption{Accuracy by Agent Dissonance Level}
+\begin{tabular}{llrrr}
+\toprule
+\textbf{Range} & \textbf{Interpretation} & \textbf{n} & \textbf{Phase~1} & \textbf{Phase~2} \\
+\midrule
+$D \in [0.0, 0.1)$ & Agents fully agree    & 867 & 0.241 & 0.480 \\
+$D \in [0.2, 0.3)$ & Moderate disagreement & 464 & 0.078 & 0.438 \\
+$D \in [0.4, 1.0)$ & High: SC triggered    & 669 & 0.115 & 0.232 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent Two findings stand out:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Even when agents fully agree ($D < 0.1$), Phase~2 is dramatically better
+    (+23.9~pp)} than Phase~1. This means the improvement is not primarily from
+    self-correction --- it comes from the additional context alone. The three agents, fed
+    metadata + image captions, converge on the right answer twice as often as Phase~1.
+
+  \item \textbf{Moderate disagreement ($D \in [0.2, 0.3)$) is where Phase~2 gains the
+    most (+36.0~pp).} These are genuinely ambiguous samples where Phase~1 collapses to
+    a conservative guess, but the multimodal ensemble has enough signal to reach consensus
+    on the correct answer.
+
+  \item \textbf{High dissonance ($D \geq 0.4$) is where Phase~2 gains the least (+11.7~pp)}.
+    These are the hardest samples --- even the self-correction loop only partially resolves
+    them. This is expected: if three specialised agents fundamentally disagree after seeing
+    all available modalities, the sample is genuinely difficult.
+\end{enumerate}
+
+\subsection{Self-Correction: Useful but Not the Primary Driver}
+
+Self-correction was triggered on 922 samples (46.1\%). On those samples:
+
+\begin{itemize}[leftmargin=*]
+  \item Phase~1 accuracy: 0.095 (very low --- these are the hardest samples, which is why
+    agents disagreed)
+  \item Phase~2 accuracy after self-correction: 0.261 (+16.6~pp)
+\end{itemize}
+
+On uncorrected samples (dissonance below threshold), Phase~2 gains +27.7~pp over Phase~1.
+\textbf{Self-correction is less impactful than context enrichment itself.} The bigger driver
+is that having three agents with different information sources produces better majority votes
+even without looping. Self-correction adds a meaningful but secondary layer on top.
+
+\subsection{Summary: Why Phase 2 Works}
+
+The gain decomposes into three mechanisms, in order of impact:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Context breaks the conservative collapse (primary driver).}
+    Phase~1 defaults to 3$\star$ or 1$\star$ because review text alone is ambiguous.
+    Product metadata and image captions give the Visual Verifier and RAG Prover enough
+    signal to vote for higher ratings --- specifically rescuing the 288 cases where Phase~1
+    guesses 3$\star$ but the truth is 5$\star$.
+
+  \item \textbf{Multi-agent majority voting overrules the conservative Analyst (secondary
+    driver).} The Analyst alone replicates Phase~1's bias. But when two of three agents
+    (Visual Verifier, RAG Prover) independently vote for a higher rating based on separate
+    evidence sources, the majority vote corrects the Analyst's text-only conservatism.
+
+  \item \textbf{Self-correction handles genuine ambiguity (tertiary driver).}
+    On the 46\% of samples where agents disagree significantly, the Critic loop partially
+    resolves conflicts, adding a further +16.6~pp on those hard cases specifically.
+\end{enumerate}
+
+% ══════════════════════════════════════════════════════════════════════════════
 \section{Evaluation Metrics Framework}
 % ══════════════════════════════════════════════════════════════════════════════
 
