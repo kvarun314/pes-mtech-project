@@ -4,6 +4,7 @@ from llama_sentiment_baseline) — only the Trainer plumbing + Drive callback
 is new here."""
 
 import dataclasses
+import json
 
 from agentic_sentiment.phase1.config import DataConfig, ModelConfig, TrainingConfig
 from agentic_sentiment.phase1.data.dataset import build_sft_dataset
@@ -61,6 +62,7 @@ def _build_trainer(model, tokenizer, train_ds, eval_ds, training_cfg, run_dir: R
         greater_is_better=False,
         fp16=training_cfg.fp16,
         seed=training_cfg.seed,
+        overwrite_output_dir=training_cfg.overwrite_output_dir,
         report_to="none",
     )
     return Trainer(
@@ -93,5 +95,5 @@ def run_training(data_path: str, run_dir: RunDir, overrides: dict | None = None)
     best_dir = run_dir.path / "best_adapter"
     trainer.save_model(str(best_dir))
     tokenizer.save_pretrained(str(best_dir))
-    (run_dir.path / "metrics.json").write_text(__import__("json").dumps(metrics, indent=2))
+    (run_dir.path / "metrics.json").write_text(json.dumps(metrics, indent=2))
     return metrics

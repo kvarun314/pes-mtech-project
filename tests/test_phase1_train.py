@@ -10,6 +10,16 @@ def test_build_training_config_applies_paper_closer_overrides():
     assert cfg.num_train_epochs == 5
 
 
+def test_build_model_config_applies_paper_closer_overrides():
+    from agentic_sentiment.train.phase1_train import build_model_config
+
+    cfg = build_model_config()
+    assert cfg.lora_r == 16
+    assert cfg.lora_alpha == 128
+    assert cfg.trainable_layers == 8
+    assert cfg.lora_target_modules == ["q_proj", "k_proj", "v_proj", "o_proj"]
+
+
 def test_run_training_writes_config_json(tmp_path):
     from agentic_sentiment.train import phase1_train
 
