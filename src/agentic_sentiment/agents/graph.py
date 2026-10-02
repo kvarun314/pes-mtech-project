@@ -50,17 +50,30 @@ def build_graph(llm_fn: Callable[[str], str], spec_store=None, max_correction_it
 
     def rag_node(state: AgentState) -> AgentState:
         if not state.get("use_rag"):
-            return {**state, "rag_rating": None}
+            return {**state, "rag_rating": None, "rag_grounding": None}
         context = state.get("meta_description", "")
-        if spec_store is not None and state.get("asin"):
+        has_spec_store = spec_store is not None and state.get("asin")
+        if has_spec_store:
             context += " " + " ".join(r["text"] for r in spec_store.query(state["review_text"], asin=state["asin"]))
         text = llm_fn(RAG_PROMPT.format(context=context, review_text=state["review_text"]))
-        return {**state, "rag_rating": parse_rating(text)}
+        rag_rating = parse_rating(text)
+        # Real factual grounding (catches e.g. "claims USB-C, spec says
+        # Micro-USB"), independent of the sentiment vote above.
+        rag_grounding = (
+            spec_store.grounding_score(claims=[state["review_text"]], asin=state["asin"])
+            if has_spec_store else None
+        )
+        return {**state, "rag_rating": rag_rating, "rag_grounding": rag_grounding}
 
     def critic_node(state: AgentState) -> AgentState:
         h = normalize_rating(state["analyst_rating"])
         ev = normalize_rating(state["visual_rating"]) if state.get("visual_rating") else h
-        gf = normalize_rating(state["rag_rating"]) if state.get("rag_rating") else h
+        if state.get("rag_grounding") is not None:
+            gf = state["rag_grounding"]
+        elif state.get("rag_rating"):
+            gf = normalize_rating(state["rag_rating"])
+        else:
+            gf = h
 
         if state.get("dissonance_method") == "stdev":
             from agentic_sentiment.agents.critic import dissonance_stdev

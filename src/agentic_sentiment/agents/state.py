@@ -21,6 +21,7 @@ class AgentState(TypedDict, total=False):
     analyst_rating: int | None
     visual_rating: int | None
     rag_rating: int | None
+    rag_grounding: float | None
     critique: str | None
     dissonance: float
     correction_iters: int
