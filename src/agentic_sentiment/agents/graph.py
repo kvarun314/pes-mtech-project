@@ -15,7 +15,7 @@ from agentic_sentiment.agents.parsing import parse_rating
 from agentic_sentiment.agents.state import AgentState
 
 ANALYST_PROMPT = """Analyst: read this review and rate its sentiment 1-5.
-Review: {review_text}
+{metadata_block}Review: {review_text}
 {critique_block}
 Sentiment (1-5):"""
 
@@ -35,8 +35,16 @@ They disagree. Give one sentence of feedback for the Analyst to reconsider."""
 
 def build_graph(llm_fn: Callable[[str], str], spec_store=None, max_correction_iters: int = 2):
     def analyst_node(state: AgentState) -> AgentState:
+        metadata_block = ""
+        if state.get("use_metadata"):
+            title = state.get("meta_title", "")
+            description = state.get("meta_description", "")
+            if title or description:
+                metadata_block = f"Product: {title}. {description}\n"
         critique_block = f"Critic feedback: {state['critique']}" if state.get("critique") else ""
-        text = llm_fn(ANALYST_PROMPT.format(review_text=state["review_text"], critique_block=critique_block))
+        text = llm_fn(ANALYST_PROMPT.format(
+            metadata_block=metadata_block, review_text=state["review_text"], critique_block=critique_block
+        ))
         rating = parse_rating(text) or 3
         return {**state, "analyst_rating": rating}
 

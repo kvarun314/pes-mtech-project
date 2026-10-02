@@ -96,6 +96,37 @@ def test_graph_uses_real_grounding_score_for_dissonance_when_spec_store_present(
     assert result["dissonance"] >= 0.4
 
 
+def test_analyst_prompt_includes_metadata_iff_use_metadata():
+    marker = "UNIQUE-MARKER-WIDGET-9000"
+    seen_in_analyst_prompt = {"present": False}
+
+    def llm_fn(prompt: str) -> str:
+        if "Analyst" in prompt and marker in prompt:
+            seen_in_analyst_prompt["present"] = True
+        return "Sentiment (1-5): 4. stub."
+
+    graph = build_graph(llm_fn=llm_fn)
+
+    # use_metadata True + real metadata -> marker must appear in Analyst prompt.
+    graph.invoke({
+        "review_id": "r5", "review_text": "fine", "gt_rating": 4,
+        "meta_title": marker, "meta_description": "a widget", "image_caption": None,
+        "use_metadata": True, "use_image": False, "use_rag": False,
+        "correction_iters": 0, "max_correction_iters": 2,
+    })
+    assert seen_in_analyst_prompt["present"] is True
+
+    # use_metadata False (same metadata present in state) -> marker must NOT appear.
+    seen_in_analyst_prompt["present"] = False
+    graph.invoke({
+        "review_id": "r6", "review_text": "fine", "gt_rating": 4,
+        "meta_title": marker, "meta_description": "a widget", "image_caption": None,
+        "use_metadata": False, "use_image": False, "use_rag": False,
+        "correction_iters": 0, "max_correction_iters": 2,
+    })
+    assert seen_in_analyst_prompt["present"] is False
+
+
 def test_graph_skips_visual_when_use_image_false():
     seen_visual = {"called": False}
 
