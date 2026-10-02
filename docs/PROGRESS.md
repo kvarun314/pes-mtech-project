@@ -42,3 +42,38 @@
 - Next: user runs the 4 notebooks on Colab in order (01 -> 02 -> 03 -> 04), downloads
   `results/run2/` back into the repo, then the paper gets updated with real Run 2 numbers
   (not before).
+
+## 2026-10-02 (final whole-branch review)
+- Dispatched a final whole-branch review (Opus) across all 16 tasks together. It found
+  two Critical issues neither per-task review could see in isolation, plus several
+  Important ones, all fixed directly:
+  - **Dissonance formula was backwards in some cases.** Averaging the grounding score
+    (Gf, a support fraction) with the sentiment votes (H/Ev) meant an *ungrounded but
+    unanimous* review scored dissonance 0.0 regardless of rating direction — e.g. a
+    1-star review with a factually wrong claim never triggered self-correction, exactly
+    backwards from the "USB-C vs Micro-USB" case the spec store exists to catch. Fixed:
+    dissonance is now `max(vote-agreement, 1 - grounding)`, so an ungrounded claim can
+    only raise dissonance, never get cancelled out.
+  - **Notebook 03's dataset load would have failed outright** (a Hub config name needing
+    `trust_remote_code`, incompatible with `datasets>=4`). Replaced with the streaming
+    JSONL + parquet loader already proven in the Run 1 notebook.
+  - `plus_rag_specs`/`full_graph`/the dissonance-ablation's "norm" run were three
+    identical graph executions under different names — now run once each, aliased.
+  - `image_url` was read from the reviewer's own (usually absent) uploaded images
+    instead of the product's own metadata images — the Visual Verifier was starved.
+  - XLNet's local HF checkpoint staging lived under its own Drive run dir, doubling
+    Drive usage with no cap across ~150 saves; fixed by keeping local staging off
+    Drive and pruning the Drive-side checkpoint copies to the 2 most recent
+    (`RunDir.checkpoint_callback(keep=2)`, shared by Phase 1 and XLNet).
+  - Training now actually resumes from the latest Drive checkpoint on reconnect
+    (`RunDir.latest_checkpoint()` + `resume_from_checkpoint`) instead of silently
+    restarting at step 0 while BEST.md still reflected the interrupted attempt.
+  - SVM's sigmoid kernel is infeasible on the full ~568k-row Kaggle CSV on Colab;
+    classical baselines now share XLNet's 20k-row cap.
+  - `rag_grounding` is now recorded in every ablation checkpoint row (needed for the
+    brief's faithfulness metric); the Critic's critique now names the grounding
+    mismatch explicitly, not just "they disagree"; `pytest` now works standalone
+    (`pyproject.toml` `pythonpath`, independent of the editable install quirk on
+    macOS/Python 3.13).
+- 62 tests passing, all 4 Colab notebooks JSON-valid. Branch `full-phase2-rebuild`,
+  not yet merged.
