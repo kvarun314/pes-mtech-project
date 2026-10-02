@@ -30,7 +30,7 @@ Rate sentiment 1-5 given this grounding.
 Sentiment (1-5):"""
 
 CRITIQUE_PROMPT = """Critique: Analyst said {analyst}, Visual said {visual}, RAG said {rag}.
-They disagree. Give one sentence of feedback for the Analyst to reconsider."""
+{grounding_block}Give one sentence of feedback for the Analyst to reconsider."""
 
 
 def build_graph(llm_fn: Callable[[str], str], spec_store=None, max_correction_iters: int = 2):
@@ -99,8 +99,19 @@ def build_graph(llm_fn: Callable[[str], str], spec_store=None, max_correction_it
         iters = state.get("correction_iters", 0)
         max_iters = state.get("max_correction_iters", max_correction_iters)
         if d >= DISSONANCE_THRESHOLD and iters < max_iters:
+            grounding_block = ""
+            if state.get("rag_grounding") is not None and state["rag_grounding"] < 0.5:
+                # Mission spec §13.5 example: "User is complaining about a
+                # feature this product never claimed to have." -- make the
+                # grounding mismatch explicit, not just a bare disagreement.
+                grounding_block = (
+                    "The review's claim does not match the product's spec "
+                    f"(grounding score {state['rag_grounding']:.2f} of 1.0) -- "
+                    "this may be a user-expectation mismatch, not a genuine defect.\n"
+                )
             critique = llm_fn(CRITIQUE_PROMPT.format(
                 analyst=state["analyst_rating"], visual=state.get("visual_rating"), rag=state.get("rag_rating"),
+                grounding_block=grounding_block,
             ))
             return {
                 **state, "dissonance": d, "critique": critique,

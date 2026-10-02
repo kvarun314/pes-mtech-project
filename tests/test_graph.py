@@ -140,6 +140,28 @@ def test_graph_grounding_does_not_mask_real_vote_disagreement():
     assert result["dissonance"] == pytest.approx(1.0)
 
 
+def test_critique_mentions_grounding_mismatch_when_ungrounded():
+    seen_critique_prompt = {"text": None}
+
+    def llm_fn(prompt: str) -> str:
+        if "Critique" in prompt:
+            seen_critique_prompt["text"] = prompt
+            return "Reconsider: this may be a user-expectation mismatch, not a defect."
+        return "Sentiment (1-5): 5. stub."
+
+    graph = build_graph(llm_fn=llm_fn, spec_store=_FakeSpecStore(), max_correction_iters=1)
+    graph.invoke({
+        "review_id": "r9", "review_text": "Broken USB-C port", "gt_rating": 1,
+        "meta_title": "Widget", "image_caption": "a clean widget", "asin": "B001",
+        "use_metadata": True, "use_image": True, "use_rag": True,
+        "correction_iters": 0, "max_correction_iters": 1,
+    })
+
+    assert seen_critique_prompt["text"] is not None
+    assert "does not match the product's spec" in seen_critique_prompt["text"]
+    assert "0.10" in seen_critique_prompt["text"]
+
+
 def test_analyst_prompt_includes_metadata_iff_use_metadata():
     marker = "UNIQUE-MARKER-WIDGET-9000"
     seen_in_analyst_prompt = {"present": False}
