@@ -19,6 +19,13 @@ def iter_done_ids(path: str) -> set[str]:
     with p.open() as f:
         for line in f:
             line = line.strip()
-            if line:
-                done.add(json.loads(line)["review_id"])
+            if not line:
+                continue
+            try:
+                record = json.loads(line)
+                done.add(record["review_id"])
+            except (json.JSONDecodeError, KeyError):
+                # A crash can truncate the last line mid-write; skip it
+                # rather than losing visibility into every prior id.
+                continue
     return done

@@ -25,6 +25,16 @@ def test_iter_done_ids_reflects_appended_records(tmp_path):
     assert iter_done_ids(str(path)) == {"r1", "r2"}
 
 
+def test_iter_done_ids_skips_truncated_last_line(tmp_path):
+    path = tmp_path / "ckpt.jsonl"
+    append_result(str(path), {"review_id": "r1"})
+    # Simulate a crash mid-write: a truncated, invalid JSON trailing line.
+    with open(path, "a") as f:
+        f.write('{"review_id": "r2", "final_rat')
+
+    assert iter_done_ids(str(path)) == {"r1"}
+
+
 def test_resume_skips_done_ids_simulated_crash(tmp_path):
     path = tmp_path / "ckpt.jsonl"
     all_ids = ["r1", "r2", "r3"]
