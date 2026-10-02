@@ -25,7 +25,7 @@ def load_balanced_slice(
         by_rating[rating].append({
             "review_id": f"{asin}_{rating}_{len(by_rating[rating])}",
             "asin": asin,
-            "rating": rating,
+            "gt_rating": rating,
             "review_text": text,
             "meta_title": meta.get("title", ""),
             "meta_description": " ".join(meta.get("description", []) or []),

@@ -19,7 +19,7 @@ def test_load_balanced_slice_has_equal_counts_per_rating():
     assert len(rows) == 10
     counts = {}
     for r in rows:
-        counts[r["rating"]] = counts.get(r["rating"], 0) + 1
+        counts[r["gt_rating"]] = counts.get(r["gt_rating"], 0) + 1
     assert counts == {1: 2, 2: 2, 3: 2, 4: 2, 5: 2}
     assert all(r["meta_title"] for r in rows)
 
