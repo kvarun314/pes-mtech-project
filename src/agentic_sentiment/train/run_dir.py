@@ -13,7 +13,38 @@ class RunDir:
         self.path = Path(base_dir) / self.run_id
         self.path.mkdir(parents=True, exist_ok=True)
         (self.path / "checkpoints").mkdir(exist_ok=True)
-        self._best_value: float | None = None
+
+        # Seed best_value from existing BEST.md if it exists (for resume after disconnect)
+        self._best_value = self._load_best_value_from_file()
+
+    def _load_best_value_from_file(self) -> float | None:
+        """Parse the best value from existing BEST.md if it exists.
+
+        Format: "# Best checkpoint\n\nstep N\nmetric_name = value\n"
+        Returns the float value from the last line, or None if not found/unparseable.
+        """
+        best_md_path = self.path / "BEST.md"
+        if not best_md_path.exists():
+            return None
+
+        try:
+            content = best_md_path.read_text()
+            # Last non-empty line should be "metric_name = value"
+            lines = [line.strip() for line in content.split("\n") if line.strip()]
+            if not lines:
+                return None
+            last_line = lines[-1]
+
+            # Parse "metric_name = value"
+            if " = " in last_line:
+                parts = last_line.split(" = ")
+                if len(parts) == 2:
+                    return float(parts[1])
+        except (ValueError, IndexError):
+            # Malformed file; fall back to None
+            pass
+
+        return None
 
     def write_config(self, config: dict) -> None:
         (self.path / "config.json").write_text(json.dumps(config, indent=2, default=str))
