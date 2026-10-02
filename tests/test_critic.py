@@ -38,5 +38,10 @@ def test_dissonance_stdev_matches_run1_formula():
     assert dissonance_stdev([1, 3, 5]) > 0
 
 
+def test_dissonance_stdev_handles_fewer_than_two_votes():
+    assert dissonance_stdev([]) == 0.0
+    assert dissonance_stdev([3]) == 0.0
+
+
 def test_threshold_is_point_four():
     assert DISSONANCE_THRESHOLD == 0.4
