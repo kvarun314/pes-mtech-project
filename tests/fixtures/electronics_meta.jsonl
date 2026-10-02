@@ -1,0 +1,10 @@
+{"parent_asin": "B000000000", "title": "Widget 0 Pro", "description": ["A great widget, model 0."], "details": {"Connector Type": "USB-C", "Battery Life": "10 hours"}, "images": {"hi_res": ["http://example.com/0.jpg"], "large": [], "thumb": []}}
+{"parent_asin": "B000000001", "title": "Widget 1 Pro", "description": ["A great widget, model 1."], "details": {"Connector Type": "USB-C", "Battery Life": "10 hours"}}
+{"parent_asin": "B000000002", "title": "Widget 2 Pro", "description": ["A great widget, model 2."], "details": {"Connector Type": "USB-C", "Battery Life": "10 hours"}, "images": {"hi_res": ["http://example.com/2.jpg"], "large": [], "thumb": []}}
+{"parent_asin": "B000000003", "title": "Widget 3 Pro", "description": ["A great widget, model 3."], "details": {"Connector Type": "USB-C", "Battery Life": "10 hours"}}
+{"parent_asin": "B000000004", "title": "Widget 4 Pro", "description": ["A great widget, model 4."], "details": {"Connector Type": "USB-C", "Battery Life": "10 hours"}, "images": {"hi_res": ["http://example.com/4.jpg"], "large": [], "thumb": []}}
+{"parent_asin": "B000000005", "title": "Widget 5 Pro", "description": ["A great widget, model 5."], "details": {"Connector Type": "USB-C", "Battery Life": "10 hours"}}
+{"parent_asin": "B000000006", "title": "Widget 6 Pro", "description": ["A great widget, model 6."], "details": {"Connector Type": "USB-C", "Battery Life": "10 hours"}, "images": {"hi_res": ["http://example.com/6.jpg"], "large": [], "thumb": []}}
+{"parent_asin": "B000000007", "title": "Widget 7 Pro", "description": ["A great widget, model 7."], "details": {"Connector Type": "USB-C", "Battery Life": "10 hours"}}
+{"parent_asin": "B000000008", "title": "Widget 8 Pro", "description": ["A great widget, model 8."], "details": {"Connector Type": "USB-C", "Battery Life": "10 hours"}, "images": {"hi_res": ["http://example.com/8.jpg"], "large": [], "thumb": []}}
+{"parent_asin": "B000000009", "title": "Widget 9 Pro", "description": ["A great widget, model 9."], "details": {"Connector Type": "USB-C", "Battery Life": "10 hours"}}

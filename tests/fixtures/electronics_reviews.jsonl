@@ -1,0 +1,10 @@
+{"parent_asin": "B000000000", "rating": 1, "text": "Review number 0 with enough characters to pass the min length filter.", "images": [{"large_image_url": "http://example.com/0.jpg"}]}
+{"parent_asin": "B000000001", "rating": 1, "text": "Review number 1 with enough characters to pass the min length filter.", "images": []}
+{"parent_asin": "B000000002", "rating": 2, "text": "Review number 2 with enough characters to pass the min length filter.", "images": [{"large_image_url": "http://example.com/2.jpg"}]}
+{"parent_asin": "B000000003", "rating": 2, "text": "Review number 3 with enough characters to pass the min length filter.", "images": []}
+{"parent_asin": "B000000004", "rating": 3, "text": "Review number 4 with enough characters to pass the min length filter.", "images": [{"large_image_url": "http://example.com/4.jpg"}]}
+{"parent_asin": "B000000005", "rating": 3, "text": "Review number 5 with enough characters to pass the min length filter.", "images": []}
+{"parent_asin": "B000000006", "rating": 4, "text": "Review number 6 with enough characters to pass the min length filter.", "images": [{"large_image_url": "http://example.com/6.jpg"}]}
+{"parent_asin": "B000000007", "rating": 4, "text": "Review number 7 with enough characters to pass the min length filter.", "images": []}
+{"parent_asin": "B000000008", "rating": 5, "text": "Review number 8 with enough characters to pass the min length filter.", "images": [{"large_image_url": "http://example.com/8.jpg"}]}
+{"parent_asin": "B000000009", "rating": 5, "text": "Review number 9 with enough characters to pass the min length filter.", "images": []}
