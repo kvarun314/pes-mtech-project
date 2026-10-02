@@ -70,8 +70,6 @@ def run_training(texts: list[str], labels: list[int], run_dir: RunDir, local_out
     trainer.train(resume_from_checkpoint=run_dir.latest_checkpoint())
     metrics = trainer.evaluate()
 
-    best_dir = run_dir.path / "best_model"
-    trainer.save_model(str(best_dir))
-    tokenizer.save_pretrained(str(best_dir))
+    run_dir.save_best(trainer, tokenizer, "best_model")
     (run_dir.path / "metrics.json").write_text(json.dumps(metrics, indent=2))
     return metrics

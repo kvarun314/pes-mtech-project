@@ -103,3 +103,64 @@ def test_checkpoint_callback_prunes_beyond_keep_limit(tmp_path):
     kept = sorted(p.name for p in (rd.path / "checkpoints").glob("checkpoint-*"))
     assert kept == ["checkpoint-200", "checkpoint-300"]  # oldest (100) pruned
     assert rd.latest_checkpoint() == str(rd.path / "checkpoints" / "checkpoint-300")
+
+
+def test_checkpoint_callback_never_prunes_the_best_checkpoint(tmp_path):
+    # Regression: keep=2 pruning used to delete the best-eval checkpoint
+    # once 2 newer (but worse) checkpoints were saved after it, leaving
+    # BEST.md pointing at a step whose files no longer exist on Drive.
+    pytest.importorskip("transformers")
+    rd = RunDir(base_dir=str(tmp_path / "runs"), run_id="run")
+    callback = rd.checkpoint_callback(keep=2)
+
+    hf_output = tmp_path / "hf_output"
+    for step in (100, 200, 300, 400):
+        _write_fake_hf_checkpoint(hf_output, step)
+        callback.on_save(SimpleNamespace(output_dir=str(hf_output)), SimpleNamespace(global_step=step), None)
+        if step == 100:  # step 100 is the (only) eval improvement -- the best
+            rd.write_best(step=100, metric_name="eval_loss", value=0.1)
+
+    kept = sorted(p.name for p in (rd.path / "checkpoints").glob("checkpoint-*"))
+    assert "checkpoint-100" in kept  # best, protected despite being oldest
+    assert rd.best_checkpoint_dir() == str(rd.path / "checkpoints" / "checkpoint-100")
+
+
+def test_save_best_prefers_protected_checkpoint_over_trainer_model(tmp_path):
+    # Simulates the post-resume scenario: trainer.save_model() would write
+    # whatever the (possibly non-best, e.g. after a failed reload) in-memory
+    # model currently is. save_best() must prefer the protected Drive copy.
+    rd = RunDir(base_dir=str(tmp_path / "runs"), run_id="run")
+    best_src = rd.path / "checkpoints" / "checkpoint-100"
+    best_src.mkdir(parents=True)
+    (best_src / "model.safetensors").write_text("BEST WEIGHTS")
+    rd.write_best(step=100, metric_name="eval_loss", value=0.1)
+
+    class _FakeTrainer:
+        def save_model(self, path):
+            Path(path).mkdir(parents=True, exist_ok=True)
+            (Path(path) / "model.safetensors").write_text("WRONG: final, not best")
+
+    class _FakeTokenizer:
+        def save_pretrained(self, path):
+            (Path(path) / "tokenizer.json").write_text("{}")
+
+    dest = rd.save_best(_FakeTrainer(), _FakeTokenizer(), "best_adapter")
+
+    assert (Path(dest) / "model.safetensors").read_text() == "BEST WEIGHTS"
+    assert (Path(dest) / "tokenizer.json").exists()
+
+
+def test_save_best_falls_back_to_trainer_when_no_best_recorded_yet(tmp_path):
+    rd = RunDir(base_dir=str(tmp_path / "runs"), run_id="run")
+
+    class _FakeTrainer:
+        def save_model(self, path):
+            Path(path).mkdir(parents=True, exist_ok=True)
+            (Path(path) / "model.safetensors").write_text("only model available")
+
+    class _FakeTokenizer:
+        def save_pretrained(self, path):
+            (Path(path) / "tokenizer.json").write_text("{}")
+
+    dest = rd.save_best(_FakeTrainer(), _FakeTokenizer(), "best_adapter")
+    assert (Path(dest) / "model.safetensors").read_text() == "only model available"

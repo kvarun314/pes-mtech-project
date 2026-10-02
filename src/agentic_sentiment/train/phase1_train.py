@@ -94,8 +94,6 @@ def run_training(data_path: str, run_dir: RunDir, overrides: dict | None = None)
     trainer.train(resume_from_checkpoint=run_dir.latest_checkpoint())
     metrics = trainer.evaluate()
 
-    best_dir = run_dir.path / "best_adapter"
-    trainer.save_model(str(best_dir))
-    tokenizer.save_pretrained(str(best_dir))
+    run_dir.save_best(trainer, tokenizer, "best_adapter")
     (run_dir.path / "metrics.json").write_text(json.dumps(metrics, indent=2))
     return metrics
