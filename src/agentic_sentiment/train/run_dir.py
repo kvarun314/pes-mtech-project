@@ -49,6 +49,20 @@ class RunDir:
     def write_config(self, config: dict) -> None:
         (self.path / "config.json").write_text(json.dumps(config, indent=2, default=str))
 
+    def latest_checkpoint(self) -> str | None:
+        """Path to the highest-step checkpoint already copied to Drive, or
+        None if this run dir has none yet. Pass this to
+        `Trainer.train(resume_from_checkpoint=...)` to resume a reconnected
+        run instead of restarting at step 0 (which would also corrupt
+        BEST.md/checkpoints/ if the run reuses the same run_id, since a
+        fresh restart's early, worse evals would otherwise get copied over
+        the prior attempt's better checkpoints)."""
+        checkpoints = sorted(
+            (self.path / "checkpoints").glob("checkpoint-*"),
+            key=lambda p: int(p.name.split("-")[-1]),
+        )
+        return str(checkpoints[-1]) if checkpoints else None
+
     def write_best(self, step: int, metric_name: str, value: float, greater_is_better: bool = False) -> None:
         is_better = (
             self._best_value is None
@@ -61,11 +75,13 @@ class RunDir:
             f"# Best checkpoint\n\nstep {step}\n{metric_name} = {value}\n"
         )
 
-    def checkpoint_callback(self):
+    def checkpoint_callback(self, keep: int = 2):
         """Returns a transformers.TrainerCallback that copies each new HF
-        checkpoint dir into this RunDir's checkpoints/ on Drive, and updates
-        BEST.md when eval_loss improves. Import of transformers is deferred
-        so this module has no hard dependency on it."""
+        checkpoint dir into this RunDir's checkpoints/ on Drive (pruning all
+        but the `keep` most recent, so an unattended run with many save
+        steps can't silently fill the Drive quota), and updates BEST.md
+        when eval_loss improves. Import of transformers is deferred so this
+        module has no hard dependency on it."""
         import shutil
         from transformers import TrainerCallback
 
@@ -74,9 +90,18 @@ class RunDir:
         class DriveCheckpointCallback(TrainerCallback):
             def on_save(self, args, state, control, **kwargs):
                 src = Path(args.output_dir) / f"checkpoint-{state.global_step}"
-                if src.is_dir():
-                    dst = run_dir.path / "checkpoints" / src.name
-                    shutil.copytree(src, dst, dirs_exist_ok=True)
+                if not src.is_dir():
+                    return
+                dst_dir = run_dir.path / "checkpoints"
+                dst = dst_dir / src.name
+                shutil.copytree(src, dst, dirs_exist_ok=True)
+
+                existing = sorted(
+                    dst_dir.glob("checkpoint-*"),
+                    key=lambda p: int(p.name.split("-")[-1]),
+                )
+                for stale in existing[:-keep] if keep > 0 else []:
+                    shutil.rmtree(stale, ignore_errors=True)
 
             def on_evaluate(self, args, state, control, metrics=None, **kwargs):
                 if metrics and "eval_loss" in metrics:

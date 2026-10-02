@@ -4,6 +4,19 @@ slice + product-spec records for the RAG spec store."""
 import random
 
 
+def _first_image_url(meta: dict) -> str | None:
+    """Product (not reviewer-uploaded) image, for the Visual Verifier --
+    matches the Amazon Reviews 2023 metadata schema: images is a dict of
+    lists keyed by resolution (hi_res/large/thumb)."""
+    images = meta.get("images") or {}
+    if isinstance(images, dict):
+        for key in ("hi_res", "large", "thumb"):
+            for url in images.get(key) or []:
+                if url and isinstance(url, str) and url.startswith("http"):
+                    return url
+    return None
+
+
 def load_balanced_slice(
     reviews_rows: list[dict],
     meta_by_asin: dict[str, dict],
@@ -21,7 +34,6 @@ def load_balanced_slice(
         if asin not in meta_by_asin or len(text) < min_review_chars or rating not in by_rating:
             continue
         meta = meta_by_asin[asin]
-        images = row.get("images") or []
         by_rating[rating].append({
             "review_id": f"{asin}_{rating}_{len(by_rating[rating])}",
             "asin": asin,
@@ -30,7 +42,7 @@ def load_balanced_slice(
             "meta_title": meta.get("title", ""),
             "meta_description": " ".join(meta.get("description", []) or []),
             "meta_details": meta.get("details", {}) or {},
-            "image_url": images[0].get("large_image_url") if images else None,
+            "image_url": _first_image_url(meta),
         })
 
     rng = random.Random(seed)

@@ -22,6 +22,12 @@ def test_load_balanced_slice_has_equal_counts_per_rating():
         counts[r["gt_rating"]] = counts.get(r["gt_rating"], 0) + 1
     assert counts == {1: 2, 2: 2, 3: 2, 4: 2, 5: 2}
     assert all(r["meta_title"] for r in rows)
+    # image_url comes from the PRODUCT's metadata (the Visual Verifier needs
+    # product photos, not reviewer-uploaded images) -- half the fixture
+    # products have one, half don't.
+    with_image = [r for r in rows if r["image_url"]]
+    assert all(r["image_url"].startswith("http://example.com/") for r in with_image)
+    assert len(with_image) < len(rows)  # some products have no image in the fixture
 
 
 def test_load_balanced_slice_caps_at_available_rows():

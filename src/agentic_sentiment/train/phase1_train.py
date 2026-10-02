@@ -89,7 +89,9 @@ def run_training(data_path: str, run_dir: RunDir, overrides: dict | None = None)
     train_ds, eval_ds = build_sft_dataset(data_path, tokenizer, data_cfg, training_cfg, seed=training_cfg.seed)
 
     trainer = _build_trainer(model, tokenizer, train_ds, eval_ds, training_cfg, run_dir)
-    trainer.train()
+    # Resume from the latest Drive-side checkpoint if this run_id already has
+    # one (a reconnect under the same run_id), instead of restarting at step 0.
+    trainer.train(resume_from_checkpoint=run_dir.latest_checkpoint())
     metrics = trainer.evaluate()
 
     best_dir = run_dir.path / "best_adapter"

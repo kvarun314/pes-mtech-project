@@ -32,7 +32,7 @@ def build_training_args(run_dir: RunDir, output_dir: str, num_train_epochs: int 
     )
 
 
-def run_training(texts: list[str], labels: list[int], run_dir: RunDir) -> dict:
+def run_training(texts: list[str], labels: list[int], run_dir: RunDir, local_output_dir: str = "/tmp/xlnet_output") -> dict:
     from datasets import Dataset
     from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer
     from sklearn.model_selection import train_test_split
@@ -54,12 +54,20 @@ def run_training(texts: list[str], labels: list[int], run_dir: RunDir) -> dict:
     train_ds = Dataset.from_dict({**tokenize(train_texts), "labels": train_labels})
     eval_ds = Dataset.from_dict({**tokenize(eval_texts), "labels": eval_labels})
 
-    args = build_training_args(run_dir, output_dir=str(run_dir.path / "output"))
+    # local_output_dir must NOT live under run_dir.path -- that's on Drive,
+    # and the checkpoint_callback already copies the checkpoints Drive-side;
+    # staging HF's own (unpruned) checkpoint-* dirs there too would double
+    # Drive usage for no benefit.
+    args = build_training_args(run_dir, output_dir=local_output_dir)
     trainer = Trainer(
         model=model, args=args, train_dataset=train_ds, eval_dataset=eval_ds,
         callbacks=[run_dir.checkpoint_callback()],
     )
-    trainer.train()
+    # Resume from the latest Drive-side checkpoint if this run_id already
+    # has one (a reconnect under the same run_id), instead of silently
+    # restarting at step 0 while BEST.md/checkpoints/ still reflect the
+    # prior attempt.
+    trainer.train(resume_from_checkpoint=run_dir.latest_checkpoint())
     metrics = trainer.evaluate()
 
     best_dir = run_dir.path / "best_model"

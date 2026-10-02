@@ -1,5 +1,8 @@
 import json
 from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
 
 from agentic_sentiment.train.run_dir import RunDir
 
@@ -59,3 +62,44 @@ def test_resume_preserves_best_value_across_reconnect(tmp_path):
     assert "step 100" in best_md_2, f"Expected step 100 in BEST.md, got: {best_md_2}"
     assert "0.3" in best_md_2, f"Expected 0.3 in BEST.md, got: {best_md_2}"
     assert "step 200" not in best_md_2, f"Should not have step 200, got: {best_md_2}"
+
+
+def test_latest_checkpoint_returns_none_when_empty(tmp_path):
+    rd = RunDir(base_dir=str(tmp_path), run_id="run")
+    assert rd.latest_checkpoint() is None
+
+
+def _write_fake_hf_checkpoint(output_dir: Path, step: int) -> None:
+    ckpt = output_dir / f"checkpoint-{step}"
+    ckpt.mkdir(parents=True, exist_ok=True)
+    (ckpt / "trainer_state.json").write_text(json.dumps({"global_step": step}))
+
+
+def test_checkpoint_callback_copies_and_reports_latest(tmp_path):
+    pytest.importorskip("transformers")
+    rd = RunDir(base_dir=str(tmp_path / "runs"), run_id="run")
+    callback = rd.checkpoint_callback()
+
+    hf_output = tmp_path / "hf_output"
+    for step in (100, 200):
+        _write_fake_hf_checkpoint(hf_output, step)
+        callback.on_save(SimpleNamespace(output_dir=str(hf_output)), SimpleNamespace(global_step=step), None)
+
+    assert rd.latest_checkpoint() == str(rd.path / "checkpoints" / "checkpoint-200")
+    assert (rd.path / "checkpoints" / "checkpoint-100").exists()
+    assert (rd.path / "checkpoints" / "checkpoint-200").exists()
+
+
+def test_checkpoint_callback_prunes_beyond_keep_limit(tmp_path):
+    pytest.importorskip("transformers")
+    rd = RunDir(base_dir=str(tmp_path / "runs"), run_id="run")
+    callback = rd.checkpoint_callback(keep=2)
+
+    hf_output = tmp_path / "hf_output"
+    for step in (100, 200, 300):
+        _write_fake_hf_checkpoint(hf_output, step)
+        callback.on_save(SimpleNamespace(output_dir=str(hf_output)), SimpleNamespace(global_step=step), None)
+
+    kept = sorted(p.name for p in (rd.path / "checkpoints").glob("checkpoint-*"))
+    assert kept == ["checkpoint-200", "checkpoint-300"]  # oldest (100) pruned
+    assert rd.latest_checkpoint() == str(rd.path / "checkpoints" / "checkpoint-300")
