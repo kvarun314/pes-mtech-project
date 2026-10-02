@@ -3,6 +3,8 @@ RunDir the same way as the Phase 1 LoRA run. Training itself needs a GPU and
 `transformers`/`torch`, so it is validated on Colab (notebook 02), not
 locally — only the config construction is unit tested here."""
 
+import json
+
 from agentic_sentiment.train.run_dir import RunDir
 
 MODEL_NAME = "xlnet-large-cased"
@@ -63,5 +65,5 @@ def run_training(texts: list[str], labels: list[int], run_dir: RunDir) -> dict:
     best_dir = run_dir.path / "best_model"
     trainer.save_model(str(best_dir))
     tokenizer.save_pretrained(str(best_dir))
-    (run_dir.path / "metrics.json").write_text(__import__("json").dumps(metrics, indent=2))
+    (run_dir.path / "metrics.json").write_text(json.dumps(metrics, indent=2))
     return metrics
