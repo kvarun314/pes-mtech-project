@@ -38,6 +38,7 @@ def run_ablation(name: str, rows: list[dict], llm_fn, checkpoint_path: str, spec
             "analyst_rating": result.get("analyst_rating"),
             "visual_rating": result.get("visual_rating"),
             "rag_rating": result.get("rag_rating"),
+            "rag_grounding": result.get("rag_grounding"),
             "dissonance": result.get("dissonance"),
             "self_corrected": result.get("self_corrected", False),
             "correction_iters": result.get("correction_iters", 0),

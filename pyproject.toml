@@ -29,3 +29,8 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/agentic_sentiment"]
+
+[tool.pytest.ini_options]
+# Independent of the editable install, which macOS/Python 3.13 can skip
+# loading (treats the generated _editable_impl_*.pth as a hidden file).
+pythonpath = ["src"]

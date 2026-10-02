@@ -76,19 +76,25 @@ def build_graph(llm_fn: Callable[[str], str], spec_store=None, max_correction_it
     def critic_node(state: AgentState) -> AgentState:
         h = normalize_rating(state["analyst_rating"])
         ev = normalize_rating(state["visual_rating"]) if state.get("visual_rating") else h
-        if state.get("rag_grounding") is not None:
-            gf = state["rag_grounding"]
-        elif state.get("rag_rating"):
-            gf = normalize_rating(state["rag_rating"])
-        else:
-            gf = h
+        # Sentiment-axis term: when a spec store grounded the claim, Gf is a
+        # support score (0..1), not a sentiment estimate — it must not be
+        # averaged with H/Ev on the same axis (doing so makes a confidently
+        # *ungrounded but unanimous* review score D=0, and a well-grounded
+        # negative review score high, which is backwards). So the sentiment
+        # term here always uses rag_rating (another vote on the same axis
+        # as H/Ev); grounding is folded in afterwards as an independent
+        # penalty via max(), so it can only raise D, never mask a real vote
+        # disagreement by cancelling it out.
+        rag_sentiment = normalize_rating(state["rag_rating"]) if state.get("rag_rating") else h
 
         if state.get("dissonance_method") == "stdev":
             from agentic_sentiment.agents.critic import dissonance_stdev
             votes = [v for v in (state["analyst_rating"], state.get("visual_rating"), state.get("rag_rating")) if v]
             d = dissonance_stdev(votes)
         else:
-            d = dissonance_norm(h, ev, gf)
+            d = dissonance_norm(h, ev, rag_sentiment)
+            if state.get("rag_grounding") is not None:
+                d = max(d, 1.0 - state["rag_grounding"])
 
         iters = state.get("correction_iters", 0)
         max_iters = state.get("max_correction_iters", max_correction_iters)

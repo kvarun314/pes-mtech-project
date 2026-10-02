@@ -76,9 +76,10 @@ class _FakeSpecStore:
 
 
 def test_graph_uses_real_grounding_score_for_dissonance_when_spec_store_present():
-    # Everyone (Analyst, Visual, RAG-sentiment-vote) agrees on a 5 -> if Gf
-    # came from normalize_rating(rag_rating) as before, dissonance would be
-    # norm(1.0 - (1.0 + 1.0)/2) = 0.0, well under DISSONANCE_THRESHOLD=0.4.
+    # Everyone (Analyst, Visual, RAG-sentiment-vote) agrees on a 5, so the
+    # sentiment-agreement term is 0. The ungrounded claim (grounding_score=0.1)
+    # must still force dissonance up via the independent penalty max(d, 1-Gf),
+    # not get averaged away: max(0.0, 1 - 0.1) = 0.9.
     llm = _make_stub_llm({"Analyst": 5, "Visual": 5, "RAG": 5, "Critique": 5})
     graph = build_graph(llm_fn=llm, spec_store=_FakeSpecStore(), max_correction_iters=0)
 
@@ -89,11 +90,54 @@ def test_graph_uses_real_grounding_score_for_dissonance_when_spec_store_present(
         "correction_iters": 0, "max_correction_iters": 0,
     })
 
-    # With the spec store wired in, Gf must come from grounding_score()=0.1
-    # instead: norm(1.0 - (1.0 + 0.1)/2) = 0.45 >= DISSONANCE_THRESHOLD.
     assert result["rag_grounding"] == 0.1
-    assert result["dissonance"] == pytest.approx(0.45)
+    assert result["dissonance"] == pytest.approx(0.9)
     assert result["dissonance"] >= 0.4
+
+
+def test_graph_grounding_penalty_fires_even_on_unanimous_negative_rating():
+    # Regression: averaging Gf with H/Ev (the pre-fix formula) made a
+    # unanimous NEGATIVE rating with an UNGROUNDED claim score dissonance
+    # 0.0 (backwards -- an ungrounded claim should raise suspicion
+    # regardless of which direction the rating leans). With the fix, the
+    # grounding penalty is independent of sentiment direction.
+    llm = _make_stub_llm({"Analyst": 1, "Visual": 1, "RAG": 1, "Critique": 1})
+    graph = build_graph(llm_fn=llm, spec_store=_FakeSpecStore(), max_correction_iters=0)
+
+    result = graph.invoke({
+        "review_id": "r7", "review_text": "Broken USB-C port", "gt_rating": 1,
+        "meta_title": "Widget", "image_caption": "a clean widget", "asin": "B001",
+        "use_metadata": True, "use_image": True, "use_rag": True,
+        "correction_iters": 0, "max_correction_iters": 0,
+    })
+
+    assert result["dissonance"] == pytest.approx(0.9)
+    assert result["dissonance"] >= 0.4
+
+
+def test_graph_grounding_does_not_mask_real_vote_disagreement():
+    # A well-grounded claim (Gf=1.0) must not suppress genuine disagreement
+    # between the agents' votes -- the max() combinator should keep the
+    # higher of the two signals, not let a good grounding score cancel it.
+    class _FullyGroundedStore:
+        def query(self, claim, asin, k=3):
+            return []
+
+        def grounding_score(self, claims, asin, threshold=0.5):
+            return 1.0
+
+    llm = _make_stub_llm({"Analyst": 5, "Visual": 1, "RAG": 1, "Critique": 3})
+    graph = build_graph(llm_fn=llm, spec_store=_FullyGroundedStore(), max_correction_iters=0)
+
+    result = graph.invoke({
+        "review_id": "r8", "review_text": "Mixed signals", "gt_rating": 3,
+        "meta_title": "Widget", "image_caption": "a clean widget", "asin": "B001",
+        "use_metadata": True, "use_image": True, "use_rag": True,
+        "correction_iters": 0, "max_correction_iters": 0,
+    })
+
+    # dissonance_norm(h=1.0, ev=0.0, rag_sentiment=0.0) = |1.0 - 0.0| = 1.0
+    assert result["dissonance"] == pytest.approx(1.0)
 
 
 def test_analyst_prompt_includes_metadata_iff_use_metadata():
