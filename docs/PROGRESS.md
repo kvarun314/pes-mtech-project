@@ -77,3 +77,67 @@
     macOS/Python 3.13).
 - 62 tests passing, all 4 Colab notebooks JSON-valid. Branch `full-phase2-rebuild`,
   not yet merged.
+
+## 2026-10-03 — merged to main; auto-doc-push; Phase 1 re-ported from the real notebook
+- Merged `full-phase2-rebuild` to `main` (`cbc7820`).
+- Added auto-documentation: every Colab notebook now commits + pushes its own
+  outputs straight to `main` (new `agentic_sentiment.colab_sync.push_repo_changes`,
+  `RunDir.history_row()`, `agentic_sentiment.eval.results_log`), gated on a
+  `GITHUB_TOKEN` Colab Secret. Two review rounds found and fixed real reliability
+  bugs: `userdata.get()` raising (not returning None) on a missing secret crashed
+  all 4 notebooks instead of degrading gracefully; a retry after a failed push
+  never actually retried the push (fixed: only the *commit* is skipped when
+  nothing's newly staged, pull+push always run); two notebooks appending to the
+  same log file around the same time conflicted under a plain rebase (fixed:
+  `.gitattributes` `merge=union`). Merged (`5f0ea2c`).
+- **User pointed at `colab/llama_sentiment_baseline_train.ipynb` directly and
+  asked to verify `src/agentic_sentiment/phase1/` actually matches it** — it
+  didn't. Task 2 had vendored Phase 1's logic from a *different*, never-run
+  sibling package, not this notebook. Two rounds of line-by-line comparison
+  against the actual proven cells found real algorithmic drift, not just
+  config differences:
+  - VGST's target size was ~1% of the *already-stratified* pool (~100 rows)
+    instead of ~1% of the *post-DQC* pool floored at `max_samples` (~4000 rows)
+    — training would have run on a tiny fraction of the intended data.
+  - The SFT target was a bare digit ("5") instead of the full
+    "{rating}. {description}" line the notebook deliberately trains on.
+  - LoRA's `target_modules` fallback was `[q_proj, v_proj]` instead of all four
+    attention projections.
+  - `gradient_checkpointing` didn't exist as a config field or get wired in at
+    all — needed at this LoRA size to avoid OOM on a T4.
+  - Half of `TrainingArguments` was never passed through despite the config
+    fields existing (weight_decay, max_grad_norm, warmup_steps, logging_steps,
+    bf16, optim, neftune_noise_alpha).
+  - `max_csv_rows` didn't exist; the full ~500k-row CSV was always read.
+  - Validation examples never got a one-shot prefix even with
+    `use_one_shot=True`.
+  - **No 4-bit QLoRA at all** — `load_model_and_tokenizer()` defaulted to
+    full-fp16, a different numerical regime from the proven Run 1 QLoRA run,
+    and one that OOMs on a T4. Added `detect_use_4bit()`, ported from the
+    notebook's own bitsandbytes/GPU-memory detection.
+  - `overwrite_output_dir` (added in an earlier fix round for a different
+    reason) crashed on the installed transformers 5.x, since the notebook
+    never passes it — removed; added a real (unmocked) `TrainingArguments`
+    regression test so this class of bug is caught locally next time.
+  - An en dash vs. ASCII hyphen mismatch in the training prompt's trailing
+    instruction line (literal training-input text).
+  - Fixed all of them by re-porting the actual logic from the notebook's
+    cells; `ModelConfig`/`TrainingConfig`/`DataConfig` defaults are now the
+    paper-closer config directly. Merged (`2d556ed`).
+- **Checked `colab/phase2_agentic_full_comparison.ipynb` (the notebook that
+  produced Run 1's real Phase 2 numbers) against `src/agentic_sentiment/agents/graph.py`**
+  the same way: every one of its four agent prompts was missing
+  `SENTIMENT_INSTRUCTION` (the 5-point-scale task framing the LoRA adapter was
+  fine-tuned to expect) — fixed, added to all four prompts (merged `ba57b4b`'s
+  parent). Separately, both proven Phase 2 notebooks always give the Analyst a
+  one-shot example (task framing, not multimodal context) — the rebuilt graph
+  never did. Added `agentic_sentiment.eval.one_shot` (`build_one_shot_pool`/
+  `pick_one_shot_text`, ported from the notebook's own `create_one_shot_pool`/
+  `pick_one_shot`), wired into `run_ablation()` unconditionally across all six
+  ablations, each row's pick seeded by its own `review_id` so it's stable
+  across a resumed run. Merged (`ba57b4b`).
+- 107 tests passing. All of `src/agentic_sentiment/` is now verified against
+  the actual proven notebooks, not just internally self-consistent.
+- Next: unchanged — run the 4 Colab notebooks in order, review the auto-pushed
+  `docs/RESULTS.md`/`docs/CHECKPOINT_HISTORY.md`/`results/run2/`, then update
+  the paper with real Run 2 numbers.
