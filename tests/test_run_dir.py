@@ -64,6 +64,28 @@ def test_resume_preserves_best_value_across_reconnect(tmp_path):
     assert "step 200" not in best_md_2, f"Should not have step 200, got: {best_md_2}"
 
 
+def test_history_row_includes_run_id_type_best_and_path(tmp_path):
+    rd = RunDir(base_dir=str(tmp_path), run_id="2026-10-02_test")
+    rd.write_config({"lora_r": 16, "lora_alpha": 128})
+    rd.write_best(step=100, metric_name="eval_loss", value=0.42)
+
+    row = rd.history_row("phase1")
+
+    assert "2026-10-02_test" in row
+    assert "phase1" in row
+    assert "step 100" in row
+    assert "0.42" in row
+    assert "lora_r=16" in row
+    assert str(rd.path) in row
+
+
+def test_history_row_handles_missing_config_and_best(tmp_path):
+    rd = RunDir(base_dir=str(tmp_path), run_id="fresh_run")
+    row = rd.history_row("xlnet")
+    assert "fresh_run" in row
+    assert "xlnet" in row
+
+
 def test_latest_checkpoint_returns_none_when_empty(tmp_path):
     rd = RunDir(base_dir=str(tmp_path), run_id="run")
     assert rd.latest_checkpoint() is None

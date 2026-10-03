@@ -44,6 +44,23 @@ class RunDir:
     def write_config(self, config: dict) -> None:
         (self.path / "config.json").write_text(json.dumps(config, indent=2, default=str))
 
+    def history_row(self, run_type: str) -> str:
+        """One markdown table row summarizing this run, for a
+        CHECKPOINT_HISTORY.md log: run_id, type, best step/metric, and the
+        Drive path -- so every training run is documented even if nobody
+        downloads the checkpoint itself. Call after training completes
+        (reads config.json/BEST.md as they currently stand)."""
+        config_path = self.path / "config.json"
+        config_summary = "—"
+        if config_path.exists():
+            try:
+                config = json.loads(config_path.read_text())
+                config_summary = ", ".join(f"{k}={v}" for k, v in config.items() if not isinstance(v, (dict, list)))
+            except (json.JSONDecodeError, OSError):
+                pass
+        best = f"step {self._best_step}, eval_loss={self._best_value}" if self._best_step is not None else "—"
+        return f"| {self.run_id} | {run_type} | {best} | {config_summary[:120]} | `{self.path}` |"
+
     def save_best(self, trainer, tokenizer, dir_name: str) -> str:
         """Save the best model into self.path/dir_name. Prefers the
         protected Drive-side best checkpoint over the Trainer's in-memory
