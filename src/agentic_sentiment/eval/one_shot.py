@@ -22,10 +22,17 @@ def format_one_shot_example(review_text: str, rating: int) -> str:
 def build_one_shot_pool(rows: list[dict], pool_size: int = 5, seed: int = 42) -> list[dict]:
     """One row per rating 1-5 (if available among `rows`), for use as
     one-shot examples. Matches the proven notebooks' approach of building
-    the pool from the eval set itself."""
+    the pool from the eval set itself.
+
+    `rows` is sorted by review_id before pooling -- rng.choice() picks by
+    position, so an unsorted/differently-ordered `rows` (e.g. a caller that
+    reloads the eval set fresh on a resumed run, in a different order)
+    would otherwise silently produce a different pool. Sorting first makes
+    the result depend only on which rows and ratings are present, not on
+    the order they arrived in."""
     rng = random.Random(seed)
     by_rating: dict[int, list[dict]] = {r: [] for r in range(1, 6)}
-    for row in rows:
+    for row in sorted(rows, key=lambda r: r.get("review_id", "")):
         rating = row.get("gt_rating")
         if rating in by_rating:
             by_rating[rating].append(row)

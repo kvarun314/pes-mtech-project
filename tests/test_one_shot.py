@@ -26,6 +26,21 @@ def test_build_one_shot_pool_caps_at_pool_size():
     assert len(pool) == 2
 
 
+def test_build_one_shot_pool_is_independent_of_row_order():
+    # Regression: rng.choice() picks by position, so an unsorted/
+    # differently-ordered `rows` (e.g. a caller that reloads the eval set
+    # fresh on a resumed run) must not silently produce a different pool.
+    rows = [{"review_text": f"review {i}", "review_id": f"r{i}", "gt_rating": (i % 5) + 1} for i in range(20)]
+
+    pool_in_order = build_one_shot_pool(rows, pool_size=5, seed=42)
+
+    shuffled = list(rows)
+    random.Random(999).shuffle(shuffled)
+    pool_shuffled = build_one_shot_pool(shuffled, pool_size=5, seed=42)
+
+    assert {p["review_id"] for p in pool_in_order} == {p["review_id"] for p in pool_shuffled}
+
+
 def test_build_one_shot_pool_skips_ratings_with_no_rows():
     rows = [{"review_text": "only fives", "gt_rating": 5}] * 3
     pool = build_one_shot_pool(rows, pool_size=5, seed=42)
