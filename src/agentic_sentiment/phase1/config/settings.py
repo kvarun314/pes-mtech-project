@@ -75,6 +75,8 @@ class TrainingConfig:
     save_total_limit: int | None = 3
     evaluation_strategy: str = "steps"
     eval_steps: int | None = 50
+    load_best_model_at_end: bool = True
+    metric_for_best_model: str = "eval_loss"
     val_ratio: float = 0.2
 
     max_samples: int | None = 4000

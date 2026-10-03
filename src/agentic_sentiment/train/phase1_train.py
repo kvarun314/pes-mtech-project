@@ -11,7 +11,7 @@ import json
 
 from agentic_sentiment.phase1.config import DataConfig, ModelConfig, TrainingConfig
 from agentic_sentiment.phase1.data.dataset import build_sft_dataset
-from agentic_sentiment.phase1.models.lora import load_model_and_tokenizer
+from agentic_sentiment.phase1.models.lora import detect_use_4bit, load_model_and_tokenizer
 
 from agentic_sentiment.train.run_dir import RunDir
 
@@ -40,7 +40,6 @@ def _build_trainer(model, tokenizer, train_ds, eval_ds, training_cfg, run_dir: R
     )
     args = TrainingArguments(
         output_dir=training_cfg.output_dir,
-        overwrite_output_dir=training_cfg.overwrite_output_dir,
         num_train_epochs=training_cfg.num_train_epochs,
         per_device_train_batch_size=training_cfg.per_device_train_batch_size,
         per_device_eval_batch_size=training_cfg.per_device_eval_batch_size,
@@ -91,7 +90,7 @@ def run_training(data_path: str, run_dir: RunDir, overrides: dict | None = None)
         "data_path": data_path,
     })
 
-    model, tokenizer = load_model_and_tokenizer(model_cfg)
+    model, tokenizer = load_model_and_tokenizer(model_cfg, use_4bit=detect_use_4bit())
     train_ds, eval_ds = build_sft_dataset(data_path, tokenizer, data_cfg, training_cfg, seed=training_cfg.seed)
 
     trainer = _build_trainer(model, tokenizer, train_ds, eval_ds, training_cfg, run_dir)

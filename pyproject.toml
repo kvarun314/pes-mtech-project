@@ -21,6 +21,7 @@ colab = [
     "textblob>=0.17.0",
     "sentence-transformers>=3.0.0",
     "xgboost",
+    "bitsandbytes>=0.46.1",
 ]
 
 [build-system]

@@ -59,13 +59,37 @@ def print_frozen_trainable_summary(model) -> None:
     n_frozen = sum(
         p.numel() for n, p in model.named_parameters() if not p.requires_grad
     )
-    print("--- Frozen vs trainable (paper: Freeze technique, trainable layers: 3) ---", flush=True)
+    print(f"--- Frozen vs trainable (trainable layers: {len(trainable_layers)}) ---", flush=True)
     print(
-        "  Frozen: all base model params (embedding + layers 0–28) + base in last 3.",
+        "  Frozen: all base model params + base weights in the trainable layers (LoRA adapters only train).",
         flush=True,
     )
     print(f"  Trainable: LoRA adapters on decoder layers {sorted(trainable_layers)}.", flush=True)
     print(f"  Trainable params: {n_trainable:,}  |  Frozen params: {n_frozen:,}", flush=True)
+
+
+def detect_use_4bit(min_fp16_gpu_gb: float = 18.0) -> bool:
+    """Whether to load in 4-bit (QLoRA/nf4), matching
+    colab/llama_sentiment_baseline_train.ipynb cell 14's own detection
+    exactly: try importing bitsandbytes; if it's unavailable AND the GPU
+    has less than min_fp16_gpu_gb, raise rather than silently train a
+    full-fp16 LoRA (a different numerical regime from the proven Run 1
+    QLoRA run, and one that will OOM on a T4's ~15GB anyway)."""
+    try:
+        import bitsandbytes  # noqa: F401
+        return True
+    except Exception as exc:
+        gpu_mem_gb = 0.0
+        if torch.cuda.is_available():
+            gpu_mem_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
+        if gpu_mem_gb < min_fp16_gpu_gb:
+            raise RuntimeError(
+                f"bitsandbytes not loadable ({exc}) and GPU has only {gpu_mem_gb:.1f}GB "
+                f"(fp16 LLaMA-3-8B needs ~16GB) -- training would OOM. Install "
+                "bitsandbytes (pip install -U 'bitsandbytes>=0.46.1') before loading "
+                "the model, or run on a GPU with >= 18GB."
+            ) from exc
+        return False
 
 
 def load_model_and_tokenizer(
@@ -106,7 +130,7 @@ def load_model_and_tokenizer(
     )
     print("  [2/4] Model weights loaded.", flush=True)
 
-    print("  [3/4] Applying LoRA adapters (loading peft, then last 3 layers)...", flush=True)
+    print(f"  [3/4] Applying LoRA adapters (last {model_cfg.trainable_layers} layers)...", flush=True)
     from peft import get_peft_model
     lora_config = get_lora_config(model_cfg)
     model = get_peft_model(model, lora_config)

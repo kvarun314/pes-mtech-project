@@ -43,7 +43,7 @@ def build_prompt(
     parts.append("\n\nReview to classify:\n" + review)
     parts.append(
         "\nAfter your reasoning, end with exactly one line starting with \"Sentiment (1-5):\" "
-        "followed by the rating 1-5 and a short justification (paper-style output)."
+        "followed by the rating 1–5 and a short justification (paper-style output)."
     )
     parts.append("\nSentiment (1-5):")
     return "\n".join(parts)
