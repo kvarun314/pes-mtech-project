@@ -23,9 +23,9 @@ def format_results_entry(
     """
     date = date or datetime.date.today().isoformat()
 
-    lines = [f"## {date} — {run_label}", ""]
+    lines = [f"## {_escape_md(date)} — {_escape_md(run_label)}", ""]
     for key, value in context.items():
-        lines.append(f"- **{key}:** {value}")
+        lines.append(f"- **{_escape_md(key)}:** {_escape_md(_fmt(value))}")
     lines.append("")
 
     columns: list[str] = []
@@ -34,14 +34,20 @@ def format_results_entry(
             if key not in columns:
                 columns.append(key)
 
-    lines.append("| name | " + " | ".join(columns) + " |")
+    lines.append("| name | " + " | ".join(_escape_md(c) for c in columns) + " |")
     lines.append("|" + "---|" * (len(columns) + 1))
     for name, metrics in metrics_by_name.items():
-        row = [name] + [_fmt(metrics.get(col)) for col in columns]
+        row = [_escape_md(name)] + [_escape_md(_fmt(metrics.get(col))) for col in columns]
         lines.append("| " + " | ".join(row) + " |")
     lines.append("")
 
     return "\n".join(lines)
+
+
+def _escape_md(text) -> str:
+    """A `|` or newline in a value would otherwise break a Markdown table
+    row's column structure."""
+    return str(text).replace("|", "\\|").replace("\n", " ")
 
 
 def _fmt(value) -> str:

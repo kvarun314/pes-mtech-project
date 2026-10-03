@@ -36,6 +36,14 @@ def test_format_results_entry_handles_mismatched_metric_keys_across_rows():
     assert "—" in entry  # xlnet's missing precision/recall/f1 cells
 
 
+def test_format_results_entry_escapes_pipe_and_newline():
+    entry = format_results_entry(
+        run_label="x", context={"note": "a | pipe\nand a newline"}, metrics_by_name={"a": {"accuracy": 1.0}},
+    )
+    assert "a \\| pipe and a newline" in entry
+    assert "a | pipe\nand" not in entry
+
+
 def test_format_results_entry_defaults_to_today_when_date_omitted():
     import datetime
 
