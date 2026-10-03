@@ -1,6 +1,6 @@
 import pytest
 
-from agentic_sentiment.agents.graph import build_graph
+from agentic_sentiment.agents.graph import SENTIMENT_INSTRUCTION, build_graph
 
 
 def _make_stub_llm(ratings_by_prompt_substring):
@@ -191,6 +191,42 @@ def test_analyst_prompt_includes_metadata_iff_use_metadata():
         "correction_iters": 0, "max_correction_iters": 2,
     })
     assert seen_in_analyst_prompt["present"] is False
+
+
+def test_every_agent_prompt_includes_the_sentiment_instruction():
+    # Regression: the fine-tuned Phase 1 adapter (and Run 1's proven Phase 2
+    # notebook, colab/phase2_agentic_full_comparison.ipynb) always opens
+    # every agent's prompt with this task framing. Dropping it isn't one
+    # of the mission spec's intentional upgrades.
+    seen = {"analyst": False, "visual": False, "rag": False, "critique": False}
+
+    def llm_fn(prompt: str) -> str:
+        has_instruction = SENTIMENT_INSTRUCTION in prompt
+        # CRITIQUE_PROMPT contains the literal word "Analyst" (e.g. "Analyst
+        # said 1") -- check it first so that branch isn't shadowed.
+        if "Critique" in prompt:
+            seen["critique"] = seen["critique"] or has_instruction
+            return "feedback stub."
+        if "Analyst" in prompt:
+            seen["analyst"] = seen["analyst"] or has_instruction
+            return "Sentiment (1-5): 1. stub."
+        if "Visual" in prompt:
+            seen["visual"] = seen["visual"] or has_instruction
+            return "Sentiment (1-5): 5. stub."
+        if "RAG" in prompt:
+            seen["rag"] = seen["rag"] or has_instruction
+            return "Sentiment (1-5): 5. stub."
+        return "Sentiment (1-5): 3. stub."
+
+    graph = build_graph(llm_fn=llm_fn, max_correction_iters=1)
+    graph.invoke({
+        "review_id": "r10", "review_text": "mixed", "gt_rating": 3,
+        "meta_title": "Widget", "image_caption": "a widget",
+        "use_metadata": True, "use_image": True, "use_rag": True,
+        "correction_iters": 0, "max_correction_iters": 1,
+    })
+
+    assert all(seen.values()), seen
 
 
 def test_graph_skips_visual_when_use_image_false():

@@ -41,6 +41,10 @@ def build_prompt(
     if one_shot_example and cfg.use_one_shot:
         parts.append("\n\nExample:\n" + one_shot_example)
     parts.append("\n\nReview to classify:\n" + review)
+    parts.append(
+        "\nAfter your reasoning, end with exactly one line starting with \"Sentiment (1-5):\" "
+        "followed by the rating 1–5 and a short justification (paper-style output)."
+    )
     parts.append("\nSentiment (1-5):")
     return "\n".join(parts)
 
@@ -59,11 +63,19 @@ def rating_to_sentiment_class(rating: int, cfg: DataConfig) -> str:
 def prepare_conversation_format(
     text: str, rating: int, cfg: DataConfig, one_shot: Optional[str] = None
 ) -> dict:
-    """Single example in chat format for SFT (prompt + answer)."""
+    """Single example in chat format for SFT (prompt + answer).
+
+    The SFT target is the full "{rating}. {description}" line, not a bare
+    digit -- it must match the one-shot example's format and the eval
+    parser's expectation. Matches
+    colab/llama_sentiment_baseline_train.ipynb cell 11's prepare_conversation
+    exactly (its own comment: "Target matches the one-shot line after
+    'Sentiment (1-5):' (not digit-only) so train matches inference")."""
     prompt = build_prompt(text, cfg, one_shot_example=one_shot)
+    desc = RATING_DESCRIPTIONS.get(rating, f"Rating {rating}.")
     return {
         "prompt": prompt,
-        "answer": str(rating),
+        "answer": f"{rating}. {desc}",
         "rating": rating,
         "text": text,
     }

@@ -14,22 +14,44 @@ from agentic_sentiment.agents.critic import (
 from agentic_sentiment.agents.parsing import parse_rating
 from agentic_sentiment.agents.state import AgentState
 
-ANALYST_PROMPT = """Analyst: read this review and rate its sentiment 1-5.
+# Same task framing the Phase 1 LoRA adapter was fine-tuned on
+# (agentic_sentiment.phase1.data.preprocessing.SENTIMENT_INSTRUCTION) and
+# that Run 1's proven Phase 2 notebook
+# (colab/phase2_agentic_full_comparison.ipynb cell 12) includes in every
+# agent's prompt. Every prompt below must open with it -- dropping it is
+# not one of the mission spec's intentional upgrades (real StateGraph,
+# spec-store RAG, Norm dissonance); it just means the adapter never sees
+# the rubric it was trained to respond to.
+SENTIMENT_INSTRUCTION = (
+    "Evaluate the sentiment expressed in user reviews and classify each one "
+    "according to its sentiment rating. Use a five-point scale: "
+    "1-2 negative, 3 neutral, 4-5 positive."
+)
+
+ANALYST_PROMPT = """{instruction}
+
+Analyst: read this review and rate its sentiment 1-5.
 {metadata_block}Review: {review_text}
 {critique_block}
 Sentiment (1-5):"""
 
-VISUAL_PROMPT = """Visual Verifier: the product image shows: {image_caption}
+VISUAL_PROMPT = """{instruction}
+
+Visual Verifier: the product image shows: {image_caption}
 Product: {meta_title}
 Based only on the image, rate expected sentiment 1-5.
 Sentiment (1-5):"""
 
-RAG_PROMPT = """RAG Prover: similar context: {context}
+RAG_PROMPT = """{instruction}
+
+RAG Prover: similar context: {context}
 Review: {review_text}
 Rate sentiment 1-5 given this grounding.
 Sentiment (1-5):"""
 
-CRITIQUE_PROMPT = """Critique: Analyst said {analyst}, Visual said {visual}, RAG said {rag}.
+CRITIQUE_PROMPT = """{instruction}
+
+Critique: Analyst said {analyst}, Visual said {visual}, RAG said {rag}.
 {grounding_block}Give one sentence of feedback for the Analyst to reconsider."""
 
 
@@ -43,6 +65,7 @@ def build_graph(llm_fn: Callable[[str], str], spec_store=None, max_correction_it
                 metadata_block = f"Product: {title}. {description}\n"
         critique_block = f"Critic feedback: {state['critique']}" if state.get("critique") else ""
         text = llm_fn(ANALYST_PROMPT.format(
+            instruction=SENTIMENT_INSTRUCTION,
             metadata_block=metadata_block, review_text=state["review_text"], critique_block=critique_block
         ))
         rating = parse_rating(text) or 3
@@ -52,6 +75,7 @@ def build_graph(llm_fn: Callable[[str], str], spec_store=None, max_correction_it
         if not state.get("use_image") or not state.get("image_caption"):
             return {**state, "visual_rating": None}
         text = llm_fn(VISUAL_PROMPT.format(
+            instruction=SENTIMENT_INSTRUCTION,
             image_caption=state["image_caption"], meta_title=state.get("meta_title", "")
         ))
         return {**state, "visual_rating": parse_rating(text)}
@@ -63,7 +87,9 @@ def build_graph(llm_fn: Callable[[str], str], spec_store=None, max_correction_it
         has_spec_store = spec_store is not None and state.get("asin")
         if has_spec_store:
             context += " " + " ".join(r["text"] for r in spec_store.query(state["review_text"], asin=state["asin"]))
-        text = llm_fn(RAG_PROMPT.format(context=context, review_text=state["review_text"]))
+        text = llm_fn(RAG_PROMPT.format(
+            instruction=SENTIMENT_INSTRUCTION, context=context, review_text=state["review_text"]
+        ))
         rag_rating = parse_rating(text)
         # Real factual grounding (catches e.g. "claims USB-C, spec says
         # Micro-USB"), independent of the sentiment vote above.
@@ -110,6 +136,7 @@ def build_graph(llm_fn: Callable[[str], str], spec_store=None, max_correction_it
                     "this may be a user-expectation mismatch, not a genuine defect.\n"
                 )
             critique = llm_fn(CRITIQUE_PROMPT.format(
+                instruction=SENTIMENT_INSTRUCTION,
                 analyst=state["analyst_rating"], visual=state.get("visual_rating"), rag=state.get("rag_rating"),
                 grounding_block=grounding_block,
             ))

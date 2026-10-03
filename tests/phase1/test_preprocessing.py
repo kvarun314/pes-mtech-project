@@ -32,10 +32,14 @@ def test_format_one_shot_example(data_config):
 
 
 def test_prepare_conversation_format(data_config):
+    # The SFT target is "{rating}. {description}", not a bare digit --
+    # must match the one-shot example's format and the eval parser's
+    # expectation (colab/llama_sentiment_baseline_train.ipynb cell 11).
     out = prepare_conversation_format("Nice.", 5, data_config, one_shot=None)
     assert out["text"] == "Nice."
     assert out["rating"] == 5
-    assert out["answer"] == "5"
+    assert out["answer"].startswith("5. ")
+    assert len(out["answer"]) > len("5. ")
     assert "Nice." in out["prompt"]
 
 
