@@ -1,7 +1,22 @@
 """Amazon Reviews 2023 (Electronics) loading: balanced per-rating eval
 slice + product-spec records for the RAG spec store."""
 
+import json
 import random
+
+
+def _parse_details(value) -> dict:
+    """The Amazon Reviews 2023 metadata's `details` field is a JSON
+    *string* in the real dataset (e.g. '{"Manufacturer": "SIIG"}'), not a
+    dict -- calling .items() on it raises AttributeError. Parse it if it's
+    a string; pass through if it's already a dict (e.g. in tests)."""
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+            return parsed if isinstance(parsed, dict) else {}
+        except (json.JSONDecodeError, TypeError):
+            return {}
+    return value or {}
 
 
 def _first_image_url(meta: dict) -> str | None:
@@ -41,7 +56,7 @@ def load_balanced_slice(
             "review_text": text,
             "meta_title": meta.get("title", ""),
             "meta_description": " ".join(meta.get("description", []) or []),
-            "meta_details": meta.get("details", {}) or {},
+            "meta_details": _parse_details(meta.get("details")),
             "image_url": _first_image_url(meta),
         })
 
@@ -63,6 +78,6 @@ def build_spec_records(meta_by_asin: dict[str, dict]) -> list[dict]:
         description = " ".join(meta.get("description", []) or [])
         if description:
             records.append({"asin": asin, "field": "description", "text": description})
-        for field, value in (meta.get("details") or {}).items():
+        for field, value in _parse_details(meta.get("details")).items():
             records.append({"asin": asin, "field": field, "text": f"{field}: {value}"})
     return records

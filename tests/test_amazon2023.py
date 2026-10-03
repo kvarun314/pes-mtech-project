@@ -45,3 +45,27 @@ def test_build_spec_records_one_per_field():
     assert all({"asin", "field", "text"} <= r.keys() for r in records)
     usb_c = [r for r in records if "USB-C" in r["text"]]
     assert len(usb_c) == 10  # one per product's "Connector Type" detail
+
+
+def test_build_spec_records_handles_details_as_a_json_string():
+    # Regression: the real Amazon Reviews 2023 metadata's `details` field
+    # is a JSON *string* ('{"Manufacturer": "SIIG"}'), not a dict -- the
+    # fixtures use dicts, so this was never caught locally and crashed on
+    # the real dataset with AttributeError: 'str' object has no attribute
+    # 'items'.
+    meta = {"B1": {"title": "Widget", "description": [], "details": '{"Connector Type": "USB-C"}'}}
+    records = build_spec_records(meta)
+    assert any("USB-C" in r["text"] for r in records)
+
+
+def test_build_spec_records_handles_malformed_details_string_without_crashing():
+    meta = {"B1": {"title": "Widget", "description": [], "details": "not valid json"}}
+    records = build_spec_records(meta)  # must not raise
+    assert all(r["field"] != "not valid json" for r in records)
+
+
+def test_load_balanced_slice_parses_details_json_string():
+    reviews = [{"parent_asin": "B1", "rating": 5, "text": "a fine review with enough characters"}]
+    meta = {"B1": {"title": "Widget", "details": '{"Connector Type": "USB-C"}'}}
+    rows = load_balanced_slice(reviews, meta, n_per_rating=1, seed=42)
+    assert rows[0]["meta_details"] == {"Connector Type": "USB-C"}
