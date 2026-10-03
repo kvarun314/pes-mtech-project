@@ -38,6 +38,55 @@ def test_run_ablation_resumes_without_reprocessing(tmp_path):
     assert len(lines) == 3  # not 5 — the first 2 weren't reprocessed
 
 
+def test_run_ablation_gives_the_analyst_a_one_shot_example(tmp_path):
+    # Regression: both proven Phase 2 notebooks always give the Analyst a
+    # one-shot example; the Analyst prompt must actually contain one.
+    seen_one_shot = {"present": False}
+
+    def llm_fn(prompt: str) -> str:
+        if "Example:\nReview:" in prompt:
+            seen_one_shot["present"] = True
+        return "Sentiment (1-5): 5. stub."
+
+    varied_rows = [
+        {"review_id": f"v{i}", "review_text": f"review {i}", "gt_rating": (i % 5) + 1,
+         "meta_title": "W", "meta_description": "", "image_caption": "a widget", "asin": "B1"}
+        for i in range(10)
+    ]
+    ckpt = tmp_path / "text_only.jsonl"
+    run_ablation("text_only", varied_rows, llm_fn=llm_fn, checkpoint_path=str(ckpt))
+
+    assert seen_one_shot["present"] is True
+
+
+def test_run_ablation_one_shot_choice_is_stable_across_resume(tmp_path):
+    # The same row must get the same one-shot example whether this is a
+    # fresh run or a resume -- seeded by review_id, not loop position.
+    captured = []
+
+    def llm_fn(prompt: str) -> str:
+        if "Example:" in prompt and "review 9" in prompt:
+            captured.append(prompt)
+        return "Sentiment (1-5): 5. stub."
+
+    varied_rows = [
+        {"review_id": f"v{i}", "review_text": f"review {i}", "gt_rating": (i % 5) + 1,
+         "meta_title": "W", "meta_description": "", "image_caption": "a widget", "asin": "B1"}
+        for i in range(10)
+    ]
+
+    run_ablation("text_only", varied_rows, llm_fn=llm_fn, checkpoint_path=str(tmp_path / "a.jsonl"))
+    fresh_prompt_for_v9 = captured[0]
+
+    captured.clear()
+    ckpt_b = str(tmp_path / "b.jsonl")
+    run_ablation("text_only", varied_rows[:5], llm_fn=llm_fn, checkpoint_path=ckpt_b)  # v9 not reached yet
+    run_ablation("text_only", varied_rows, llm_fn=llm_fn, checkpoint_path=ckpt_b)  # resume, reaches v9
+    resumed_prompt_for_v9 = captured[0]
+
+    assert fresh_prompt_for_v9 == resumed_prompt_for_v9
+
+
 def test_compute_metrics_accuracy_and_mae():
     records = [
         {"gt_rating": 5, "final_rating": 5},

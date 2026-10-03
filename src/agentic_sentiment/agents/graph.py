@@ -13,6 +13,7 @@ from agentic_sentiment.agents.critic import (
 )
 from agentic_sentiment.agents.parsing import parse_rating
 from agentic_sentiment.agents.state import AgentState
+from agentic_sentiment.eval.one_shot import COT_PHRASE
 
 # Same task framing the Phase 1 LoRA adapter was fine-tuned on
 # (agentic_sentiment.phase1.data.preprocessing.SENTIMENT_INSTRUCTION) and
@@ -29,9 +30,9 @@ SENTIMENT_INSTRUCTION = (
 )
 
 ANALYST_PROMPT = """{instruction}
-
+{cot_block}
 Analyst: read this review and rate its sentiment 1-5.
-{metadata_block}Review: {review_text}
+{one_shot_block}{metadata_block}Review: {review_text}
 {critique_block}
 Sentiment (1-5):"""
 
@@ -64,8 +65,10 @@ def build_graph(llm_fn: Callable[[str], str], spec_store=None, max_correction_it
             if title or description:
                 metadata_block = f"Product: {title}. {description}\n"
         critique_block = f"Critic feedback: {state['critique']}" if state.get("critique") else ""
+        cot_block = COT_PHRASE if state.get("use_cot", True) else ""
+        one_shot_block = f"Example:\n{state['one_shot_example']}\n\n" if state.get("one_shot_example") else ""
         text = llm_fn(ANALYST_PROMPT.format(
-            instruction=SENTIMENT_INSTRUCTION,
+            instruction=SENTIMENT_INSTRUCTION, cot_block=cot_block, one_shot_block=one_shot_block,
             metadata_block=metadata_block, review_text=state["review_text"], critique_block=critique_block
         ))
         rating = parse_rating(text) or 3

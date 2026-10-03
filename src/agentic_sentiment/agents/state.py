@@ -15,6 +15,8 @@ class AgentState(TypedDict, total=False):
     use_metadata: bool
     use_image: bool
     use_rag: bool
+    use_cot: bool  # defaults True in analyst_node -- matches how the adapter was trained
+    one_shot_example: str | None  # pre-formatted "Review: ...\nSentiment (1-5): N. desc"
     dissonance_method: str  # "norm" | "stdev"
     max_correction_iters: int
 
