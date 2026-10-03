@@ -229,6 +229,50 @@ def test_every_agent_prompt_includes_the_sentiment_instruction():
     assert all(seen.values()), seen
 
 
+def test_analyst_prompt_includes_one_shot_and_cot_when_provided():
+    seen = {"one_shot": False, "cot": False}
+
+    def llm_fn(prompt: str) -> str:
+        if "Analyst" in prompt:
+            seen["one_shot"] = "Example:\nReview: a prior review" in prompt
+            seen["cot"] = "Let's take it one step at a time." in prompt
+        return "Sentiment (1-5): 4. stub."
+
+    graph = build_graph(llm_fn=llm_fn)
+    graph.invoke({
+        "review_id": "r11", "review_text": "fine", "gt_rating": 4,
+        "meta_title": "Widget", "image_caption": None,
+        "use_metadata": False, "use_image": False, "use_rag": False,
+        "use_cot": True, "one_shot_example": "Review: a prior review\nSentiment (1-5): 2. meh.",
+        "correction_iters": 0, "max_correction_iters": 2,
+    })
+
+    assert seen["one_shot"] is True
+    assert seen["cot"] is True
+
+
+def test_analyst_prompt_omits_one_shot_and_cot_when_disabled():
+    seen = {"one_shot": True, "cot": True}  # start True so a missed check would fail loudly
+
+    def llm_fn(prompt: str) -> str:
+        if "Analyst" in prompt:
+            seen["one_shot"] = "Example:" in prompt
+            seen["cot"] = "Let's take it one step at a time." in prompt
+        return "Sentiment (1-5): 4. stub."
+
+    graph = build_graph(llm_fn=llm_fn)
+    graph.invoke({
+        "review_id": "r12", "review_text": "fine", "gt_rating": 4,
+        "meta_title": "Widget", "image_caption": None,
+        "use_metadata": False, "use_image": False, "use_rag": False,
+        "use_cot": False, "one_shot_example": None,
+        "correction_iters": 0, "max_correction_iters": 2,
+    })
+
+    assert seen["one_shot"] is False
+    assert seen["cot"] is False
+
+
 def test_graph_skips_visual_when_use_image_false():
     seen_visual = {"called": False}
 

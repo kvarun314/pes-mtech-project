@@ -1,9 +1,12 @@
 """Ablation runner + metrics for the Phase 2 graph eval."""
 
+import random
+
 from sklearn.metrics import f1_score
 
 from agentic_sentiment.agents.graph import build_graph
 from agentic_sentiment.eval.checkpoint import append_result, iter_done_ids
+from agentic_sentiment.eval.one_shot import build_one_shot_pool, pick_one_shot_text
 
 ABLATIONS = {
     "text_only": {"use_metadata": False, "use_image": False, "use_rag": False},
@@ -20,12 +23,23 @@ def run_ablation(name: str, rows: list[dict], llm_fn, checkpoint_path: str, spec
     flags = ABLATIONS[name]
     graph = build_graph(llm_fn=llm_fn, spec_store=spec_store, max_correction_iters=max_correction_iters)
     done = iter_done_ids(checkpoint_path)
+    # One-shot + CoT framing is task framing, not multimodal context -- it's
+    # given to the Analyst for every ablation (matching both proven Phase 2
+    # notebooks and how the adapter was trained), never toggled by the
+    # text_only/+metadata/+image/+rag ladder above.
+    one_shot_pool = build_one_shot_pool(rows)
 
     for row in rows:
         if row["review_id"] in done:
             continue
+        # Seeded by review_id (not a shared, loop-advancing rng) so the same
+        # row gets the same one-shot example whether this call is a fresh
+        # run or a resume, and across every ablation.
+        rng = random.Random(row["review_id"])
         state = {
             **row, **flags,
+            "one_shot_example": pick_one_shot_text(row, one_shot_pool, rng),
+            "use_cot": True,
             "dissonance_method": dissonance_method,
             "correction_iters": 0,
             "max_correction_iters": max_correction_iters,
