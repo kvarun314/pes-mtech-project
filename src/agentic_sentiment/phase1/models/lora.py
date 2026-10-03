@@ -1,6 +1,6 @@
 """
-LLaMA-3-8B + LoRA loading (itmconf_dai2024_04021, Table 1).
-Freeze base model, train only LoRA on last 3 layers.
+LLaMA-3-8B + LoRA loading. Freeze base model, train only LoRA on the last
+ModelConfig.trainable_layers layers (default 8, the paper-closer config).
 
 Peft and transformers are imported only when load_model_and_tokenizer runs
 (not at module import), so the rest of the app can run without loading peft.
@@ -25,7 +25,7 @@ def get_lora_config(cfg: ModelConfig):
         r=cfg.lora_r,
         lora_alpha=cfg.lora_alpha,
         lora_dropout=cfg.lora_dropout,
-        target_modules=cfg.lora_target_modules or ["q_proj", "v_proj"],
+        target_modules=cfg.lora_target_modules or ["q_proj", "k_proj", "v_proj", "o_proj"],
         bias="none",
         task_type=TaskType.CAUSAL_LM,
         inference_mode=False,

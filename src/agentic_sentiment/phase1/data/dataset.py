@@ -36,15 +36,19 @@ def _infer_columns(df_columns: list[str]) -> tuple[Optional[str], Optional[str]]
 
 
 def load_raw_data(
-    path: str, text_column: str, label_column: str
+    path: str, text_column: str, label_column: str, max_rows: Optional[int] = None
 ) -> list[dict]:
-    """Load CSV or JSON into list of dicts with 'text' and 'rating'."""
+    """Load CSV or JSON into list of dicts with 'text' and 'rating'.
+
+    `max_rows` caps the CSV read (500k-row Kaggle pool; DataConfig.max_csv_rows
+    default 250k balances RAM vs diversity on Colab) -- matches
+    colab/llama_sentiment_baseline_train.ipynb cell 10's load_raw_data."""
     ext = os.path.splitext(path)[1].lower()
     rows: list[dict] = []
     if ext == ".csv":
         import pandas as pd
 
-        df = pd.read_csv(path)
+        df = pd.read_csv(path, nrows=max_rows)
         infer_text, infer_rating = _infer_columns(df.columns.tolist())
         use_text = (
             text_column
@@ -118,7 +122,8 @@ def build_sft_dataset(
         rows = dummy * 10
     else:
         rows = load_raw_data(
-            data_path, data_cfg.text_column, data_cfg.label_column
+            data_path, data_cfg.text_column, data_cfg.label_column,
+            max_rows=getattr(data_cfg, "max_csv_rows", None),
         )
         # Paper 2.1–2.2: TextBlob DQC, stratified sampling, optional VGST, oversample neutral
         rows = apply_paper_preprocessing(
@@ -149,9 +154,12 @@ def build_sft_dataset(
         prompts = []
         answers = []
         for ex in examples:
+            # Use one-shot for val too (pool is train-only) so val loss
+            # matches the actual eval protocol (one-shot + CoT) -- matches
+            # colab/llama_sentiment_baseline_train.ipynb cell 12 exactly.
             one_shot = (
                 get_one_shot_from_pool(one_shot_pool, data_cfg, rng)
-                if split == "train"
+                if split == "train" or (split == "val" and getattr(data_cfg, "use_one_shot", True))
                 else None
             )
             formatted = prepare_conversation_format(

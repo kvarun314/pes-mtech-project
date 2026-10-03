@@ -18,17 +18,21 @@ from typing import Optional
 
 @dataclass
 class ModelConfig:
-    """Base model and LoRA settings from the paper."""
+    """Base model and LoRA settings. Defaults match the proven, paper-closer
+    config in colab/llama_sentiment_baseline_train.ipynb cell 9/13 (not the
+    Table 1 literal baseline r=4/alpha=64/3-layers below it in that paper's
+    own Table 1 text) -- this is the config that actually produced Run 1's
+    Phase 1 numbers."""
 
     model_name_or_path: str = "meta-llama/Meta-Llama-3-8B"
     use_fast_tokenizer: bool = True
     trust_remote_code: bool = True
 
-    lora_r: int = 4
-    lora_alpha: int = 64
+    lora_r: int = 16
+    lora_alpha: int = 128
     lora_dropout: float = 0.0
     lora_target_modules: list | None = None
-    trainable_layers: int = 3
+    trainable_layers: int = 8
 
     use_rslora: bool = False
     use_dora: bool = False
@@ -43,12 +47,14 @@ class ModelConfig:
 
 @dataclass
 class TrainingConfig:
-    """Training hyperparameters from Table 1."""
+    """Training hyperparameters. Defaults match
+    colab/llama_sentiment_baseline_train.ipynb cell 9/16 exactly (the proven
+    config), not Table 1's literal baseline values."""
 
     output_dir: str = "./output"
     overwrite_output_dir: bool = True
 
-    num_train_epochs: int = 3
+    num_train_epochs: int = 5
     learning_rate: float = 5e-5
     weight_decay: float = 0.01
     max_grad_norm: float = 1.0
@@ -62,17 +68,22 @@ class TrainingConfig:
 
     optim: str = "adamw_torch"
     lr_scheduler_type: str = "cosine"
-    warmup_steps: int = 0
+    warmup_steps: int = 200
 
     logging_steps: int = 5
-    save_steps: int = 100
-    save_total_limit: int | None = 2
+    save_steps: int = 50
+    save_total_limit: int | None = 3
     evaluation_strategy: str = "steps"
-    eval_steps: int | None = 100
+    eval_steps: int | None = 50
     val_ratio: float = 0.2
 
-    max_samples: int | None = 2000
+    max_samples: int | None = 4000
     max_eval_samples: int | None = None
+
+    # Needed at this LoRA size (r=16, 8 layers) to avoid OOM on a T4 -- the
+    # notebook enables it by default and wires it into both
+    # TrainingArguments and model.gradient_checkpointing_enable().
+    gradient_checkpointing: bool = True
 
     neftune_alpha: float = 0.02
     upcast_layernorm: bool = True
@@ -93,7 +104,8 @@ class TrainingConfig:
 
 @dataclass
 class DataConfig:
-    """Data and prompt settings from the paper (Section 2.1–2.2)."""
+    """Data and prompt settings. Defaults match
+    colab/llama_sentiment_baseline_train.ipynb cell 9/16 exactly."""
 
     dataset_path: str | None = None
     text_column: str = "review_text"
@@ -103,12 +115,15 @@ class DataConfig:
     neutral_labels: tuple = (3,)
     positive_labels: tuple = (4, 5)
 
+    # Paper 500k-row pool; 250k balances Colab RAM vs diversity (set None for the full file).
+    max_csv_rows: Optional[int] = 250_000
+
     # Paper 2.1 Dataset sampling
     use_textblob_filter: bool = True  # DQC: discard polarity–rating misaligned reviews
     use_stratified_sampling: bool = True  # equal number per rating 1–5
     samples_per_rating: Optional[int] = None  # if set, use this per class; else from max_total
-    stratified_max_total: Optional[int] = None  # cap total after stratify (often = max_samples)
-    use_vgst: bool = False  # VGST 1% diversity sampling (expensive)
+    stratified_max_total: Optional[int] = 10_000  # larger pool before VGST/cap (paper-aligned diversity)
+    use_vgst: bool = True  # VGST ~1% (of post-DQC pool, floored at max_samples) diversity sampling
     vgst_batch_size: int = 32
     vgst_wishlist_len: int = 10
     vgst_target_ratio: float = 0.01

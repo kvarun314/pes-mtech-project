@@ -4,20 +4,28 @@ from agentic_sentiment.train.phase1_train import build_training_config
 from agentic_sentiment.train.run_dir import RunDir
 
 
-def test_build_training_config_applies_paper_closer_overrides():
+def test_build_training_config_is_paper_closer():
+    # No overrides needed anymore -- TrainingConfig's own defaults are the
+    # paper-closer config (matches colab/llama_sentiment_baseline_train.ipynb
+    # cell 9 exactly), not Table 1's literal baseline.
     cfg = build_training_config()
     assert cfg.max_samples == 4000
     assert cfg.num_train_epochs == 5
+    assert cfg.gradient_checkpointing is True
 
 
-def test_build_model_config_applies_paper_closer_overrides():
+def test_build_model_config_is_paper_closer():
     from agentic_sentiment.train.phase1_train import build_model_config
 
     cfg = build_model_config()
     assert cfg.lora_r == 16
     assert cfg.lora_alpha == 128
     assert cfg.trainable_layers == 8
-    assert cfg.lora_target_modules == ["q_proj", "k_proj", "v_proj", "o_proj"]
+    # None here is correct: get_lora_config()'s own fallback supplies
+    # ["q_proj", "k_proj", "v_proj", "o_proj"] when this is unset (tested
+    # directly in tests/phase1/test_lora.py), matching how the notebook's
+    # ModelConfig leaves this field unset too.
+    assert cfg.lora_target_modules is None
 
 
 def test_run_training_writes_config_json(tmp_path):

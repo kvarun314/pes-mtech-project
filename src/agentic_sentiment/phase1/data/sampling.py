@@ -162,6 +162,7 @@ def apply_paper_preprocessing(
 
     if getattr(data_cfg, "use_textblob_filter", True):
         rows = filter_by_textblob_polarity(rows)
+    n_after_dqc = len(rows)
 
     if getattr(data_cfg, "use_stratified_sampling", True):
         per_rating = getattr(data_cfg, "samples_per_rating", None)
@@ -176,9 +177,16 @@ def apply_paper_preprocessing(
         )
 
     if getattr(data_cfg, "use_vgst", False) and tokenizer is not None:
-        target_ratio = getattr(data_cfg, "vgst_target_ratio", 0.01)
-        target_size = max(1, int(len(rows) * target_ratio))
-        target_size = min(target_size, len(rows))
+        # VGST's ~1% diversity target is of the POST-DQC pool (before
+        # stratification shrank it), floored at max_samples -- VGST is the
+        # diversity-aware replacement for the later plain cap, not an
+        # additional ~1% squeeze on top of an already-small stratified
+        # pool. Matches colab/llama_sentiment_baseline_train.ipynb cell 10's
+        # apply_paper_preprocessing exactly.
+        ratio = getattr(data_cfg, "vgst_target_ratio", 0.01)
+        one_pct_of_pool = max(1, int(ratio * n_after_dqc))
+        cap = max_samples if max_samples else len(rows)
+        target_size = min(len(rows), max(cap, one_pct_of_pool))
         if target_size < len(rows):
             rows = vgst_sample(
                 rows,
