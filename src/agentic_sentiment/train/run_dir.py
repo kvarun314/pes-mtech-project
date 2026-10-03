@@ -7,6 +7,29 @@ import time
 from pathlib import Path
 
 
+def _escape_md(text: str) -> str:
+    """A `|` or newline in a value would otherwise break a Markdown table
+    row's column structure."""
+    return str(text).replace("|", "\\|").replace("\n", " ")
+
+
+def _flatten_scalars(config: dict, prefix: str = "") -> list[str]:
+    """`key=value` strings for every scalar in `config`, recursing into
+    nested dicts (e.g. phase1_train's {"model": {...}, "training": {...}}
+    config.json) with a dotted prefix, so history_row() doesn't silently
+    show nothing but a few top-level fields for a nested config. JSON has
+    no cycles, so this always terminates; the caller truncates the overall
+    string to 120 chars regardless of how deep a config happens to nest."""
+    parts = []
+    for key, value in config.items():
+        name = f"{prefix}{key}"
+        if isinstance(value, dict):
+            parts.extend(_flatten_scalars(value, prefix=f"{name}."))
+        elif not isinstance(value, list):
+            parts.append(f"{name}={value}")
+    return parts
+
+
 class RunDir:
     def __init__(self, base_dir: str, run_id: str | None = None):
         self.run_id = run_id or time.strftime("%Y-%m-%d_%H%M%S") + f"_{int(time.time() * 1e6) % 1_000_000}"
@@ -14,18 +37,19 @@ class RunDir:
         self.path.mkdir(parents=True, exist_ok=True)
         (self.path / "checkpoints").mkdir(exist_ok=True)
 
-        # Seed best_value/best_step from existing BEST.md if it exists (for resume after disconnect)
-        self._best_value, self._best_step = self._load_best_from_file()
+        # Seed best_value/best_step/best_metric_name from existing BEST.md if
+        # it exists (for resume after disconnect)
+        self._best_value, self._best_step, self._best_metric_name = self._load_best_from_file()
 
-    def _load_best_from_file(self) -> tuple[float | None, int | None]:
-        """Parse (value, step) from existing BEST.md if it exists.
+    def _load_best_from_file(self) -> tuple[float | None, int | None, str | None]:
+        """Parse (value, step, metric_name) from existing BEST.md if it exists.
 
         Format: "# Best checkpoint\n\nstep N\nmetric_name = value\n"
-        Returns (None, None) if not found/unparseable.
+        Returns (None, None, None) if not found/unparseable.
         """
         best_md_path = self.path / "BEST.md"
         if not best_md_path.exists():
-            return None, None
+            return None, None, None
 
         try:
             lines = [line.strip() for line in best_md_path.read_text().split("\n") if line.strip()]
@@ -34,15 +58,38 @@ class RunDir:
                 if line.startswith("step "):
                     step = int(line.removeprefix("step ").strip())
             if not lines or " = " not in lines[-1]:
-                return None, None
-            value = float(lines[-1].split(" = ")[1])
-            return value, step
+                return None, None, None
+            metric_name, _, raw_value = lines[-1].partition(" = ")
+            return float(raw_value), step, metric_name
         except (ValueError, IndexError):
             # Malformed file; fall back to None
-            return None, None
+            return None, None, None
 
     def write_config(self, config: dict) -> None:
         (self.path / "config.json").write_text(json.dumps(config, indent=2, default=str))
+
+    def history_row(self, run_type: str) -> str:
+        """One markdown table row summarizing this run, for a
+        CHECKPOINT_HISTORY.md log: run_id, type, best step/metric, and the
+        Drive path -- so every training run is documented even if nobody
+        downloads the checkpoint itself. Call after training completes
+        (reads config.json/BEST.md as they currently stand)."""
+        config_path = self.path / "config.json"
+        config_summary = "—"
+        if config_path.exists():
+            try:
+                config = json.loads(config_path.read_text())
+                config_summary = ", ".join(_flatten_scalars(config))
+            except (json.JSONDecodeError, OSError):
+                pass
+        if self._best_step is not None:
+            best = f"step {self._best_step}, {self._best_metric_name}={self._best_value}"
+        else:
+            best = "—"
+        return (
+            f"| {_escape_md(self.run_id)} | {_escape_md(run_type)} | {_escape_md(best)} | "
+            f"{_escape_md(config_summary[:120])} | `{self.path}` |"
+        )
 
     def save_best(self, trainer, tokenizer, dir_name: str) -> str:
         """Save the best model into self.path/dir_name. Prefers the
@@ -100,6 +147,7 @@ class RunDir:
             return
         self._best_value = value
         self._best_step = step
+        self._best_metric_name = metric_name
         (self.path / "BEST.md").write_text(
             f"# Best checkpoint\n\nstep {step}\n{metric_name} = {value}\n"
         )

@@ -1,0 +1,8 @@
+# Two Colab notebooks can append to these append-only logs around the same
+# time (e.g. 01 and 02 both write CHECKPOINT_HISTORY.md; 02 and 03 both
+# write RESULTS.md). A plain rebase on two end-of-file appends conflicts
+# even though both additions are wanted -- `union` keeps both sides' new
+# lines instead of asking a human to pick one, which is correct for a
+# pure append log (never used for a file anyone hand-edits/reorders).
+docs/CHECKPOINT_HISTORY.md merge=union
+docs/RESULTS.md merge=union

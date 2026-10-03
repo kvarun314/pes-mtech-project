@@ -64,6 +64,62 @@ def test_resume_preserves_best_value_across_reconnect(tmp_path):
     assert "step 200" not in best_md_2, f"Should not have step 200, got: {best_md_2}"
 
 
+def test_history_row_includes_run_id_type_best_and_path(tmp_path):
+    rd = RunDir(base_dir=str(tmp_path), run_id="2026-10-02_test")
+    rd.write_config({"lora_r": 16, "lora_alpha": 128})
+    rd.write_best(step=100, metric_name="eval_loss", value=0.42)
+
+    row = rd.history_row("phase1")
+
+    assert "2026-10-02_test" in row
+    assert "phase1" in row
+    assert "step 100" in row
+    assert "0.42" in row
+    assert "lora_r=16" in row
+    assert str(rd.path) in row
+
+
+def test_history_row_handles_missing_config_and_best(tmp_path):
+    rd = RunDir(base_dir=str(tmp_path), run_id="fresh_run")
+    row = rd.history_row("xlnet")
+    assert "fresh_run" in row
+    assert "xlnet" in row
+
+
+def test_history_row_flattens_nested_config_one_level(tmp_path):
+    # phase1_train.py's actual config.json shape: {"model": {...}, "training": {...}}
+    rd = RunDir(base_dir=str(tmp_path), run_id="run")
+    rd.write_config({
+        "model": {"lora_r": 16, "lora_alpha": 128},
+        "training": {"num_train_epochs": 5},
+        "data_path": "/content/data/Reviews.csv",
+    })
+
+    row = rd.history_row("phase1")
+
+    assert "model.lora_r=16" in row
+    assert "model.lora_alpha=128" in row
+    assert "training.num_train_epochs=5" in row
+    assert "data_path=/content/data/Reviews.csv" in row
+
+
+def test_history_row_shows_the_actual_best_metric_name(tmp_path):
+    rd = RunDir(base_dir=str(tmp_path), run_id="run")
+    rd.write_best(step=100, metric_name="eval_accuracy", value=0.9, greater_is_better=True)
+    row = rd.history_row("xlnet")
+    assert "eval_accuracy=0.9" in row
+    assert "eval_loss" not in row  # not hardcoded to the wrong metric name
+
+
+def test_history_row_escapes_pipe_and_newline_in_config_values(tmp_path):
+    rd = RunDir(base_dir=str(tmp_path), run_id="run")
+    rd.write_config({"note": "a | pipe\nand a newline"})
+    row = rd.history_row("phase1")
+
+    assert "note=a \\| pipe and a newline" in row  # pipe escaped, newline collapsed to a space
+    assert "\n" not in row
+
+
 def test_latest_checkpoint_returns_none_when_empty(tmp_path):
     rd = RunDir(base_dir=str(tmp_path), run_id="run")
     assert rd.latest_checkpoint() is None
