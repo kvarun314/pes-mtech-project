@@ -41,19 +41,58 @@ def test_push_commits_and_pushes_to_remote(tmp_path):
     assert "add results" in log.stdout
 
 
-def test_push_skips_commit_when_nothing_staged(tmp_path):
+def test_push_skips_commit_but_still_pushes_when_nothing_newly_staged(tmp_path):
     work, bare = _init_repo_with_remote(tmp_path)
     (work / "RESULTS.md").write_text("# Results\n")
     push_repo_changes(repo_dir=str(work), paths=["RESULTS.md"], message="first",
                        token="x", remote=f"file://{bare}")
 
-    # Re-run with the exact same (already-committed) content: nothing new to add.
+    # Re-run with the exact same (already-committed) content: nothing new to
+    # add, so no new commit -- but the push itself must still run (a no-op
+    # "already up to date" push succeeds), not get skipped outright, since
+    # a prior commit could be sitting locally-committed-but-unpushed after
+    # a retry.
     result = push_repo_changes(repo_dir=str(work), paths=["RESULTS.md"], message="first again",
                                 token="x", remote=f"file://{bare}")
-    assert "Nothing to commit" in result
+    assert "Pushed" in result  # push ran (as a harmless no-op), not silently skipped
 
     log = subprocess.run(["git", "-C", str(bare), "log", "--oneline"], capture_output=True, text=True)
-    assert log.stdout.count("first") == 1  # not duplicated
+    assert log.stdout.count("first") == 1  # no new commit was made -- not duplicated
+
+
+def test_push_retries_successfully_after_a_push_failure_with_a_prior_local_commit(tmp_path):
+    # Regression: a push that fails after the local commit already exists
+    # (e.g. a transient network error) must still be pushable on retry --
+    # not silently reduced to "nothing to commit, skipped" forever.
+    work, bare = _init_repo_with_remote(tmp_path)
+    (work / "RESULTS.md").write_text("# Results\n")
+
+    # First attempt: force the push step itself to fail, after the commit
+    # has already been made locally. `real_run` is captured before patching
+    # so the fallback branch doesn't recurse into the mock.
+    real_run = subprocess.run
+
+    def side_effect(args, **kwargs):
+        if args[0] == "git" and "push" in args:
+            return subprocess.CompletedProcess(args, returncode=1, stdout="", stderr="simulated failure")
+        return real_run(args, **kwargs)
+
+    with patch("agentic_sentiment.colab_sync.subprocess.run", side_effect=side_effect):
+        with pytest.raises(RuntimeError, match="git push failed"):
+            push_repo_changes(repo_dir=str(work), paths=["RESULTS.md"], message="first",
+                               token="x", remote=f"file://{bare}")
+
+    # The local commit exists; the bare remote does not have it yet.
+    log_before = subprocess.run(["git", "-C", str(bare), "log", "--oneline"], capture_output=True, text=True)
+    assert "first" not in log_before.stdout
+
+    # Retry (nothing newly staged, since the file is unchanged and already committed locally).
+    result = push_repo_changes(repo_dir=str(work), paths=["RESULTS.md"], message="first",
+                                token="x", remote=f"file://{bare}")
+    assert "Pushed" in result
+
+    log_after = subprocess.run(["git", "-C", str(bare), "log", "--oneline"], capture_output=True, text=True)
+    assert "first" in log_after.stdout
 
 
 def test_push_rebases_onto_changes_pushed_by_another_clone(tmp_path):
@@ -78,6 +117,40 @@ def test_push_rebases_onto_changes_pushed_by_another_clone(tmp_path):
     log = subprocess.run(["git", "-C", str(bare), "log", "--oneline"], capture_output=True, text=True)
     assert "from work1" in log.stdout
     assert "from work2" in log.stdout
+
+
+def test_push_rebases_cleanly_on_concurrent_appends_to_the_same_log_file(tmp_path):
+    # The realistic conflict case I3: two notebooks both append a new line
+    # to the SAME log file (CHECKPOINT_HISTORY.md/RESULTS.md) around the
+    # same time. A plain rebase of two end-of-file appends conflicts even
+    # though both additions are wanted -- the project's real .gitattributes
+    # (merge=union for these two files) must resolve it automatically.
+    work1, bare = _init_repo_with_remote(tmp_path, name="work1")
+    (work1 / ".gitattributes").write_text("LOG.md merge=union\n")
+    (work1 / "LOG.md").write_text("existing line\n")
+    _git("add", ".gitattributes", "LOG.md", cwd=work1)
+    _git("-c", "user.email=t@t.com", "-c", "user.name=t", "commit", "-m", "seed log", cwd=work1)
+    push_repo_changes(repo_dir=str(work1), paths=["LOG.md"], message="seed",
+                       token="x", remote=f"file://{bare}")
+
+    _git("clone", str(bare), str(tmp_path / "work2"), cwd=tmp_path)
+    work2 = tmp_path / "work2"
+    _git("branch", "-M", "main", cwd=work2)
+
+    with open(work1 / "LOG.md", "a") as f:
+        f.write("row from work1\n")
+    push_repo_changes(repo_dir=str(work1), paths=["LOG.md"], message="row from work1",
+                       token="x", remote=f"file://{bare}")
+
+    with open(work2 / "LOG.md", "a") as f:
+        f.write("row from work2\n")
+    result = push_repo_changes(repo_dir=str(work2), paths=["LOG.md"], message="row from work2",
+                                token="x", remote=f"file://{bare}")
+
+    assert "Pushed" in result
+    final = subprocess.run(["git", "-C", str(bare), "show", "main:LOG.md"], capture_output=True, text=True).stdout
+    assert "row from work1" in final
+    assert "row from work2" in final
 
 
 def test_push_raises_on_empty_token(tmp_path):

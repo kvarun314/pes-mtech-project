@@ -37,14 +37,18 @@ def push_repo_changes(repo_dir: str, paths: list[str], message: str, token: str,
     if add.returncode != 0:
         raise RuntimeError(f"git add failed: {_redact(add.stderr, token)}")
 
+    # If nothing is newly staged, there might still be a PRIOR local commit
+    # sitting unpushed (e.g. a retry after a push that failed partway
+    # through) -- don't skip straight to "nothing to do," or a retry would
+    # silently never push anything. Only skip the commit step itself; the
+    # pull+push below always runs (pushing an up-to-date branch is a
+    # harmless no-op in git).
     staged = run("diff", "--cached", "--quiet")
-    if staged.returncode == 0:
-        return f"Nothing to commit for {paths} -- skipped (already up to date)."
-
-    commit = run("-c", "user.email=colab@pes-mtech-project", "-c", "user.name=Colab Run",
-                  "commit", "-m", message)
-    if commit.returncode != 0:
-        raise RuntimeError(f"git commit failed: {_redact(commit.stderr, token)}")
+    if staged.returncode != 0:
+        commit = run("-c", "user.email=colab@pes-mtech-project", "-c", "user.name=Colab Run",
+                      "commit", "-m", message)
+        if commit.returncode != 0:
+            raise RuntimeError(f"git commit failed: {_redact(commit.stderr, token)}")
 
     remote_has_branch = subprocess.run(
         ["git", "-C", repo_dir, "ls-remote", "--exit-code", authed_remote, branch],
@@ -56,6 +60,10 @@ def push_repo_changes(repo_dir: str, paths: list[str], message: str, token: str,
             capture_output=True, text=True,
         )
         if pull.returncode != 0:
+            # Leave the clone in a clean (non-rebasing) state for a retry --
+            # a stuck mid-rebase checkout would make every subsequent call
+            # fail too, best-effort / outcome ignored on purpose.
+            subprocess.run(["git", "-C", repo_dir, "rebase", "--abort"], capture_output=True, text=True)
             raise RuntimeError(f"git pull --rebase failed: {_redact(pull.stderr, token)}")
 
     push = subprocess.run(

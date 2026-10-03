@@ -14,10 +14,12 @@ def _escape_md(text: str) -> str:
 
 
 def _flatten_scalars(config: dict, prefix: str = "") -> list[str]:
-    """`key=value` strings for every scalar in `config`, recursing one
-    level into nested dicts (e.g. phase1_train's {"model": {...}, "training":
-    {...}} config.json) with a dotted prefix, so history_row() doesn't
-    silently show nothing but a few top-level fields for a nested config."""
+    """`key=value` strings for every scalar in `config`, recursing into
+    nested dicts (e.g. phase1_train's {"model": {...}, "training": {...}}
+    config.json) with a dotted prefix, so history_row() doesn't silently
+    show nothing but a few top-level fields for a nested config. JSON has
+    no cycles, so this always terminates; the caller truncates the overall
+    string to 120 chars regardless of how deep a config happens to nest."""
     parts = []
     for key, value in config.items():
         name = f"{prefix}{key}"
