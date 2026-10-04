@@ -113,18 +113,30 @@ class RunDir:
         return str(dest)
 
     def latest_checkpoint(self) -> str | None:
-        """Path to the highest-step checkpoint already copied to Drive, or
-        None if this run dir has none yet. Pass this to
+        """Path to the highest-step COMPLETE checkpoint already copied to
+        Drive, or None if this run dir has none yet. Pass this to
         `Trainer.train(resume_from_checkpoint=...)` to resume a reconnected
         run instead of restarting at step 0 (which would also corrupt
         BEST.md/checkpoints/ if the run reuses the same run_id, since a
         fresh restart's early, worse evals would otherwise get copied over
-        the prior attempt's better checkpoints)."""
+        the prior attempt's better checkpoints).
+
+        Skips a checkpoint missing trainer_state.json: the Drive-copy
+        callback's shutil.copytree can be interrupted mid-copy by exactly
+        the kind of disconnect this method exists to recover from, and
+        resuming from a half-written checkpoint either crashes (missing
+        model weights) or silently restarts from step 0 on top of
+        otherwise-warm weights (missing trainer_state.json) -- falls back
+        to the next-newest complete one instead."""
         checkpoints = sorted(
             (self.path / "checkpoints").glob("checkpoint-*"),
             key=lambda p: int(p.name.split("-")[-1]),
+            reverse=True,
         )
-        return str(checkpoints[-1]) if checkpoints else None
+        for checkpoint in checkpoints:
+            if (checkpoint / "trainer_state.json").exists():
+                return str(checkpoint)
+        return None
 
     def best_checkpoint_dir(self) -> str | None:
         """Path to the Drive-side checkpoint directory for the best step

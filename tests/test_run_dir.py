@@ -131,6 +131,22 @@ def _write_fake_hf_checkpoint(output_dir: Path, step: int) -> None:
     (ckpt / "trainer_state.json").write_text(json.dumps({"global_step": step}))
 
 
+def test_latest_checkpoint_skips_incomplete_checkpoint_missing_trainer_state(tmp_path):
+    # Regression: a disconnect mid-copytree can leave the newest checkpoint
+    # directory without trainer_state.json. Resuming from it either
+    # crashes or silently restarts from step 0 -- fall back to the next-
+    # newest COMPLETE checkpoint instead.
+    rd = RunDir(base_dir=str(tmp_path), run_id="run")
+    complete = rd.path / "checkpoints" / "checkpoint-100"
+    complete.mkdir(parents=True)
+    (complete / "trainer_state.json").write_text("{}")
+
+    incomplete = rd.path / "checkpoints" / "checkpoint-200"
+    incomplete.mkdir(parents=True)  # no trainer_state.json -- half-copied
+
+    assert rd.latest_checkpoint() == str(complete)
+
+
 def test_checkpoint_callback_copies_and_reports_latest(tmp_path):
     pytest.importorskip("transformers")
     rd = RunDir(base_dir=str(tmp_path / "runs"), run_id="run")

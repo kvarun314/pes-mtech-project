@@ -12,20 +12,28 @@ def append_result(path: str, record: dict) -> None:
 
 
 def iter_done_ids(path: str) -> set[str]:
+    return {rid for record in read_records(path) if (rid := record.get("review_id")) is not None}
+
+
+def read_records(path: str) -> list[dict]:
+    """Every record in the checkpoint, skipping a truncated/malformed
+    trailing line (a crash can interrupt the last write) instead of
+    raising -- read the checkpoint back with this, not a bare
+    `[json.loads(l) for l in open(path)]`, once a long ablation run has
+    already finished and only the metrics step is left; losing the whole
+    run's results to one bad line at the very end is the worst time for
+    a strict parser to raise."""
     p = Path(path)
     if not p.exists():
-        return set()
-    done = set()
+        return []
+    records = []
     with p.open() as f:
         for line in f:
             line = line.strip()
             if not line:
                 continue
             try:
-                record = json.loads(line)
-                done.add(record["review_id"])
-            except (json.JSONDecodeError, KeyError):
-                # A crash can truncate the last line mid-write; skip it
-                # rather than losing visibility into every prior id.
+                records.append(json.loads(line))
+            except json.JSONDecodeError:
                 continue
-    return done
+    return records
