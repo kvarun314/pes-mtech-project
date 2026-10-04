@@ -39,22 +39,32 @@ class SpecStore:
         ])
         self._table = self._db.create_table("specs", data=rows, schema=schema, mode="overwrite")
 
-    def query(self, claim: str, asin: str, k: int = 3) -> list[dict]:
-        vec = self.embed_fn(claim)
+    def query(self, claim: str, asin: str, k: int = 3, _vec: list[float] | None = None) -> list[dict]:
+        vec = _vec if _vec is not None else self.embed_fn(claim)
         results = (
             self._table.search(vec)
             .where(f"asin = '{asin}'", prefilter=True)
             .limit(k)
             .to_list()
         )
-        return [{"asin": r["asin"], "field": r["field"], "text": r["text"]} for r in results]
+        return [
+            {"asin": r["asin"], "field": r["field"], "text": r["text"], "vector": r["vector"]}
+            for r in results
+        ]
 
     def grounding_score(self, claims: list[str], asin: str, threshold: float = 0.5) -> float:
+        # Each claim's embedding is already computed for the vector search --
+        # reused for the cosine check instead of calling embed_fn on the same
+        # text again. The match's own vector is already a search-result
+        # column (schema stores it), so it's reused too instead of
+        # re-embedding its text. Same scores as calling embed_fn twice per
+        # claim, half the embedding calls.
         if not claims:
             return 0.0
         hits = 0
         for claim in claims:
-            matches = self.query(claim, asin=asin, k=1)
-            if matches and _cosine(self.embed_fn(claim), self.embed_fn(matches[0]["text"])) >= threshold:
+            claim_vec = self.embed_fn(claim)
+            matches = self.query(claim, asin=asin, k=1, _vec=claim_vec)
+            if matches and _cosine(claim_vec, matches[0]["vector"]) >= threshold:
                 hits += 1
         return hits / len(claims)

@@ -51,3 +51,25 @@ def test_grounding_score_averages_across_claims(tmp_path):
 
     gf = store.grounding_score(["this has a USB-C port", "this has a Micro-USB port"], asin="B1")
     assert math.isclose(gf, 0.5)
+
+
+def test_grounding_score_embeds_each_claim_exactly_once(tmp_path):
+    # Regression: grounding_score previously called embed_fn twice per claim
+    # (once inside query() for the search, once again for the cosine check)
+    # and once more for the matched spec's own text, which query()'s result
+    # already carries as a stored vector column -- this is the single most
+    # repeated call in the full_graph/plus_rag_specs ablations (every row,
+    # every ablation, every correction iteration), so halving it compounds.
+    calls = []
+
+    def counting_embed(text: str) -> list[float]:
+        calls.append(text)
+        return _fake_embed(text)
+
+    store = SpecStore(db_path=str(tmp_path / "db"), embed_fn=counting_embed)
+    store.build(RECORDS)
+    calls.clear()  # build() embeds the spec records themselves; not what we're counting
+
+    store.grounding_score(["this has a USB-C port", "this has a Micro-USB port"], asin="B1")
+
+    assert calls == ["this has a USB-C port", "this has a Micro-USB port"]
