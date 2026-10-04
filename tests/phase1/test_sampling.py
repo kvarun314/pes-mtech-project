@@ -45,3 +45,24 @@ def test_vgst_disabled_leaves_stratified_pool_untouched():
     result = apply_paper_preprocessing(rows, cfg, tokenizer=_FakeTokenizer(), max_samples=4_000, seed=42)
 
     assert len(result) == 500  # exactly the stratified cap, no VGST shrink
+
+
+def test_filter_by_textblob_polarity_parallel_path_matches_serial_decisions():
+    # >= _PARALLEL_DQC_THRESHOLD rows forces the process-pool path; results
+    # must match the same discard/keep rules as the serial path below it.
+    from agentic_sentiment.phase1.data.sampling import filter_by_textblob_polarity
+
+    filler = [{"text": "it is fine I guess", "rating": 3} for _ in range(2_000)]
+    probes = [
+        {"text": "This is absolutely terrible, worst purchase ever.", "rating": 5},  # drop
+        {"text": "Absolutely wonderful, best purchase ever, love it.", "rating": 1},  # drop
+        {"text": "Absolutely wonderful, best purchase ever, love it.", "rating": 5},  # keep
+    ]
+    rows = filler + probes
+
+    result = filter_by_textblob_polarity(rows)
+    result_texts_ratings = {(r["text"], r["rating"]) for r in result}
+
+    assert ("This is absolutely terrible, worst purchase ever.", 5) not in result_texts_ratings
+    assert ("Absolutely wonderful, best purchase ever, love it.", 1) not in result_texts_ratings
+    assert ("Absolutely wonderful, best purchase ever, love it.", 5) in result_texts_ratings

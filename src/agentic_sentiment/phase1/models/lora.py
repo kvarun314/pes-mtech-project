@@ -68,6 +68,29 @@ def print_frozen_trainable_summary(model) -> None:
     print(f"  Trainable params: {n_trainable:,}  |  Frozen params: {n_frozen:,}", flush=True)
 
 
+def detect_gpu_memory_gb() -> float:
+    if not torch.cuda.is_available():
+        return 0.0
+    return torch.cuda.get_device_properties(0).total_memory / (1024**3)
+
+
+def detect_fast_training_config(min_gpu_gb: float = 20.0) -> dict:
+    """On a GPU with real headroom beyond the T4 (16GB) this project was
+    originally tuned for -- an L4/A100-class card -- gradient checkpointing
+    only costs ~20-30% speed for no benefit (nothing is close to OOMing),
+    and a bigger micro-batch with less accumulation keeps the same
+    effective batch size (paper's 3x4=12) while launching fewer, better-
+    utilized forward/backward passes. Below the threshold, returns {}
+    (keep the proven T4-safe defaults untouched)."""
+    if detect_gpu_memory_gb() < min_gpu_gb:
+        return {}
+    return {
+        "gradient_checkpointing": False,
+        "per_device_train_batch_size": 6,
+        "gradient_accumulation_steps": 2,
+    }
+
+
 def detect_use_4bit(min_fp16_gpu_gb: float = 18.0) -> bool:
     """Whether to load in 4-bit (QLoRA/nf4), matching
     colab/llama_sentiment_baseline_train.ipynb cell 14's own detection

@@ -4,14 +4,23 @@ The data/model logic (agentic_sentiment.phase1.*) is a faithful port of
 colab/llama_sentiment_baseline_train.ipynb's own cells -- that notebook is
 the proven source of the Run 1 Phase 1 numbers, so its ModelConfig/
 TrainingConfig/DataConfig dataclass DEFAULTS already are the paper-closer
-config (not Table 1's literal baseline); no overrides are needed here.
-Only the Trainer plumbing + Drive checkpoint callback is new in this module."""
+config (not Table 1's literal baseline). run_training() auto-detects a
+GPU with real headroom beyond the T4 this was tuned for (see
+detect_fast_training_config) and skips gradient checkpointing / widens
+the micro-batch on it, holding the effective batch size (and every other
+hyperparameter) fixed -- not a config override, an engineering-only
+speedup. Only the Trainer plumbing + Drive checkpoint callback is new in
+this module."""
 
 import json
 
 from agentic_sentiment.phase1.config import DataConfig, ModelConfig, TrainingConfig
 from agentic_sentiment.phase1.data.dataset import build_sft_dataset
-from agentic_sentiment.phase1.models.lora import detect_use_4bit, load_model_and_tokenizer
+from agentic_sentiment.phase1.models.lora import (
+    detect_fast_training_config,
+    detect_use_4bit,
+    load_model_and_tokenizer,
+)
 
 from agentic_sentiment.train.run_dir import RunDir
 
@@ -80,8 +89,12 @@ def run_training(data_path: str, run_dir: RunDir, overrides: dict | None = None)
     model_cfg = build_model_config()
     training_cfg = build_training_config()
     data_cfg = DataConfig()
-    if overrides:
-        training_cfg = dataclasses.replace(training_cfg, **overrides)
+    # Same effective batch (3x4=12) and same gradient math either way --
+    # only skips the T4-only checkpointing tax on a GPU that doesn't need
+    # it. Explicit overrides (if any) still win over the auto-detected ones.
+    merged_overrides = {**detect_fast_training_config(), **(overrides or {})}
+    if merged_overrides:
+        training_cfg = dataclasses.replace(training_cfg, **merged_overrides)
 
     run_dir.write_config({
         "model": dataclasses.asdict(model_cfg),

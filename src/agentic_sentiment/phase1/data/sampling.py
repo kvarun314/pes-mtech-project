@@ -2,10 +2,24 @@
 Paper Section 2.1–2.2: Data quality (TextBlob), stratified sampling, VGST, neutral oversampling.
 """
 
+import os
 import random
+from concurrent.futures import ProcessPoolExecutor
 from typing import Any, Optional
 
 from agentic_sentiment.phase1.config import DataConfig
+
+# Below this row count, process-pool startup overhead costs more than it
+# saves -- stay serial (also keeps small/test inputs deterministic and fast).
+_PARALLEL_DQC_THRESHOLD = 2_000
+
+
+def _polarity_or_none(text: str) -> Optional[float]:
+    try:
+        from textblob import TextBlob
+        return float(TextBlob(text).sentiment.polarity)
+    except (ValueError, TypeError, AttributeError):
+        return None
 
 
 def filter_by_textblob_polarity(rows: list[dict]) -> list[dict]:
@@ -13,19 +27,29 @@ def filter_by_textblob_polarity(rows: list[dict]) -> list[dict]:
     Paper 2.1 DQC: discard reviews where TextBlob polarity disagrees with rating.
     Discard if (polarity < 0 and rating > 3) or (polarity > 0 and rating < 3).
     Keep neutral polarity (== 0) with any rating.
+
+    Same decision per row either way -- only *how* polarities are computed
+    changes with input size (serial vs. a process pool), so output is
+    identical regardless of which path runs. On a 250k-row CSV, TextBlob
+    one-row-at-a-time was the single biggest silent wall-clock cost before
+    training even starts; this does not change which rows survive DQC.
     """
     try:
-        from textblob import TextBlob
+        import textblob  # noqa: F401
     except ImportError:
         return rows
 
+    texts = [r.get("text", "") for r in rows]
+    if len(rows) >= _PARALLEL_DQC_THRESHOLD:
+        with ProcessPoolExecutor(max_workers=os.cpu_count() or 4) as pool:
+            polarities = list(pool.map(_polarity_or_none, texts, chunksize=200))
+    else:
+        polarities = [_polarity_or_none(t) for t in texts]
+
     kept = []
-    for r in rows:
-        text = r.get("text", "")
+    for r, polarity in zip(rows, polarities):
         rating = r.get("rating", 3)
-        try:
-            polarity = float(TextBlob(text).sentiment.polarity)
-        except (ValueError, TypeError, AttributeError):
+        if polarity is None:
             kept.append(r)
             continue
         # Discard misaligned: negative polarity but high rating, or positive polarity but low rating
