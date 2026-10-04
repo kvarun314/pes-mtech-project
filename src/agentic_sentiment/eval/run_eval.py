@@ -1,6 +1,7 @@
 """Ablation runner + metrics for the Phase 2 graph eval."""
 
 import random
+import time
 
 from sklearn.metrics import f1_score
 
@@ -44,7 +45,9 @@ def run_ablation(name: str, rows: list[dict], llm_fn, checkpoint_path: str, spec
             "correction_iters": 0,
             "max_correction_iters": max_correction_iters,
         }
+        start = time.perf_counter()
         result = graph.invoke(state)
+        latency_s = time.perf_counter() - start
         append_result(checkpoint_path, {
             "review_id": row["review_id"],
             "gt_rating": row["gt_rating"],
@@ -57,7 +60,48 @@ def run_ablation(name: str, rows: list[dict], llm_fn, checkpoint_path: str, spec
             "self_corrected": result.get("self_corrected", False),
             "correction_iters": result.get("correction_iters", 0),
             "rationale": result.get("rationale", ""),
+            "latency_s": latency_s,
         })
+
+
+def average_grounding(records: list[dict]) -> float | None:
+    """Faithfulness (mission spec §14): mean rag_grounding across rows
+    where RAG ran (None where it didn't, e.g. text_only/plus_metadata/
+    plus_image). None if no row has a grounding score."""
+    scores = [r["rag_grounding"] for r in records if r.get("rag_grounding") is not None]
+    return sum(scores) / len(scores) if scores else None
+
+
+def average_correction_iters(records: list[dict]) -> float:
+    """Average reflection edges per input (mission spec §14)."""
+    if not records:
+        return 0.0
+    return sum(r.get("correction_iters", 0) for r in records) / len(records)
+
+
+def average_latency(records: list[dict]) -> float | None:
+    values = [r["latency_s"] for r in records if r.get("latency_s") is not None]
+    return sum(values) / len(values) if values else None
+
+
+def error_recovery(baseline_records: list[dict], improved_records: list[dict]) -> dict:
+    """Net error recovery between two ablations on the same rows (e.g.
+    text_only -> full_graph), matched by review_id so misaligned row order
+    between the two checkpoints can't silently produce a wrong count."""
+    baseline_by_id = {r["review_id"]: r for r in baseline_records}
+    fixed = regressed = 0
+    for row in improved_records:
+        rid = row["review_id"]
+        if rid not in baseline_by_id:
+            continue
+        base = baseline_by_id[rid]
+        base_correct = base["final_rating"] == base["gt_rating"]
+        improved_correct = row["final_rating"] == row["gt_rating"]
+        if not base_correct and improved_correct:
+            fixed += 1
+        elif base_correct and not improved_correct:
+            regressed += 1
+    return {"fixed": fixed, "regressed": regressed, "net": fixed - regressed}
 
 
 def compute_metrics(records: list[dict], key: str = "final_rating") -> dict:

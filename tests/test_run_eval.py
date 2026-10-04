@@ -1,6 +1,14 @@
 import json
 
-from agentic_sentiment.eval.run_eval import ABLATIONS, compute_metrics, run_ablation
+from agentic_sentiment.eval.run_eval import (
+    ABLATIONS,
+    average_correction_iters,
+    average_grounding,
+    average_latency,
+    compute_metrics,
+    error_recovery,
+    run_ablation,
+)
 
 
 def _stub_llm(prompt: str) -> str:
@@ -97,3 +105,46 @@ def test_compute_metrics_accuracy_and_mae():
     assert metrics["accuracy"] == 2 / 3
     assert round(metrics["mae"], 4) == round(1 / 3, 4)
     assert len(metrics["confusion"]) == 5
+
+
+def test_run_ablation_records_latency(tmp_path):
+    ckpt = tmp_path / "text_only.jsonl"
+    run_ablation("text_only", ROWS, llm_fn=_stub_llm, checkpoint_path=str(ckpt))
+
+    records = [json.loads(line) for line in ckpt.read_text().strip().split("\n")]
+    assert all(r["latency_s"] >= 0 for r in records)
+
+
+def test_average_grounding_ignores_rows_without_rag():
+    records = [{"rag_grounding": 1.0}, {"rag_grounding": 0.5}, {"rag_grounding": None}]
+    assert average_grounding(records) == 0.75
+
+
+def test_average_grounding_none_when_no_row_has_it():
+    assert average_grounding([{"rag_grounding": None}]) is None
+
+
+def test_average_correction_iters():
+    records = [{"correction_iters": 0}, {"correction_iters": 2}, {"correction_iters": 1}]
+    assert average_correction_iters(records) == 1.0
+
+
+def test_average_latency_ignores_missing():
+    records = [{"latency_s": 1.0}, {"latency_s": 3.0}, {"latency_s": None}]
+    assert average_latency(records) == 2.0
+
+
+def test_error_recovery_matches_by_review_id_not_row_order():
+    baseline = [
+        {"review_id": "r1", "gt_rating": 5, "final_rating": 3},  # wrong
+        {"review_id": "r2", "gt_rating": 5, "final_rating": 5},  # right
+        {"review_id": "r3", "gt_rating": 1, "final_rating": 1},  # right
+    ]
+    # Deliberately shuffled order vs. baseline -- must match by review_id.
+    improved = [
+        {"review_id": "r3", "gt_rating": 1, "final_rating": 1},  # still right
+        {"review_id": "r1", "gt_rating": 5, "final_rating": 5},  # fixed
+        {"review_id": "r2", "gt_rating": 5, "final_rating": 4},  # regressed
+    ]
+    result = error_recovery(baseline, improved)
+    assert result == {"fixed": 1, "regressed": 1, "net": 0}
