@@ -22,6 +22,28 @@ def test_build_training_args_checkpoints_sparsely_enough_for_drive_quota(tmp_pat
     assert args.eval_steps >= 1000
 
 
+def test_build_training_args_has_lr_warmup(tmp_path):
+    # Regression: no warmup meant AdamW hit full LR against a randomly-
+    # initialized classification head from step 1 on a batch_size=4 --
+    # observed collapsing permanently to predicting one majority class
+    # (identical accuracy/precision/recall/F1 at every eval step).
+    run_dir = RunDir(base_dir=str(tmp_path), run_id="xlnet_run")
+    args = build_training_args(run_dir, output_dir=str(tmp_path / "out"))
+    assert args.warmup_steps > 0
+
+
+def test_build_training_args_warmup_scales_with_train_size(tmp_path):
+    # 10% of total steps, derived from the real train-set size/batch/epochs
+    # -- not a fixed guess that's wildly wrong for a different dataset size.
+    run_dir = RunDir(base_dir=str(tmp_path), run_id="xlnet_run")
+    args = build_training_args(
+        run_dir, output_dir=str(tmp_path / "out"), num_train_epochs=3,
+        per_device_train_batch_size=4, num_train_samples=12800,
+    )
+    # 12800/4 = 3200 steps/epoch * 3 epochs = 9600 total -> 10% = 960
+    assert args.warmup_steps == 960
+
+
 def test_compute_metrics_matches_classical_evaluate_shape():
     pytest.importorskip("transformers")
     import numpy as np

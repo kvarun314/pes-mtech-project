@@ -11,13 +11,38 @@ MODEL_NAME = "xlnet-large-cased"
 
 
 def build_training_args(run_dir: RunDir, output_dir: str, num_train_epochs: int = 3,
-                         per_device_train_batch_size: int = 4, learning_rate: float = 2e-5):
+                         per_device_train_batch_size: int = 4, learning_rate: float = 2e-5,
+                         num_train_samples: int | None = None):
     from transformers import TrainingArguments
+
+    # Without warmup, AdamW hits full LR against a randomly-initialized
+    # classification head (sequence_summary/logits_proj, not in the
+    # xlnet-large checkpoint -- see the LOAD REPORT's MISSING rows) from
+    # step 1 on a tiny batch_size=4 -- observed in practice as a fast,
+    # permanent collapse to predicting one majority class (identical
+    # accuracy/precision/recall/F1 at every eval step from step 1000
+    # onward, the textbook always-predict-one-class signature: macro
+    # precision == accuracy/5, macro recall == 1/5). Wang et al.'s own
+    # XLNet baseline (Table 3) is a real, non-degenerate classifier
+    # (acc 0.916, recall 0.973) -- that paper's Table 1 hyperparameters
+    # are LoRA/LLaMA3-only and say nothing about XLNet's own training, so
+    # this isn't a paper-mandated value to preserve, just a missing
+    # standard safeguard against this exact failure mode. Installed
+    # transformers (5.x) dropped warmup_ratio -- only warmup_steps remains,
+    # so compute the equivalent 10% directly from the actual train size
+    # instead of guessing a fixed step count that may be wildly off for a
+    # different dataset size.
+    if num_train_samples:
+        total_steps = -(-num_train_samples // per_device_train_batch_size) * num_train_epochs
+        warmup_steps = max(1, int(0.1 * total_steps))
+    else:
+        warmup_steps = 100
 
     return TrainingArguments(
         output_dir=output_dir,
         num_train_epochs=num_train_epochs,
         per_device_train_batch_size=per_device_train_batch_size,
+        warmup_steps=warmup_steps,
         learning_rate=learning_rate,
         save_strategy="steps",
         # xlnet-large is ~1.4GB of weights + ~2.9GB of optimizer state per
@@ -92,7 +117,7 @@ def run_training(texts: list[str], labels: list[int], run_dir: RunDir,
     # and the checkpoint_callback already copies the checkpoints Drive-side;
     # staging HF's own (unpruned) checkpoint-* dirs there too would double
     # Drive usage for no benefit.
-    args = build_training_args(run_dir, output_dir=local_output_dir)
+    args = build_training_args(run_dir, output_dir=local_output_dir, num_train_samples=len(train_texts))
     trainer = Trainer(
         model=model, args=args, train_dataset=train_ds, eval_dataset=eval_ds,
         compute_metrics=_compute_metrics, callbacks=[run_dir.checkpoint_callback()],
