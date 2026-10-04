@@ -141,3 +141,65 @@
 - Next: unchanged — run the 4 Colab notebooks in order, review the auto-pushed
   `docs/RESULTS.md`/`docs/CHECKPOINT_HISTORY.md`/`results/run2/`, then update
   the paper with real Run 2 numbers.
+
+## 2026-10-04 — full dry-run audit before spending real Colab GPU credits
+- User: "make sure this is correct, I dont want to waste my colab credits." Ran two
+  independent full-notebook dry-run audits (both Opus) across all 4 notebooks against
+  the actual `src/agentic_sentiment/` source (not just internal self-consistency). Both
+  converged on the same real bugs, cross-validated via actual local repro (a tiny-model
+  Trainer resume simulation, a live HF parquet schema check against `raw_meta_Electronics`,
+  real transformers/peft version checks):
+  - Same-kernel `ModuleNotFoundError` on every notebook: an editable install's `.pth` file
+    is only read at Python interpreter startup, never picked up by a kernel already
+    running — `!pip` vs `%pip` never actually fixed this (that helped a different failure
+    mode). Fixed with `sys.path.insert(0, "/content/repo/src")` right before the import.
+  - 4-bit quant type mismatch: notebook 03's `BitsAndBytesConfig` never set
+    `bnb_4bit_quant_type`, defaulting to fp4 while the adapter was trained nf4 — would have
+    silently degraded every Phase 2 ablation result with no error. Fixed: `nf4` + explicit
+    `torch_dtype=torch.float16`.
+  - Notebook 01 would silently train on 30 dummy rows if the Kaggle download failed (no
+    assertion existed, and `build_sft_dataset` falls back to dummy data rather than
+    raising). Fixed with `assert os.path.isfile(DATA_PATH)` right after the download.
+  - XLNet had no `compute_metrics` (only `eval_loss` after hours of training) and was
+    scored on its own internal split, not the same `X_test` as the classical baselines —
+    fixed both.
+  - `RunDir.latest_checkpoint()` could return an incomplete checkpoint (Drive copy
+    interrupted mid-copytree) — fixed to skip and fall back to the next-newest complete one.
+  - `build_spec_records`/`load_balanced_slice` would crash on real data: Electronics'
+    actual `details` field is a JSON *string*, not a dict (test fixtures used dicts,
+    masking this).
+  - Notebook 01's fixed `run_id="phase1"` meant resume was previously dead code (always a
+    fresh timestamped folder); now added a stale-run print (resuming from what BEST.md, or
+    about to silently re-finish an already-complete run).
+  - Notebook 03's adapter-selection cell now prints `metrics.json`/`BEST.md`/adapter mtime
+    before committing GPU time to a possibly stale or incomplete adapter.
+  - Notebook 03 cells 14/16 now read checkpoints back via the already-existing
+    `eval.checkpoint.read_records` (tolerant of a truncated last line) instead of a bare
+    `[json.loads(l) for l in open(ckpt)]`.
+  - Caught and fixed my own mistake along the way: cell 16's first edit silently failed to
+    apply (indentation copied from cell 14's loop body didn't match cell 16's top-level
+    statement), leaving the brittle read in place until re-reading the notebook caught it.
+  - A grounding-cost fix (`_split_into_claims`, sentence-splitting review text before
+    comparing against spec snippets) was committed, then **reverted** after a focused
+    confirmation review actually ran the real `all-MiniLM-L6-v2` model against synthetic
+    spec records: the premise was backwards. A whole grounded review already scores
+    `g=1.00` against its product's title/description record; splitting into sentences
+    instead puts pure-sentiment sentences ("Would buy again.") into the per-claim
+    denominator, where they can never match a spec — dropping `g` to ~0.25 for exactly the
+    reviews that were grounded correctly before. Since `rag_grounding` depends only on
+    `review_text`, it's identical on every correction pass, so this would have forced
+    `full_graph`/`plus_rag_specs` into max correction iterations on *more* rows than
+    before, not fewer. Reverted; the original whole-review grounding comparison stands.
+  - Two Minor items accepted, not fixed: Phase 1's `create_one_shot_pool` uses the unseeded
+    module-level `random` (a resumed run sees different one-shot prompts than the original
+    attempt — cosmetic); a narrow edge case where `metrics.json`/`RESULTS.md` could
+    describe the final (not best) model's metrics after a resume where the best eval
+    happened strictly before a disconnect (the saved adapter itself is still correct via
+    `save_best()`'s protected-checkpoint preference).
+- 115 tests passing, all 4 notebooks JSON-valid. Merged to `main` (`320cc0c`).
+- **Status: safe to run the 4 notebooks on real Colab GPU now** (fresh clone from GitHub,
+  restart runtime, run 01 → 02 → 03 → 04 in order).
+- Reminder still open: an untracked `kaggle_json.py` in the repo root contains the user's
+  real Kaggle API credential (pasted directly in chat) — never committed, not referenced by
+  anything auto-pushed, but should be deleted once done with it; user may want to regenerate
+  that key via Kaggle's "Expire API Token" given it was pasted in plaintext.
