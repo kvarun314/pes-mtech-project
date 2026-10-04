@@ -146,7 +146,6 @@ def build_sft_dataset(
 
     one_shot_pool = create_one_shot_pool(train_rows, data_cfg, pool_size=5)
     max_len = training_cfg.max_seq_length
-    pad_id = tokenizer.pad_token_id or tokenizer.eos_token_id
 
     def _format_and_tokenize(
         examples: list[dict], split: str
@@ -173,11 +172,19 @@ def build_sft_dataset(
         labels_list = []
         for p, a in zip(prompts, answers):
             full_text = p + " " + a
+            # Truncate to max_len but don't pre-pad every example up to it --
+            # most reviews tokenize far shorter than 1024, and attention/FFN
+            # compute scales with however long each example actually is.
+            # Padded positions are masked out of the loss (labels=-100) and
+            # the attention mask regardless of where padding happens, so
+            # this changes zero gradients -- only wall-clock. The Trainer's
+            # DataCollatorForSeq2Seq (padding=True) pads each batch to its
+            # own longest example instead of a fixed 1024 for every batch.
             tok = tokenizer(
                 full_text,
                 truncation=True,
                 max_length=max_len,
-                padding="max_length",
+                padding=False,
                 return_tensors=None,
             )
             prompt_tok = tokenizer(
@@ -189,13 +196,7 @@ def build_sft_dataset(
             prompt_len = len(prompt_tok["input_ids"])
             input_ids = list(tok["input_ids"])
             labels = [-100] * prompt_len + input_ids[prompt_len:]
-            while len(input_ids) < max_len:
-                input_ids.append(pad_id)
-                labels.append(-100)
-            input_ids = input_ids[:max_len]
-            labels = labels[:max_len]
-            attention_mask = [1] * len(input_ids) + [0] * (max_len - len(input_ids))
-            attention_mask = attention_mask[:max_len]
+            attention_mask = [1] * len(input_ids)
             input_ids_list.append(input_ids)
             attention_mask_list.append(attention_mask)
             labels_list.append(labels)

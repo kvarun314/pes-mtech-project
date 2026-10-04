@@ -108,3 +108,32 @@ def test_build_trainer_only_passes_kwargs_transformers_training_arguments_accept
     sig = inspect.signature(TrainingArguments.__init__)
     for name in kwargs:
         assert name in sig.parameters, f"TrainingArguments no longer accepts {name!r}"
+
+
+def test_data_collator_pads_to_batch_longest_not_fixed_max_seq_length():
+    # Regression: the collator previously used padding="max_length", padding
+    # every batch to the full max_seq_length (1024) regardless of how short
+    # the actual examples were -- wasted attention/FFN compute every step.
+    # padding=True pads each batch to its own longest example instead.
+    pytest.importorskip("transformers")
+    from transformers import AutoTokenizer
+    from transformers.data.data_collator import DataCollatorForSeq2Seq
+
+    tokenizer = AutoTokenizer.from_pretrained("hf-internal-testing/llama-tokenizer")
+    tokenizer.pad_token = tokenizer.eos_token
+    collator = DataCollatorForSeq2Seq(
+        tokenizer=tokenizer, padding=True, pad_to_multiple_of=8,
+        label_pad_token_id=-100, return_tensors="pt",
+    )
+
+    short = {"input_ids": [1, 2, 3], "attention_mask": [1, 1, 1], "labels": [-100, -100, 3]}
+    long = {"input_ids": list(range(1, 51)), "attention_mask": [1] * 50, "labels": [-100] * 20 + list(range(21, 51))}
+
+    batch = collator([short, long])
+
+    # Batch padded to its own longest example (50, rounded up to a multiple
+    # of 8 = 56) -- not the model's own max_seq_length (1024).
+    assert batch["input_ids"].shape[1] <= 56
+    padded_positions = (batch["attention_mask"][0] == 0).sum().item()
+    assert padded_positions > 0
+    assert (batch["labels"][0][batch["attention_mask"][0] == 0] == -100).all()

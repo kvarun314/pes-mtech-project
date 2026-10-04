@@ -35,15 +35,20 @@ def build_training_config() -> TrainingConfig:
 
 def _build_trainer(model, tokenizer, train_ds, eval_ds, training_cfg, run_dir: RunDir):
     """Matches colab/llama_sentiment_baseline_train.ipynb cell 17's
-    TrainingArguments/data collator/gradient-checkpointing wiring exactly
-    (report_to is the one deliberate difference: "none" here, since this
-    runs non-interactively and doesn't need a tensorboard setup)."""
+    TrainingArguments/gradient-checkpointing wiring exactly (report_to is
+    the one deliberate difference: "none" here, since this runs non-
+    interactively and doesn't need a tensorboard setup). The data collator
+    is the other deliberate difference: padding=True (pad to each batch's
+    own longest example) instead of the notebook's padding="max_length"
+    (every batch padded to the full max_seq_length) -- dataset.py no
+    longer pre-pads examples either, for the same reason: padded positions
+    are masked out of the loss and attention regardless, so this only
+    changes wall-clock, not gradients."""
     from transformers import Trainer, TrainingArguments
     from transformers.data.data_collator import DataCollatorForSeq2Seq
 
     data_collator = DataCollatorForSeq2Seq(
-        tokenizer=tokenizer, padding="max_length",
-        max_length=training_cfg.max_seq_length,
+        tokenizer=tokenizer, padding=True,
         pad_to_multiple_of=8 if training_cfg.fp16 else None,
         label_pad_token_id=-100, return_tensors="pt",
     )

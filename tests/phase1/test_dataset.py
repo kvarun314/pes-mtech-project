@@ -68,3 +68,29 @@ def test_build_sft_dataset_uses_one_shot_for_val_when_enabled(tmp_path):
 
     assert len(train_ds) > 0
     assert len(val_ds) > 0
+
+
+def test_build_sft_dataset_does_not_pre_pad_examples_to_max_seq_length(tmp_path):
+    # Padded positions are masked out of the loss (labels=-100) and attention
+    # regardless of where padding happens -- pre-padding every example to
+    # max_seq_length wastes compute proportional to (max_seq_length - real
+    # length) on every single step. The DataCollator pads per-batch instead
+    # (tests/test_phase1_train.py's collator test covers that side).
+    csv_path = tmp_path / "reviews.csv"
+    with open(csv_path, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["review_text", "rating"])
+        for i in range(40):
+            writer.writerow([f"review number {i} with enough words", (i % 5) + 1])
+
+    data_cfg = DataConfig(
+        use_textblob_filter=False, use_vgst=False, oversample_neutral=False,
+        stratified_max_total=40, use_one_shot=False,
+    )
+    training_cfg = TrainingConfig(max_samples=40, max_seq_length=1024, val_ratio=0.2)
+
+    train_ds, _ = build_sft_dataset(str(csv_path), _FakeTokenizer(), data_cfg, training_cfg, seed=42)
+
+    lengths = {len(row["input_ids"]) for row in train_ds}
+    assert max(lengths) < 1024
+    assert len(lengths) > 1  # genuinely variable, not all padded to one length
