@@ -2,7 +2,6 @@
 -> Critic -> (loop to Analyst with critique, or END). Replaces Run 1's plain
 -Python-functions pipeline (colab/phase2_agentic_full_comparison.ipynb)."""
 
-import re
 from typing import Callable
 
 from langgraph.graph import END, StateGraph
@@ -57,16 +56,6 @@ Critique: Analyst said {analyst}, Visual said {visual}, RAG said {rag}.
 {grounding_block}Give one sentence of feedback for the Analyst to reconsider."""
 
 
-def _split_into_claims(review_text: str) -> list[str]:
-    """Sentence-split a review into separate claims for grounding_score(),
-    rather than embedding the whole multi-sentence review as one claim.
-    A simple punctuation split, not full NLP sentence segmentation --
-    good enough to shrink each claim toward spec-snippet length, which is
-    the thing that actually matters for the embedding comparison."""
-    sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", review_text) if s.strip()]
-    return sentences or [review_text]
-
-
 def build_graph(llm_fn: Callable[[str], str], spec_store=None, max_correction_iters: int = 2):
     def analyst_node(state: AgentState) -> AgentState:
         metadata_block = ""
@@ -106,17 +95,9 @@ def build_graph(llm_fn: Callable[[str], str], spec_store=None, max_correction_it
         ))
         rag_rating = parse_rating(text)
         # Real factual grounding (catches e.g. "claims USB-C, spec says
-        # Micro-USB"), independent of the sentiment vote above. Compared
-        # per-sentence, not as one giant claim: a multi-sentence review
-        # embedded whole against a short "Connector Type: USB-C"-style spec
-        # snippet is systematically far apart in a sentence embedding space
-        # on length/style alone, regardless of factual consistency -- that
-        # would force grounding near 0 (dissonance near 1) for nearly every
-        # review, triggering the self-correction loop's max iterations on
-        # almost every row. Splitting into sentences keeps each claim's
-        # length closer to the spec snippets it's compared against.
+        # Micro-USB"), independent of the sentiment vote above.
         rag_grounding = (
-            spec_store.grounding_score(claims=_split_into_claims(state["review_text"]), asin=state["asin"])
+            spec_store.grounding_score(claims=[state["review_text"]], asin=state["asin"])
             if has_spec_store else None
         )
         return {**state, "rag_rating": rag_rating, "rag_grounding": rag_grounding}

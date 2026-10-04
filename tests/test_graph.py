@@ -1,42 +1,6 @@
 import pytest
 
-from agentic_sentiment.agents.graph import SENTIMENT_INSTRUCTION, _split_into_claims, build_graph
-
-
-def test_split_into_claims_splits_on_sentence_boundaries():
-    claims = _split_into_claims("Great battery life. Screen is dim though! Would buy again?")
-    assert claims == ["Great battery life.", "Screen is dim though!", "Would buy again?"]
-
-
-def test_split_into_claims_falls_back_to_whole_text_when_no_sentences_found():
-    assert _split_into_claims("no punctuation here") == ["no punctuation here"]
-
-
-def test_split_into_claims_handles_empty_string():
-    assert _split_into_claims("") == [""]
-
-
-def test_rag_node_passes_multiple_sentence_claims_to_grounding_score():
-    seen_claims = {}
-
-    class _CapturingSpecStore:
-        def query(self, claim, asin, k=3):
-            return []
-
-        def grounding_score(self, claims, asin, threshold=0.5):
-            seen_claims["claims"] = claims
-            return 0.5
-
-    llm = _make_stub_llm({"Analyst": 5, "Visual": 5, "RAG": 5, "Critique": 5})
-    graph = build_graph(llm_fn=llm, spec_store=_CapturingSpecStore(), max_correction_iters=0)
-    graph.invoke({
-        "review_id": "r13", "review_text": "Great battery life. Screen is dim though.", "gt_rating": 5,
-        "meta_title": "Widget", "image_caption": "a widget", "asin": "B1",
-        "use_metadata": True, "use_image": True, "use_rag": True,
-        "correction_iters": 0, "max_correction_iters": 0,
-    })
-
-    assert seen_claims["claims"] == ["Great battery life.", "Screen is dim though."]
+from agentic_sentiment.agents.graph import SENTIMENT_INSTRUCTION, build_graph
 
 
 def _make_stub_llm(ratings_by_prompt_substring):
