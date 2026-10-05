@@ -1,0 +1,32 @@
+{
+  "text_only": {
+    "faithfulness": null,
+    "avg_correction_iters": 0.0,
+    "avg_latency_s": 0.3109736194210009
+  },
+  "plus_metadata": {
+    "faithfulness": null,
+    "avg_correction_iters": 0.0,
+    "avg_latency_s": 0.45202084472899606
+  },
+  "plus_image": {
+    "faithfulness": null,
+    "avg_correction_iters": 0.393,
+    "avg_latency_s": 1.0885382821250085
+  },
+  "plus_rag_reviews": {
+    "faithfulness": null,
+    "avg_correction_iters": 0.608,
+    "avg_latency_s": 1.8882310466214822
+  },
+  "full_graph": {
+    "faithfulness": 0.2905,
+    "avg_correction_iters": 1.5595,
+    "avg_latency_s": 16.138694088328034
+  },
+  "plus_rag_specs": {
+    "faithfulness": 0.2905,
+    "avg_correction_iters": 1.5595,
+    "avg_latency_s": 16.138694088328034
+  }
+}
