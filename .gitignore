@@ -21,3 +21,22 @@ paper/main.log
 paper/main.out
 paper/main.toc
 *.tar.gz
+
+# review text and training data (regenerable from scripts + public datasets), old/large adapters
+v2_reflective/e23/dev.jsonl
+v2_reflective/e23/eval.jsonl
+v2_reflective/e23/natural_test.jsonl
+v2_reflective/e23/natural_dev.jsonl
+v2_reflective/e23/p1/data_*/
+v2_reflective/e23/p1/[PR]_*.jsonl
+v2_reflective/e23/p1/halluc_R_generations.jsonl
+v2_reflective/p1final_*.jsonl
+v2_reflective/paper_protocol_rows.jsonl
+v2_reflective/p1_data/
+v2_reflective/pair_data/
+v2_reflective/pair_adapter/
+v2_reflective/p1_answeronly_adapter/
+v2_reflective/gate0_dev.json
+v2_reflective/phase2_trace*.json
+v2_reflective/e23/p1/*_train.jsonl
+v2_reflective/e23/p1/*_valid.jsonl

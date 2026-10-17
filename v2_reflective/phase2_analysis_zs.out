@@ -1,0 +1,44 @@
+dev-CV exact by gate margin: {0.2: 0.606, 0.3: 0.596, 0.5: 0.596, 0.8: 0.596, 1.01: 0.596}
+chosen gate 0.2
+
+Phase 1: exact 59.2% within1 91.8% MAE 0.502
+Phase 2: exact 59.3% within1 94.2% MAE 0.479
+delta +0.1 pts, 95% CI [-2.3, +2.5], fixed 80, regressed 79, McNemar p=1
+reflected on 55% rows, changed 21%
+
+per star (n, P1 recall -> P2 recall, P2 precision):
+ 1*  n=200  0.77 -> 0.74  prec 0.65 (P1 0.63)
+ 2*  n=200  0.30 -> 0.46  prec 0.54 (P1 0.61)
+ 3*  n=200  0.72 -> 0.54  prec 0.54 (P1 0.46)
+ 4*  n=200  0.41 -> 0.58  prec 0.52 (P1 0.63)
+ 5*  n=200  0.76 -> 0.65  prec 0.72 (P1 0.70)
+
+3-class polarity: P1 76.3% -> P2 79.5%
+binary (3* dropped): P1 88.8% -> P2 91.9%
+
+adjacent-star confusion (|err|==1 share of errors): P1 80% P2 86%
+
+P2 confusion (rows=true, cols=pred):
+  1 [149, 35, 9, 5, 2]
+  2 [61, 91, 38, 10, 0]
+  3 [16, 43, 107, 28, 6]
+  4 [3, 1, 38, 117, 41]
+  5 [1, 0, 5, 65, 129]
+
+by Phase-1 margin bucket (n, P1 exact, P2 exact):
+ margin 0-0.2: n=549 0.52 -> 0.52
+ margin 0.2-0.5: n=330 0.61 -> 0.61
+ margin 0.5-0.8: n=120 0.88 -> 0.88
+ margin 0.8-1.01: n=1 1.00 -> 1.00
+
+REGRESSED examples
+ gt=3 P1=3 P2=2 margin=0.09 | "I'm a fan of spicy things in many forms. Unfortunately this does not fall into that category. The jalepeno flavor is very mild. I tried it on a salmon burger and also on some bean and beef burritos. I"
+ gt=1 P1=1 P2=2 margin=0.13 | "I received one of these in a sampler package I had ordered of different flavored coffees from the Official Keurig.com website. I just didn't like the taste of it. I would not order this K-Cup again."
+ gt=3 P1=3 P2=2 margin=0.15 | "This is my first bag of chai tea and I have to say, it's extremely strong if you try to drink this straight. I can barely taste the tea itself, just a bit of bitter, and an extremely strong spice tast"
+ gt=5 P1=5 P2=4 margin=0.05 | 'This is a very satisfactory sugar replacement. If one uses too much it can be a bit bitter but not as bad as stevia. Easy to use in and on everything. I will buy it again. It is not as expensive as ot'
+
+FIXED examples
+ gt=2 P1=3 P2=2 margin=0.03 | 'Only two hot chocolate brands for the Tassimo and unfortunately neither one is made with real sugar.  Milka has the artificial (Sucralose) and the Suchards has HFCS.  The Milka is pretty bland with ve'
+ gt=2 P1=3 P2=2 margin=0.13 | "I started purchasing matcha about a year after they started selling it at Starbucks and Jamba Juice. live near San Francisco's Japantown and have tried several brands, varying in price from about $6 t"
+ gt=4 P1=5 P2=4 margin=0.03 | "My 30 pound puppy goes crazy for these, he really loves them.  He's just in heaven when he's chewing on one of these, but they only last about 20 minutes.  If you're looking for something that lasts m"
+ gt=4 P1=3 P2=4 margin=0.09 | 'This is a great hot cocoa as long as you read the box and only use the 8oz setting on your coffee make. Otherwise it will taste watered down. Also it is an instant coffee so dont be surprised by it.'
