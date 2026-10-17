@@ -7,23 +7,23 @@ from agentic_sentiment.train.phase1_train import build_training_config
 from agentic_sentiment.train.run_dir import RunDir
 
 
-def test_build_training_config_is_paper_closer():
-    # No overrides needed anymore -- TrainingConfig's own defaults are the
-    # paper-closer config (matches colab/llama_sentiment_baseline_train.ipynb
-    # cell 9 exactly), not Table 1's literal baseline.
+def test_build_training_config_matches_paper_table1():
+    # TrainingConfig's own defaults match Table 1 literally -- confirmed to
+    # be what actually trained the committed adapter (docs/PROGRESS.md
+    # 2026-10-09 git archaeology), not a stronger never-executed plan.
     cfg = build_training_config()
-    assert cfg.max_samples == 4000
-    assert cfg.num_train_epochs == 5
+    assert cfg.max_samples == 2000
+    assert cfg.num_train_epochs == 3
     assert cfg.gradient_checkpointing is True
 
 
-def test_build_model_config_is_paper_closer():
+def test_build_model_config_matches_paper_table1():
     from agentic_sentiment.train.phase1_train import build_model_config
 
     cfg = build_model_config()
-    assert cfg.lora_r == 16
-    assert cfg.lora_alpha == 128
-    assert cfg.trainable_layers == 8
+    assert cfg.lora_r == 4
+    assert cfg.lora_alpha == 64
+    assert cfg.trainable_layers == 3
     # None here is correct: get_lora_config()'s own fallback supplies
     # ["q_proj", "k_proj", "v_proj", "o_proj"] when this is unset (tested
     # directly in tests/phase1/test_lora.py), matching how the notebook's

@@ -44,9 +44,9 @@ Based only on the image, rate expected sentiment 1-5.
 Sentiment (1-5):"""
 
 RAG_PROMPT = """{instruction}
-
+{cot_block}
 RAG Prover: similar context: {context}
-Review: {review_text}
+{one_shot_block}Review: {review_text}
 Rate sentiment 1-5 given this grounding.
 Sentiment (1-5):"""
 
@@ -90,8 +90,11 @@ def build_graph(llm_fn: Callable[[str], str], spec_store=None, max_correction_it
         has_spec_store = spec_store is not None and state.get("asin")
         if has_spec_store:
             context += " " + " ".join(r["text"] for r in spec_store.query(state["review_text"], asin=state["asin"]))
+        cot_block = COT_PHRASE if state.get("use_cot", True) else ""
+        one_shot_block = f"Example:\n{state['one_shot_example']}\n\n" if state.get("one_shot_example") else ""
         text = llm_fn(RAG_PROMPT.format(
-            instruction=SENTIMENT_INSTRUCTION, context=context, review_text=state["review_text"]
+            instruction=SENTIMENT_INSTRUCTION, cot_block=cot_block, one_shot_block=one_shot_block,
+            context=context, review_text=state["review_text"]
         ))
         rag_rating = parse_rating(text)
         # Real factual grounding (catches e.g. "claims USB-C, spec says
@@ -111,9 +114,17 @@ def build_graph(llm_fn: Callable[[str], str], spec_store=None, max_correction_it
         # *ungrounded but unanimous* review score D=0, and a well-grounded
         # negative review score high, which is backwards). So the sentiment
         # term here always uses rag_rating (another vote on the same axis
-        # as H/Ev); grounding is folded in afterwards as an independent
-        # penalty via max(), so it can only raise D, never mask a real vote
-        # disagreement by cancelling it out.
+        # as H/Ev).
+        #
+        # Grounding does NOT feed the correction trigger (Run 2 measured:
+        # grounding_score() is near-binary and averages ~0.29 on real
+        # Amazon2023 data, so `max(d, 1-grounding)` forced correction on
+        # 78.6% of rows regardless of actual vote agreement, net -91
+        # accuracy vs. not correcting at all). Low grounding is reported as
+        # context in the critique instead -- it flags a likely
+        # user-expectation/spec mismatch without being able to force a
+        # correction pass by itself. Only real H/Ev/RAG vote disagreement
+        # can push d over threshold.
         rag_sentiment = normalize_rating(state["rag_rating"]) if state.get("rag_rating") else h
 
         if state.get("dissonance_method") == "stdev":
@@ -122,8 +133,6 @@ def build_graph(llm_fn: Callable[[str], str], spec_store=None, max_correction_it
             d = dissonance_stdev(votes)
         else:
             d = dissonance_norm(h, ev, rag_sentiment)
-            if state.get("rag_grounding") is not None:
-                d = max(d, 1.0 - state["rag_grounding"])
 
         iters = state.get("correction_iters", 0)
         max_iters = state.get("max_correction_iters", max_correction_iters)
@@ -148,8 +157,29 @@ def build_graph(llm_fn: Callable[[str], str], spec_store=None, max_correction_it
                 "correction_iters": iters + 1, "self_corrected": True,
             }
 
-        votes = [v for v in (state["analyst_rating"], state.get("visual_rating"), state.get("rag_rating")) if v]
-        final = max(set(votes), key=votes.count) if votes else state["analyst_rating"]
+        analyst_rating = state["analyst_rating"]
+        # Visual Verifier is excluded from the final vote (docs/PROGRESS.md
+        # 2026-10-09): with the text-only LoRA adapter fine-tuned solely on
+        # the Analyst's review-sentiment prompt, fed an out-of-distribution
+        # image-caption prompt under greedy decoding, visual_rating
+        # collapsed to a constant 3 on 96/96 real rows -- not weak signal,
+        # no signal at all, so "unanimous agreement" with it is spurious.
+        # It's still computed and logged (state["visual_rating"]) for
+        # diagnostics, just not used to decide final_rating until it has a
+        # real fix (a non-adapter-biased call, or real reviewer photos
+        # instead of manufacturer catalog images).
+        other_votes = [v for v in (state.get("rag_rating"),) if v]
+        # Analyst's vote is the default and only gets overridden when ALL
+        # other available verifiers independently agree with each other on
+        # a different rating -- not from a single other verifier differing
+        # (that degenerates to a plain tie, which also defaults to
+        # Analyst). A lone weak verifier can no longer swing the result;
+        # only unanimous outside agreement can (RAG alone measured
+        # 37.5-46.9% vs Analyst's 54.2%).
+        if len(other_votes) >= 2 and len(set(other_votes)) == 1 and other_votes[0] != analyst_rating:
+            final = other_votes[0]
+        else:
+            final = analyst_rating
         return {
             **state, "dissonance": d, "final_rating": final,
             "self_corrected": state.get("self_corrected", False),

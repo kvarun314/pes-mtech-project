@@ -47,7 +47,7 @@ greenfield:
 | Context ablation (bonus, §3.6a) | `colab/phase1_vs_phase2_amazon2023_presentation.ipynb` | Implemented: text-only vs. single enriched prompt (metadata + BLIP caption), no agent loop |
 | Small LangGraph demo | `colab/phase2_agentic_vs_phase1_amazon2023.ipynb` | Implemented as a real `langgraph.graph.StateGraph`, but as a smaller-scale demo with **toy RAG grounding** (metadata string, not real vector search) |
 | Final paper | `paper/main.tex` / `main.pdf` | Drafted with real Run 1 numbers already filled in (not a template) |
-| Full Phase 2 rebuild (LangGraph + spec RAG + Norm dissonance) | `src/agentic_sentiment/` + `colab/01_train_phase1.ipynb`..`04_report.ipynb` | Merged to `main` (`320cc0c`). 115 tests passing, all 4 notebooks JSON-valid. Phase 1 (`src/agentic_sentiment/phase1/`) is verified field-by-field against `colab/llama_sentiment_baseline_train.ipynb`'s actual cells (not just internally self-consistent) — it was vendored from a different, never-run package originally and had real algorithmic drift (VGST target size, SFT answer format, missing 4-bit QLoRA, missing gradient checkpointing) until re-ported. Phase 2's agent prompts (`src/agentic_sentiment/agents/graph.py`) are likewise checked against `colab/phase2_agentic_full_comparison.ipynb` (the notebook that produced Run 1's real numbers). Every Colab notebook auto-commits its own checkpoints/results to `docs/CHECKPOINT_HISTORY.md`/`docs/RESULTS.md`/`results/run2/` and pushes to `main` (needs a `GITHUB_TOKEN` Colab Secret; degrades to printing if unset). **A full pre-GPU-run dry-run audit (two independent full-notebook passes, cross-validated with real local repro) is complete** — same-kernel import crash, stale-run/adapter detection, 4-bit quant type mismatch, XLNet eval split, dummy-data-on-failed-download guard, and other findings fixed; a grounding "claim-splitting" fix was tried and then reverted after a confirmation review proved it backwards against the real embedding model (see `docs/PROGRESS.md`'s 2026-10-04 entry for the full list). **Safe to run the 4 notebooks on real Colab GPU now.** **Run 2 numbers still pending** — GPU steps (LoRA retrain, XLNet, live Phase 2 eval on Electronics) run on the user's Colab, not here. Design: `docs/superpowers/specs/2026-10-02-full-phase2-design.md`; plan: `docs/superpowers/plans/2026-10-02-full-phase2-plan.md`; full build log: `docs/PROGRESS.md`. |
+| Full Phase 2 rebuild (LangGraph + spec RAG + Norm dissonance) | `src/agentic_sentiment/` + `colab/01_train_phase1.ipynb`..`04_report.ipynb` | Merged to `main` (`320cc0c`). 115+ tests passing, all 4 notebooks JSON-valid. Phase 1 (`src/agentic_sentiment/phase1/`) is verified field-by-field against `colab/llama_sentiment_baseline_train.ipynb`'s actual cells (not just internally self-consistent) — it was vendored from a different, never-run package originally and had real algorithmic drift (VGST target size, SFT answer format, missing 4-bit QLoRA, missing gradient checkpointing) until re-ported. Phase 2's agent prompts (`src/agentic_sentiment/agents/graph.py`) are likewise checked against `colab/phase2_agentic_full_comparison.ipynb` (the notebook that produced Run 1's real numbers). Every Colab notebook auto-commits its own checkpoints/results to `docs/CHECKPOINT_HISTORY.md`/`docs/RESULTS.md`/`results/run2/` and pushes to `main` (needs a `GITHUB_TOKEN` Colab Secret; degrades to printing if unset). **A full pre-GPU-run dry-run audit (two independent full-notebook passes, cross-validated with real local repro) is complete** — same-kernel import crash, stale-run/adapter detection, 4-bit quant type mismatch, XLNet eval split, dummy-data-on-failed-download guard, and other findings fixed; a grounding "claim-splitting" fix was tried and then reverted after a confirmation review proved it backwards against the real embedding model (see `docs/PROGRESS.md`'s 2026-10-04 entry for the full list). **Run 2 is complete** (`results/run2/`, Amazon2023 Electronics, 2000 rows) — see the 2026-10-09 session summary below for what it found and what's been fixed since. Design: `docs/superpowers/specs/2026-10-02-full-phase2-design.md`; plan: `docs/superpowers/plans/2026-10-02-full-phase2-plan.md`; full build log: `docs/PROGRESS.md`. |
 
 **Important architecture wrinkle — read before touching Phase 2 code:** the
 notebook that actually produced the paper's numbers,
@@ -79,11 +79,220 @@ the mission spec (§7) expects, or keep extending `main.tex` consistently
 with what's already there — don't do both in parallel.
 
 **Gaps vs. what the mission spec below assumes exists:** no
-`requirements.txt`, no `output/final/` (the trained LoRA adapter lives only
-in Colab / as an `output_final.zip` uploaded per-session, never committed),
-no `RESULTS.md`, no `CODE_EXPLANATION.md` / `PROJECT_CHANGES_SUMMARY.md`.
-Treat every reference to those paths below as aspirational unless you
-create them.
+`requirements.txt`. `output/final/` (the trained Phase 1 LoRA adapter) **does
+exist and is committed** — see the session summary below, this was stale.
+`docs/RESULTS.md` exists and is kept current by the Colab notebooks. No
+`CODE_EXPLANATION.md` / `PROJECT_CHANGES_SUMMARY.md` at this path (there are
+same-named files one level up in `../`, not in this package).
+
+---
+
+## Session summary — 2026-10-09 (read this for current status + open items)
+
+**What this session did:** reviewed the completed Run 2 (Amazon2023
+Electronics, 2000 rows), found and fixed a real Phase 2 regression bug,
+validated the fix's prerequisites against real data, ran same-distribution
+classical baselines, and audited Phase 1's trained adapter against the
+cited paper (`itmconf_dai2024_04021.pdf`, Wang et al.). Full blow-by-blow
+log: `docs/PROGRESS.md`'s 2026-10-09 entries (three of them). This section
+is the condensed, current-state version.
+
+### Problem found: Phase 2 made Run 2 worse, not better
+Run 1 (Kaggle-era): Phase 1 16.1% -> Phase 2 38.7% (+22.6pp, the paper's
+headline claim). Run 2 (`results/run2/metrics_summary.json`): Phase 1
+`text_only` 50.95% -> Phase 2 `full_graph` 46.40% (**-4.55pp**, regression).
+
+**Root cause (confirmed by replaying `results/run2/*_checkpoint.jsonl`
+locally, no GPU needed):** `agents/graph.py`'s `critic_node` had
+`d = max(d, 1.0 - rag_grounding)` — a low RAG-grounding score alone could
+force the self-correction loop to fire, regardless of whether the
+Analyst/Visual/RAG agents actually disagreed on the rating. Measured:
+self-correction fired on 1573/2000 rows (78.6%, vs. Run 1's 46.1%); net
+effect across those rows was **-91 accuracy** (110 fixed, 201 regressed);
+`analyst_rating` alone (49.5%) beat `final_rating` (46.4%) — every agent
+stage after the Analyst was hurting, not helping.
+
+**Fix applied (`agents/graph.py`, committed to this branch):** removed the
+grounding floor from the dissonance trigger. Dissonance now comes only from
+real H/Ev/RAG vote disagreement (`dissonance_norm`); low grounding still
+rides along as context text in the critique *if* a correction already fired
+for a real disagreement, but can no longer trigger one by itself. Updated
+3 tests in `tests/test_graph.py` accordingly; 129 tests pass.
+
+**Verified on real inference, not just unit tests** (see the local-inference
+section below): this fix alone wasn't enough — a second bug in the same
+function was also masking it. Both are now fixed and confirmed together.
+
+### Grounding `spec_store.py` retested on real data — confirmed correct as-is
+The 2026-10-04 revert (see `docs/PROGRESS.md`) found that splitting a
+review into per-sentence "claims" before grounding-scoring it was backwards,
+using *synthetic* spec records. This session reran that exact comparison on
+**real** data (500 real Amazon2023 Electronics reviews + their real product
+metadata, streamed from `McAuley-Lab/Amazon-Reviews-2023`, embedded with the
+real `all-MiniLM-L6-v2` model): whole-review mean grounding 0.340 (170/500
+exact 1.0) vs. split-into-claims mean 0.144 (only 19/500 exact 1.0, 126 rows
+flip grounded->ungrounded). **Confirmed: splitting is worse on real data
+too. No code change made to `spec_store.py`.** The near-zero grounding on
+~66-71% of real rows is inherent to the task (review prose rarely restates
+spec facts closely enough to cross cosine 0.5 similarity), not a bug.
+
+### Classical baselines on Amazon2023 Electronics — surprising ceiling finding
+Retrained SVM/NB (unchanged `baselines/classical.py`, same Wang et al.
+configs) on a *fresh same-distribution* Amazon2023 Electronics sample (4000
+train / 1000 test, balanced, seed 42 — not the Kaggle data the existing
+69.7%/66.3% numbers used): **SVM 48.4%, NB 47.3%, Decision Tree 32.4%** —
+all *lower* than Phase 1 LLaMA's own cross-dataset-transfer number (50.95%).
+SVM's confusion matrix shows the same ordinal middle-class confusion as
+Phase 1/Phase 2. **Implication: the 65-70% target band in §3.5 below was
+calibrated on the Kaggle distribution and may not be a realistic ceiling on
+Amazon2023 Electronics at all, independent of training approach.** Factor
+this in before assuming a Phase 1 retrain on more Amazon2023 data will land
+anywhere near that band.
+
+### Phase 1 vs. the paper (`itmconf_dai2024_04021.pdf`) — mostly matches, one real drift found
+User asked to verify Phase 1 matches the cited paper as closely as
+possible. Findings:
+
+- **Good news:** the adapter actually on disk (`output/final/`,
+  `adapter_config.json` + `training_args.bin`) was trained with
+  hyperparameters matching the paper's **Table 1** almost exactly: lr=5e-5,
+  epochs=3, batch=3, grad_accum=4, warmup_steps=0, save_steps=100, cosine
+  scheduler, adamw_torch, fp16, LoRA r=4/alpha=64/dropout=0, 3 trainable
+  layers (29-31), target_modules=[q_proj, v_proj]. This is the paper's
+  literal config, not a loose approximation.
+- **Real drift found, and resolved via git archaeology.**
+  `src/agentic_sentiment/phase1/config/settings.py`'s `ModelConfig`/
+  `TrainingConfig` dataclass **defaults** did *not* match either the paper
+  or the committed adapter: `lora_r=16` (paper: 4), `lora_alpha=128` (paper:
+  64), `trainable_layers=8` (paper: 3), `num_train_epochs=5` (paper: 3),
+  `warmup_steps=200` (paper: 0), `save_steps=50` (paper: 100),
+  `max_samples=4000` (paper's Table 1 says 2000 — the paper's own §3 prose
+  contradicts its own Table 1 here, separately claiming "4,000 reviews for
+  training" and elsewhere "5,000 dataset rows"; Table 1 is treated as
+  authoritative since it's literally titled "hyper-parameter settings").
+  `colab/llama_sentiment_baseline_train.ipynb` documented this stronger
+  config as a **deliberate** choice ("Paper-closer defaults: LoRA on
+  q,k,v,o, r=16, α=128, last 8 layers — stronger than Table 1 (r=4, 3
+  layers) to approach reported accuracy"). **Resolved: commit timestamps
+  prove the committed adapter (`output/final/`, `6f159ce`, 2026-10-01
+  11:07:57) predates `src/agentic_sentiment/phase1/`'s own creation
+  (`29966f6`, 2026-10-02 14:19:24) by a day** — the stronger config was
+  never used to train anything; it was only ever a plan. The settings.py
+  docstring's claim that it "produced Run 1's Phase 1 numbers" was false.
+  **Fixed:** `settings.py`'s defaults now match Table 1 (and the adapter)
+  exactly; the two test files that pinned the old wrong defaults were
+  updated to match. 129 tests pass.
+- Data/prompt side (`DataConfig` in the same file) looks correctly aligned
+  with the paper's §2.1/§2.2 already: TextBlob DQC filter, stratified
+  balanced sampling, VGST at the paper's literal 1% ratio, neutral
+  oversampling ("deliberately increased their representation"), the exact
+  system-prompt wording, one-shot + the exact CoT phrase
+  ("Let's take it one step at a time"). No drift found here.
+
+### Hard constraints established this session
+- **Local machine is Apple M1, 16GB RAM, no CUDA.** Confirmed against
+  `../RESOURCES_AND_WHY_COLAB.md`: 4-bit LoRA training needs
+  CUDA+bitsandbytes, not supported on Apple Silicon. Any LoRA
+  *retrain* must run on Colab.
+- **Colab credits are at zero as of this session**, and the Run 2 GPU pass
+  that produced the regression above already cost real money. Rule going
+  forward: **no Colab run gets proposed casually** — everything gets
+  validated locally first (same bar as the 2026-10-04 pre-GPU dry-run
+  audit), with evidence shown, before asking for GPU time.
+- A local venv now exists (`.venv/`, core deps + `pytest` +
+  `sentence-transformers`, all CPU-only) for exactly this kind of
+  local-first validation work — `.venv/bin/pytest` runs clean (129 passed).
+
+### Local CUDA-free inference path — built and verified this session
+`llama.cpp` (Homebrew, Metal-accelerated) + the committed adapter converted
+to GGUF LoRA (`convert_lora_to_gguf.py`, from a shallow clone of the
+llama.cpp repo in `.scratch/`) + a Q4_K_M GGUF of the base model
+(`QuantFactory/Meta-Llama-3-8B-GGUF`, 4.6GB, ungated community requant —
+the original `meta-llama/Meta-Llama-3-8B` is gated). Served via
+`llama-server -m <gguf> --lora .scratch/phase1_lora.gguf -c 8192`. Zero
+Colab cost; all of this lives in `.scratch/` (not committed — the GGUF and
+cloned repo are multi-GB scratch artifacts, regenerate if needed from the
+commands above).
+
+**Four real bugs found and fixed this session via real inference** (not
+just unit tests), all in `agents/graph.py`'s `critic_node`/`rag_node`:
+
+1. **Dissonance floor forced correction on low grounding alone**,
+   independent of real agent disagreement (78.6% over-trigger rate on
+   Run 2). Fixed: dissonance now comes only from real H/Ev/RAG vote
+   disagreement.
+2. **Tie-break let the weaker RAG vote overrule a correct Analyst call
+   ~50% of the time** (RAG alone 37.5% vs Analyst's 54.2%; right only 8%
+   of the times they disagreed). Fixed: ties default to `analyst_rating`.
+3. **RAG Prover's prompt was missing the one-shot+CoT framing** the
+   Analyst gets. Fixed: added it — raised RAG's standalone accuracy
+   37.5% -> 46.9% — though this improvement turned out structurally
+   invisible to `final_rating` under fix (2) alone, since with only 2
+   possible votes, ties always deferred to Analyst regardless of RAG's
+   quality.
+4. **Visual Verifier collapsed to a constant output (`visual_rating == 3`
+   on 96/96 real rows)** once real product images were actually wired in
+   and tested — not weak signal, no signal at all. A first attempt
+   (require unanimous non-Analyst agreement to override Analyst, instead
+   of a lone vote) didn't help — the 4 cases where it would have mattered
+   were visual/RAG unanimously agreeing on the same wrong constant.
+   **Fixed:** Visual Verifier's vote is excluded from `final_rating`
+   entirely (still runs, still logged for diagnostics).
+   **Root cause, found by further controlled testing (corrects an earlier
+   wrong guess that this was an adapter problem):** disabling the LoRA
+   adapter entirely (`llama-server`'s per-request `lora` scale override)
+   gave the *identical* result on real reviewer-submitted condition photos
+   (not just catalog shots) — 6/100 accuracy, 99/100 still "3", adapter ON
+   or OFF. The actual cause: BLIP image captioning describes objects, not
+   condition ("a laptop computer with a blue screen" for a 1-star review —
+   no sentiment survives captioning), for catalog *and* real photos alike.
+   No downstream LLM can recover signal captioning never captured. A real
+   fix needs a genuine vision-language model reasoning over pixels
+   directly (e.g. LLaVA, matching why the base paper itself compares
+   against LLaVA1.5-7B) — materially bigger, separate undertaking, not a
+   quick follow-up to this session's fixes.
+
+**Final verified result (96-row real-data subset, real LLaMA-3-8B+LoRA
+inference, all four fixes together):**
+
+| config | accuracy | macro_f1 | mae |
+|---|---|---|---|
+| text_only | 52.08% | 0.5047 | 0.5625 |
+| full_graph | **54.17%** | 0.5190 | 0.5521 |
+
+error_recovery vs. text_only: **9 fixed, 7 regressed, net +2** —
+self-correction is genuinely net-positive now, not Run 2's buggy -91.
+
+Caveats: n=96 not 2000 (real statistical noise at this scale); Visual
+Verifier contributes nothing right now (excluded, and this is believed
+final, not a stopgap — see the captioning root cause above); RAG's
+prompt-quality win is real but currently can't move `final_rating` past
+matching Analyst alone, given the architecture's 2-vote tie-to-Analyst
+rule.
+
+### Visual Verifier swap attempted — conclusively ruled out, not just unfinished
+Tried three independent model architectures: BLIP-caption-then-text-LLM (the original), then
+`moondream2` (officially maintained GGUF, mechanically worked but refused/gave out-of-range
+answers to the rating instruction), then `Qwen2-VL-2B` (converted from HF directly, in-range
+clean answers this time) — **which predicted "5" on all 5 test images spanning true ratings 1
+through 5**, real reviewer-submitted condition photos, not catalog shots. Two different failure
+modes (constant "3" vs. constant "5"), three different models, same underlying result.
+**Conclusion: "rate reviewer satisfaction from a product photo" is frequently not answerable
+from visual content alone, regardless of model capability** — dissatisfaction usually comes
+from factors invisible in a static image (failed after a week, didn't perform as expected, poor
+support), and a product photo mostly shows the product looking normal regardless of the actual
+ownership experience. This is a task-definition limit, not a tooling gap. Visual Verifier's
+exclusion from the final vote (already implemented, see above) is the right permanent answer,
+not a stopgap — further VLM swaps are not expected to change this.
+
+### Remaining path to "better results" from here, in order
+1. (Optional, cheap) Rerun this verification at a larger scale (e.g.
+   300-500 rows, not the full 2000 — that would run hours) for a tighter
+   number than n=96.
+2. Consider a Phase 1 retrain on more same-distribution Amazon2023 data,
+   with the lower apparent ceiling (see classical-baseline finding above)
+   factored into expectations, and only once Colab credits are available
+   again — and only using `settings.py`'s now-paper-correct defaults.
 
 ---
 

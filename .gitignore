@@ -3,3 +3,21 @@
 .venv/
 __pycache__/
 *.pyc
+
+# local-only: secrets, scratch, big or rebuildable data, intermediate checkpoints, backups
+kaggle_json.py
+.scratch/
+.ppt_assets/
+.claude/
+.superpowers/
+.pytest_cache/
+v2_reflective/mlx_model
+v2_reflective/llama-server.log
+v2_reflective/e23/pool.jsonl
+v2_reflective/e23/evid_train.jsonl
+v2_reflective/**/[0-9][0-9][0-9][0-9][0-9][0-9][0-9]_adapters.safetensors
+paper/main.aux
+paper/main.log
+paper/main.out
+paper/main.toc
+*.tar.gz

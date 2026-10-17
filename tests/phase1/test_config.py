@@ -17,33 +17,35 @@ def test_get_default_config_returns_dict_with_three_keys():
     assert isinstance(cfg["data"], DataConfig)
 
 
-def test_model_config_paper_closer_defaults():
-    # Matches colab/llama_sentiment_baseline_train.ipynb cell 9 exactly --
-    # the proven, paper-closer config that produced Run 1's Phase 1 numbers,
-    # not Table 1's literal baseline (r=4, alpha=64, 3 layers).
+def test_model_config_matches_paper_table1():
+    # Matches Table 1 literally (r=4, alpha=64, 3 layers) -- confirmed via
+    # git archaeology (docs/PROGRESS.md 2026-10-09) to be what actually
+    # trained the committed adapter at output/final/, which predates this
+    # package by a day. A stronger r=16/alpha=128/8-layer config was once
+    # claimed here as "paper-closer" and "what produced Run 1's numbers" --
+    # that was never true; it was only ever a plan for an unexecuted retrain.
     m = ModelConfig()
-    assert m.lora_r == 16
-    assert m.lora_alpha == 128
+    assert m.lora_r == 4
+    assert m.lora_alpha == 64
     assert m.lora_dropout == 0.0
-    assert m.trainable_layers == 8
+    assert m.trainable_layers == 3
     assert m.model_name_or_path == "meta-llama/Meta-Llama-3-8B"
 
 
-def test_training_config_paper_closer_defaults():
+def test_training_config_matches_paper_table1():
     t = TrainingConfig()
-    assert t.num_train_epochs == 5
+    assert t.num_train_epochs == 3
     assert t.learning_rate == 5e-5
     assert t.max_grad_norm == 1.0
     assert t.per_device_train_batch_size == 3
     assert t.gradient_accumulation_steps == 4
     assert t.max_seq_length == 1024
-    assert t.max_samples == 4000
+    assert t.max_samples == 2000
     assert t.val_ratio == 0.2
     assert t.neftune_alpha == 0.02
-    # Needed at this LoRA size to avoid OOM on a T4; missing entirely before.
     assert t.gradient_checkpointing is True
-    assert t.warmup_steps == 200
-    assert t.save_steps == 50
+    assert t.warmup_steps == 0
+    assert t.save_steps == 100
     assert t.save_total_limit == 3
     assert t.eval_steps == 50
 
