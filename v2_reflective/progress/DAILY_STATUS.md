@@ -5,9 +5,9 @@
 | Oct 19 | base LLaMA (no LoRA) dev + eval | DONE (moved earlier, overnight Oct 19-20) | arm `base` in eval_p1.py |
 | Oct 20 | base LLaMA natural_test | DONE | ran in same overnight queue |
 | Oct 21 | base_vs_lora.py + make_figures.py | DONE (Oct 20, auto) | figures in paper/figures/e23 |
-| Oct 22 | Gate 0 build prompts | todo | |
-| Oct 23 | Gate 0 run | todo | |
-| Oct 24 | Gate 0 score + verdict | todo | hard stop before Nov 1 |
+| Oct 22 | Gate 0 build prompts | DONE (Oct 20) | gate0_e23.py |
+| Oct 23 | Gate 0 run | DONE (Oct 20) | |
+| Oct 24 | Gate 0 score + verdict | DONE (Oct 20): FAIL, LLM 54.2 vs stack 73.3 | hard stop met |
 | Oct 25 | rest / catch-up + week_01 note | todo | catch-up slot |
 | Oct 26 | DistilBERT 2K | todo | |
 | Oct 27 | baselines table | todo | |
@@ -28,3 +28,4 @@
 | 2026-10-18 | `../results_archive/backups/pes_20261018_0007.tar.gz` | PASSED | NOT YET (needs user: destination?) |
 | 2026-10-18 | git branch `e23-leakfree-oct2026` `a1ec9fa` (code, logs, probs, small adapters; no review text) | `HEAD == origin` verified | pushed to GitHub (code only; data/.scratch not included) |
 | 2026-10-20 | `../results_archive/backups/pes_20261020_1842.tar.gz` | PASSED | NOT YET (needs user: destination?) |
+| 2026-10-20 | git `f6c4cff` pushed to origin/e23-leakfree-oct2026 | HEAD==origin verified | GitHub |

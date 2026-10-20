@@ -1,0 +1,6 @@
+disagreement rows 434, scored 434, truth in pair 371 (dev 193, natural_dev 178)
+pair accuracy: LLM adjudicator 54.2% | stack 73.3% | Evidence always 64.2% | Analyst always 35.8%
+LLM - stack: -19.1 pts, 95% CI [-25.3,-12.4], LLM-only right 46, stack-only right 117
+  dev: n=193 LLM 55.4% stack 71.0%
+  natural_dev: n=178 LLM 52.8% stack 75.8%
+VERDICT: FAIL (criterion: LLM >= stack +3 pts and CI excludes 0)
