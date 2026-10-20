@@ -256,3 +256,12 @@ SELF-REFLECTION is a core feature. Every step, number, and failure is logged her
 - LLM - stack: -19.1 pts, CI [-25.3,-12.4] (LLM-only right 46, stack-only right 117). Worse than just trusting Evidence (64.2). Same on both splits (55.4/71.0 dev, 52.8/75.8 natural_dev).
 - Verdict per pre-declared criterion: FAIL. Adjudicator dropped; no prompt iteration (single run as declared). Replicates the Kaggle Gate 0 failure (52-57%), now with Evidence n-gram citations added. Phase 2 stays: Analyst + Evidence + LR Reflector (+ routing as P2-1 option). Oct 30 slot -> optional LoRA seed 2 (adapter variance).
 - Paper angle consequence: "agentic LLM verification helps" is not supported; leaning angle B (leak audit + preprocessing ablation + honest modest stack result + negative result for LLM adjudication). Final decision Nov 1 after baselines + variance.
+
+## 2026-10-20 — Variance run (S3). PRE-DECLARED BEFORE ANY OUTCOME (`e23/variance.py`, output `e23/variance.out`, per-seed `e23/variance_seed<k>.json`, resumable)
+- 5 seeds (0-4). Per seed: Evidence refit (same config as evidence.py: title+text, 1-2gram, 400K, C=3) on a bootstrap resample (with replacement, 100K) of evid_train; stacker C0 (A+E log-probs, LR C=1) fit on a bootstrap resample of the 500 dev rows. Analyst probs (arm R) fixed (adapter variance NOT covered; second LoRA seed is the optional Oct 30 job).
+- Reported per seed and mean +/- sd, on eval and natural_test: Evidence exact/macroF1, stack exact/macroF1, stack minus Evidence. Purpose: is +1.5 (eval) / +4.0 (natural_test) stable against evidence-training and stacker-fit randomness. No selection; eval/natural_test read as already frozen.
+
+## 2026-10-20 — RESULT variance run (S3). Output `e23/variance.out`, `e23/variance_seed0-4.json`.
+- Stack minus Evidence exact: eval +2.74 +/- 1.25 pts (seeds 1.6, 2.7, 4.1, 1.4, 3.9); natural_test +4.27 +/- 1.14 (4.7, 2.6, 4.95, 3.65, 5.45). macroF1: eval +0.027 +/- 0.013, natural_test +0.043 +/- 0.007. Positive in all 5 seeds on both splits.
+- Caveat: bootstrap Evidence is weaker (eval 60.0 +/- 0.8, vs 62.4 for the single frozen fit; bootstrap duplicates ~37% of rows) so the stack gain is larger against a weaker Evidence. The frozen +1.5 (eval, ns) is the low end; honest range for the stack gain on eval is about +1.4 to +4.1 depending on Evidence/dev draw, sign stable. Adapter (LoRA) variance not covered.
+- Reading: the stack gain is real in sign but small and sensitive to how strong the Evidence model is; report frozen values with this spread, not the best seed.

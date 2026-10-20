@@ -5,3 +5,4 @@ Routing (P2-1) ties C0 and lowers regressions; extra features (P2-3) add nothing
 Next: Oct 19 base-LLaMA scoring; Oct 21 CI of C2 vs prior-adjusted Evidence; Oct 22-24 adjudicator Gate 0.
 Day 2 (Oct 19-20 overnight): base LLaMA (no LoRA) scored on dev/eval/natural_test; base_vs_lora analysis done. Base eval 34.3 vs LoRA 54.0 (+19.7). Stack [base+E] 63.7 ~ [R+E] 63.9 ~ [base+R+E] 63.7 on eval: stack gain comes from a second signal, not the fine-tune. C2 vs prior-adjusted Evidence on natural_test +2.7 [+1.4,+4.0]. Next: Oct 22-24 Gate 0 adjudicator.
 Day 3 (Oct 20): Gate 0 adjudicator FAILED (LLM 54.2 vs stack 73.3 pair acc, CI -25.3..-12.4). Ahead of schedule: Oct 19-24 jobs all done. Next: DistilBERT 2K baseline (Oct 26 slot), variance run.
+Variance run done Oct 20: stack gain positive in 5/5 seeds (eval +2.7+/-1.3, natural_test +4.3+/-1.1). Both Nov-1 hard stops (Gate 0, variance) now met.

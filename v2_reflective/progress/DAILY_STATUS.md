@@ -12,7 +12,7 @@
 | Oct 26 | DistilBERT 2K | todo | |
 | Oct 27 | baselines table | todo | |
 | Oct 28 | DistilBERT 20K overnight | todo | first to cut if behind |
-| Oct 29 | variance run | todo | hard stop before Nov 1 |
+| Oct 29 | variance run | DONE (Oct 20): stack-Evidence +2.7+/-1.3 eval, +4.3+/-1.1 natural_test | hard stop met |
 | Oct 30 | adjudicator run (if Gate 0 passed) or LoRA seed 2 | todo | seed 2 first to cut if behind |
 | Oct 31 | frozen tables + figures | todo | |
 | Nov 1 | freeze + angle decision + deck rebuild | todo | hard stop; catch-up in the morning |
