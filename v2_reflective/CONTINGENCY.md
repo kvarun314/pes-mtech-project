@@ -3,10 +3,10 @@
 ## A. Data safety: layers (no single point of failure)
 | Layer | What | Check | If it fails |
 |---|---|---|---|
-| 1 Live files | project folder (not a git repo) | `LOG.md` entry per experiment | restore from layer 2 |
+| 1 Live files | project folder (a git repo; remote `origin` = github kvarun314/pes-mtech-project) | `LOG.md` entry per experiment | restore from layer 2 |
 | 2 Local snapshot | `v2_reflective/backup_artifacts.sh` -> `../results_archive/backups/pes_*.tar.gz` + `.sha256` (first one 2026-10-18, 353MB) | `v2_reflective/verify_backup.sh` (checksum, readable, extracts, key files byte-identical to live; exit 0 only if all pass) | re-run the backup; if verify still fails keep the previous good snapshot and tell Claude |
 | 3 Off-disk copy | the same `.tar.gz` + `.sha256` copied to a DIFFERENT device or account (external drive, iCloud Drive, or Google Drive) | run `shasum -a 256 -c` on the copy; `verify_backup.sh <copy>` | use the other destination; a same-disk copy does NOT count as protection against disk failure |
-| 4 Git history (after your OK) | `git init`, commit after each logged experiment, tag `freeze-nov1` | `git log` shows the commit | layers 2-3 still hold |
+| 4 Git remote | commit after each logged experiment on branch `e23-leakfree-oct2026` and push (user runs `! git push`, the auto-mode classifier blocks Claude pushes); tag `freeze-nov1` at the freeze. Pushed 2026-10-18 (`a1ec9fa`, verified `HEAD == origin/e23-leakfree-oct2026`). Excluded from git (see `.gitignore`): review-text data, `.scratch`, old adapters, secrets, so git alone is NOT a full backup | `git fetch` then compare `git rev-parse HEAD origin/<branch>` | layers 2-3 still hold |
 | 5 Reproduction recipe | frozen splits are regenerable: `build_splits.py` (seed 2023), `build_natural_dev.py`; evidence model is deterministic (reproduction diff 0.00e+00); LoRA adapters are NOT bit-reproducible, so adapter files are the irreplaceable items | rerun `evid_natural_dev.py` sanity check | retrain arm R locally (config in `p1/config_R.yaml`, time from `p1/train_R.log`) and re-score; treat as a new run and log it |
 
 Irreplaceable items to protect first: `e23/p1/adapter_R/`, `e23/p1/adapter_P/`, all `probs_*.jsonl`, `LOG.md`, `*.out`, `evid_train.jsonl`/`pool.jsonl` (rebuilding the pool needs a re-stream of 2.5M review rows).

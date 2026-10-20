@@ -32,7 +32,7 @@ One section per day written by you, from `results_frozen.md` and the outline. Cl
 Mon intro + related work outline · Tue method (agents, splits, protocol) · Wed experimental setup · Thu results · Fri leak audit + ablations · Sat discussion, limitations, negative results · Sun assemble draft 1 → supervisor + similarity check #1 (log the % in `progress/`).
 
 ## Week 4 (Nov 9–15): feedback, thesis, reproducibility
-Mon–Tue supervisor fixes · Wed `git init` + tag the freeze (needs your OK), one-command-per-experiment README, pin dependencies · Thu archive bundle with checksums (adapters, probs, traces, `.out` files, LOG.md) · Fri docs cleanup (CLAUDE.md, README, summaries) · Sat thesis sections as required · Sun draft 2 + similarity check #2.
+Mon–Tue supervisor fixes · Wed tag the freeze in git (you run the push), one-command-per-experiment README, pin dependencies · Thu archive bundle with checksums (adapters, probs, traces, `.out` files, LOG.md) · Fri docs cleanup (CLAUDE.md, README, summaries) · Sat thesis sections as required · Sun draft 2 + similarity check #2.
 
 ## Week 5 (Nov 16–20): buffer only
 Proofread, final similarity and AI-disclosure checks, final PDFs, submission, viva rehearsal with the deck. Nov 21–22 spare.

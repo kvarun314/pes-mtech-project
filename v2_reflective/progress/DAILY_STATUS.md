@@ -2,9 +2,9 @@
 | Date | Job | Status | Note |
 |---|---|---|---|
 | Oct 18 | natural_dev analyst scoring finish; run stack_week1.py | done | scored 500/500; stack_week1.out + prior_baseline.out; see LOG 2026-10-18 (natural_test exact gains are mostly class-prior; report macro-F1) |
-| Oct 19 | base LLaMA (no LoRA) dev + eval | todo | needs `--noadapter` option in eval_p1.py (Claude writes) |
-| Oct 20 | base LLaMA natural_test | todo | |
-| Oct 21 | base_vs_lora.py + make_figures.py | todo | |
+| Oct 19 | base LLaMA (no LoRA) dev + eval | DONE (moved earlier, overnight Oct 19-20) | arm `base` in eval_p1.py |
+| Oct 20 | base LLaMA natural_test | DONE | ran in same overnight queue |
+| Oct 21 | base_vs_lora.py + make_figures.py | DONE (Oct 20, auto) | figures in paper/figures/e23 |
 | Oct 22 | Gate 0 build prompts | todo | |
 | Oct 23 | Gate 0 run | todo | |
 | Oct 24 | Gate 0 score + verdict | todo | hard stop before Nov 1 |
@@ -26,3 +26,5 @@
 | Date | Snapshot | verify_backup.sh | Off-disk copy (where) |
 |---|---|---|---|
 | 2026-10-18 | `../results_archive/backups/pes_20261018_0007.tar.gz` | PASSED | NOT YET (needs user: destination?) |
+| 2026-10-18 | git branch `e23-leakfree-oct2026` `a1ec9fa` (code, logs, probs, small adapters; no review text) | `HEAD == origin` verified | pushed to GitHub (code only; data/.scratch not included) |
+| 2026-10-20 | `../results_archive/backups/pes_20261020_1842.tar.gz` | PASSED | NOT YET (needs user: destination?) |

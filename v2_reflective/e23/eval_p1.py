@@ -7,7 +7,7 @@ from mlx_lm import load
 from agentic_sentiment.phase1.config import DataConfig
 from agentic_sentiment.phase1.data.preprocessing import build_prompt
 arm, split = sys.argv[1], sys.argv[2]
-model, tok = load("v2_reflective/mlx_model", adapter_path=f"v2_reflective/e23/p1/adapter_{arm}")
+model, tok = load("v2_reflective/mlx_model", adapter_path=None if arm == "base" else f"v2_reflective/e23/p1/adapter_{arm}")  # arm "base" = LLaMA-3-8B Q4 without LoRA
 dig = {d: tok.encode(str(d), add_special_tokens=False)[-1] for d in range(1, 6)}; sp = tok.encode(" ", add_special_tokens=False)
 cfg = DataConfig(use_one_shot=False); out = f"v2_reflective/e23/p1/probs_{arm}_{split}.jsonl"
 # resume: keep rows already written (append mode), skip their ids; log progress/timing so the run is documented

@@ -13,7 +13,7 @@ Companion to `PAPER_PLAN.md` (detailed paper steps S1-S6). Same rule on every it
 | W5 | Presentation/viva deck | `Agentic_LLaMA3_Presentation_v5_electronics.pptx`, built by `v2_reflective/build_deck_e23.py` | v5 built 2026-10-17 with current results + plan; REBUILD from the script after the Nov 1 freeze; `Presenter_Notes.md` still stale | W1 final numbers | ? |
 | W6 | Demo notebook | `build_demo_notebook.py` rebuilt on e23 splits and probs | Kaggle-centric; stale | W1 | ? |
 | W7 | Code and reproducibility | One command per experiment; README with exact run order; pinned `requirements`/`pyproject`; seeds; tests green | `src/agentic_sentiment` package + 129 tests exist; the e23 scripts live outside it in `v2_reflective/e23/` | W1 | ? |
-| W8 | Artifact archive | Adapters, splits (ids only if license requires), probs, traces, `.out` files, LOG.md in one tagged bundle | Files exist in place; no bundle, no checksum list, no git (not a git repo) | W1 | ? |
+| W8 | Artifact archive | Adapters, splits (ids only if license requires), probs, traces, `.out` files, LOG.md in one tagged bundle | Git branch pushed; local verified snapshots exist; off-disk copy of data still missing | W1 | ? |
 | W9 | Docs cleanup | Update stale `CLAUDE.md`, `README.md`, `PROJECT_CHANGES_SUMMARY.md`, `IMPLEMENTATION_STATUS.md`, `CODE_EXPLANATION.md` to the Electronics leak-free state; mark Run 1/Run 2 as historical | Stale | W1 | ? |
 | W10 | Submission logistics | Venue, template, page limit, plagiarism/similarity check, supervisor review, co-author list, ethics/data statement, code/data availability statement | Unknown | W2 | ? |
 
@@ -29,13 +29,12 @@ Companion to `PAPER_PLAN.md` (detailed paper steps S1-S6). Same rule on every it
 - The agentic stack's gain over the TF-IDF evidence model is small and partly confounded (see PAPER_PLAN). The claim may have to be reframed.
 - Single seed for the Phase 1 adapter; no variance estimate for LoRA training yet.
 - Phase 1 arm choice (R vs P) is within dev noise.
-- Not a git repo: no history, easy to overwrite results. Consider `git init` and committing after each logged experiment (needs user approval).
+- Git repo with remote `origin` (github kvarun314/pes-mtech-project); work is on branch `e23-leakfree-oct2026` (pushed 2026-10-18), `main` untouched and 1 commit behind origin (Colab auto-commit). Review-text data and `.scratch` are gitignored, so local snapshots (`backup_artifacts.sh`) still matter.
 - Machine is M1 16GB with no CUDA; anything heavy runs via MLX or goes to Colab, which has zero credits as of 2026-10-09.
 
 ## Open questions for the user
 - Target venue(s) and every deadline (paper, thesis, viva, demo).
 - Which of W3/W4/W2 is actually required, and whether co-authors or the supervisor impose a structure.
-- OK to `git init` this folder?
 - Is the Visual Verifier / multimodal part still in scope for the thesis, given it is excluded in the results?
 
 ## DEADLINE: 3rd weekend of November 2026 = Sat Nov 21 / Sun Nov 22 (user said "November 3rd weekend" on 2026-10-17; Claude's reading, confirm). Work to finish by Fri Nov 20. User also needs to SHOW STEADY PROGRESS until then.
