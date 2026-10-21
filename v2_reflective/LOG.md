@@ -295,3 +295,27 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 ## 2026-10-21 — Deadline: user restated 'November 3rd week' = third week of November, weekend Nov 21-22 2026; submit by Fri Nov 20 as planned. Reading now CONFIRMED (no longer 'unconfirmed'). Note: if it ever meant the week of Nov 3 (weekend Nov 7-8) the plan would not hold; user to say so.
 
 ## 2026-10-21 — Improvement plan written (`v2_reflective/IMPROVEMENT_PLAN.md`), before any run. Phases A metrics, B embedding/char agents, C LoRA-10K, D better Reflector fit, E combine+freeze, each with dev-only gates and kill criteria. Local only; user rule: Colab only if truly required (nothing planned needs it). LoRA speed measured from adapter timestamps (400 iters ~2h15m).
+
+## 2026-10-21 — Phase A (metrics_extra) and Phase B (embedding + char n-gram agents) STARTED. PRE-DECLARED per IMPROVEMENT_PLAN.md.
+- A1 `e23/metrics_extra.py` -> `metrics_extra.out`: reporting only, recomputed from stored probs. Polarity 3-class (1-2 neg / 3 neu / 4-5 pos), binary (excl 3*), within-1, MAE, expected-rating MAE for Analyst R, R2, base, enc2k, Evidence, stacks.
+- B1 `e23/embed_agent.py`: all-MiniLM-L6-v2 embeddings (title + ". " + text, max_seq 256), chunked/resumable (`e23/emb/<split>_<chunk>.npy`), LR (C=1, 1000 iters) on evid_train 100K -> `evid2_<split>_probs.jsonl` for dev, natural_dev, eval, natural_test. Output `embed_agent.out`.
+- B2 `e23/char_agent.py`: char_wb 2-5 gram TF-IDF (max 400K feats, sublinear) + LR C=3 on the same 100K -> `evid3_<split>_probs.jsonl`. Output `char_agent.out`.
+- B3 `e23/stack_gate_B.py` (written after B1/B2 finish; gate declared now): dev-only 5-fold CV on dev and on natural_dev. Stacks: S0 [A+E] (current), S1 [A+E+E2], S2 [A+E+E3], S3 [A+E+E2+E3], all LR C=1 on log-probs. An agent set passes only if CV exact >= S0 + 1.0 on dev AND same direction (>= S0) on natural_dev AND macro-F1 not lower on dev. Only a passing set is read out (once) on eval + natural_test. No eval/natural_test numbers are looked at before the gate result is logged.
+
+## 2026-10-21 — RESULT Phase A (metrics_extra). Output `e23/metrics_extra.out`. Reporting only.
+- eval (balanced): 3-class polarity acc / macroF1 / binary acc: Analyst R .767/.719/.912 | Evidence .781/.737/.915 | Stack R+E .824/.775/.949 | Stack R2+E .826/.775/.953. Within-1: Evidence .931, stack .955-.960.
+- natural_test: polarity acc Analyst R .884, R2 .899, Evidence .878, Stack R+E .907 (macroF1 .758 vs Evidence .714); binary acc .953 vs .926.
+- Reading: on the coarser task the stack gain is larger and clearer than on 5-class exact (eval polarity +4.3 over Evidence, binary +3.4; natural_test polarity macroF1 +4.4). Useful framing for the paper: fine-grained star errors are mostly adjacent-star confusions; the stack is most helpful at the polarity level. Seed difference also shrinks on polarity (R .884 vs R2 .899) vs exact (53.4 vs 74.8).
+- Paired CIs for these polarity gains NOT yet computed (descriptive only); compute before claiming significance.
+
+## 2026-10-21 — RESULT Phase B gate (dev-only; `e23/stack_gate_B.out`, agents `embed_agent.out` / `char_agent.out`, probs `evid2_*` (MiniLM+LR) / `evid3_*` (char 2-5gram+LR)). Gate: FAIL for all three sets.
+- Single agents (dev / natural_dev exact): TF-IDF E .586/.714 | MiniLM E2 .534/.612 | char E3 .568/.684. Both new agents are weaker than the word TF-IDF.
+- 5-fold CV stacks, dev exact (macroF1): S0 A+E .640 (.640) | S1 +emb .627 | S2 +char .631 | S3 +both .619. natural_dev: S0 .804 (.558) | S1 .805 (.604) | S2 .779 | S3 .788.
+- Reading: extra lexical/semantic views of the same text do not complement TF-IDF at this stacker fit size (500 rows, 15-20 features); they add noise. Embedding agent gains macroF1 on natural_dev only (.604 vs .558) - not a gate pass, noted. Agents dropped; no eval/natural_test read. 3 agent-set configs declared and all reported.
+- Implication: the second signal that helps is the LLM (different knowledge source), not more classical views. Next lever is the LLM itself: Phase C (LoRA-10K), plus Phase D (more stacker fit data).
+
+## 2026-10-21 — Phase C STARTED: LoRA-10K (arm R10). PRE-DECLARED. `e23/build_R10.py` -> `p1/data_R10/{train,valid}.jsonl`; `p1/config_R10.yaml`; queue `e23/queue_R10.sh` (markers `p1/stage_R10.txt`, logs `p1/train_R10.log`, `p1/eval_R10_<split>.log`).
+- Data: 10,000 raw balanced Electronics rows (2,000/star) sampled from evid_train (disjoint from dev/natural_dev/eval/natural_test), Random(7), same prompt builder as arm R; 9,800 train / 200 valid. Hyperparameters identical to arm R (rank 4, alpha 64, lr 5e-5, batch 3 x accum 4, num_layers 3, max_seq 1024), iters 816 (= 1 epoch of 9,800 at 12 rows/iter), seed 42, save every 200.
+- Time guard: speed checked on first iterations; if projected training > 9 h, kill and reduce rows to 6,000 (500 iters). If still > 9 h tell the user (Colab case).
+- Queue scores dev ONLY, then stops. GATE (dev): R10 dev exact >= 58.0 (arm R 55.2; dev margin about +/-4.4) -> then score eval + natural_test (`queue_R10_rest.sh`) and add to the ladder. Otherwise log: more LoRA data does not rescue the analyst. No eval/natural_test looked at before the gate.
+- 2026-10-21 22:12 speed check R10: ~4 it/min (iter 80 at 22:12), 816 iters projected ~3.4 h, ETA training done ~01:30, dev scored ~01:50. Under the 9 h guard: no row reduction, no Colab.

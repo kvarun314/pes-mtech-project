@@ -35,10 +35,10 @@
 ## Improvement-plan jobs (IMPROVEMENT_PLAN.md, added Oct 21)
 | Job | Status | Note |
 |---|---|---|
-| A1 metrics_extra | todo | zero compute |
-| B1 MiniLM embedding agent | todo | 25-40 min |
-| B2 char n-gram agent | todo | |
-| B3 dev-gated stack | todo | gate: +1.0 dev CV |
-| C1 LoRA-10K smoke test | todo | project time |
-| C2 LoRA-10K train+score dev | todo | overnight, gate dev>=58 |
+| A1 metrics_extra | DONE Oct 21 | polarity gain larger than 5-class |
+| B1 MiniLM embedding agent | DONE Oct 21 (5 min) | weaker than TF-IDF |
+| B2 char n-gram agent | DONE Oct 21 | |
+| B3 dev-gated stack | DONE Oct 21: FAIL all | agents dropped |
+| C1 LoRA-10K smoke test | DONE Oct 21: 4 it/min, 3.4 h projected | no Colab |
+| C2 LoRA-10K train+score dev | RUNNING (started 21:55 Oct 21) | queue_R10.sh, p1/stage_R10.txt; gate dev>=58 |
 | D1/D2 Reflector fit | todo | |
