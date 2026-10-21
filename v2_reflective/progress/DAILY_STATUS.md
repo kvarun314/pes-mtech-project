@@ -9,8 +9,8 @@
 | Oct 23 | Gate 0 run | DONE (Oct 20) | |
 | Oct 24 | Gate 0 score + verdict | DONE (Oct 20): FAIL, LLM 54.2 vs stack 73.3 | hard stop met |
 | Oct 25 | rest / catch-up + week_01 note | todo | catch-up slot |
-| Oct 26 | DistilBERT 2K | todo | |
-| Oct 27 | baselines table | todo | |
+| Oct 26 | DistilBERT 2K | DONE (Oct 21): enc2k eval 52.8 vs LoRA 54.0 ns | |
+| Oct 27 | baselines table | DONE (in encoder_2k.out, Oct 21) | |
 | Oct 28 | DistilBERT 20K overnight | todo | first to cut if behind |
 | Oct 29 | variance run | DONE (Oct 20): stack-Evidence +2.7+/-1.3 eval, +4.3+/-1.1 natural_test | hard stop met |
 | Oct 30 | adjudicator run (if Gate 0 passed) or LoRA seed 2 | todo | seed 2 first to cut if behind |
