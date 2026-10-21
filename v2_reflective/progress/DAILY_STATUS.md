@@ -31,3 +31,14 @@
 | 2026-10-20 | git `f6c4cff` pushed to origin/e23-leakfree-oct2026 | HEAD==origin verified | GitHub |
 | 2026-10-21 | git commit 190816a (local only): push REJECTED, contains 255MB enc2k_model (>100MB GitHub limit). Fix pending user: see below | NOT pushed | last pushed = b565b4d |
 | 2026-10-21 | git e8c7ae7 (4 commits squashed; enc2k_model gitignored) pushed to origin/e23-leakfree-oct2026 | HEAD==origin verified | GitHub |
+
+## Improvement-plan jobs (IMPROVEMENT_PLAN.md, added Oct 21)
+| Job | Status | Note |
+|---|---|---|
+| A1 metrics_extra | todo | zero compute |
+| B1 MiniLM embedding agent | todo | 25-40 min |
+| B2 char n-gram agent | todo | |
+| B3 dev-gated stack | todo | gate: +1.0 dev CV |
+| C1 LoRA-10K smoke test | todo | project time |
+| C2 LoRA-10K train+score dev | todo | overnight, gate dev>=58 |
+| D1/D2 Reflector fit | todo | |
