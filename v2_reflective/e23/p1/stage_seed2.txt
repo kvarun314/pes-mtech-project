@@ -1,0 +1,5 @@
+R2_TRAIN_DONE
+R2_dev_DONE
+R2_eval_DONE
+R2_natural_test_DONE
+seed2_finished

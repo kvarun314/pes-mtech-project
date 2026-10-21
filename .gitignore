@@ -40,3 +40,5 @@ v2_reflective/gate0_dev.json
 v2_reflective/phase2_trace*.json
 v2_reflective/e23/p1/*_train.jsonl
 v2_reflective/e23/p1/*_valid.jsonl
+
+v2_reflective/e23/p1/enc2k_model/

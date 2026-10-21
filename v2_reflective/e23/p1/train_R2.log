@@ -1,0 +1,15 @@
+Loading configuration file v2_reflective/e23/p1/config_R2.yaml
+Loading pretrained model
+Loading datasets
+Training
+[34m╭─[0m[34m [0m[1;35mmlx_lm.lora[0m[34m [0m[34m───────────────────────────────────────────────────────────────────────────────────────────────────────[0m[34m─╮[0m
+[34m│[0m    [39mmodel        [0m   [1mv2_reflective/mlx_model[0m                                                                           [34m│[0m
+[34m│[0m    [39mtype         [0m   [1mlora · 3 layers · rank 4[0m                                                                          [34m│[0m
+[34m│[0m    [39mdataset      [0m   [1mv2_reflective/e23/p1/data_R[0m                                                                       [34m│[0m
+[34m│[0m    [39moptimizer    [0m   [1madam · lr 5.0e-05[0m                                                                                 [34m│[0m
+[34m│[0m    [39mbatch · iters[0m   [1m3 · 400[0m                                                                                           [34m│[0m
+[34m│[0m    [39mmax seq      [0m   [1m1,024[0m                                                                                             [34m│[0m
+[34m╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯[0m
+Trainable parameters: 0.012% (0.983M/8030.261M)
+  [1miter   train_loss     tok/s     tokens[0m
+  [38;5;244m   1[0m    [1;35mval[0m [1m3.212[0m    [38;5;244m226.37s[0m

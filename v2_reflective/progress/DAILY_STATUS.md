@@ -13,8 +13,8 @@
 | Oct 27 | baselines table | DONE (in encoder_2k.out, Oct 21) | |
 | Oct 28 | DistilBERT 20K overnight | todo | first to cut if behind |
 | Oct 29 | variance run | DONE (Oct 20): stack-Evidence +2.7+/-1.3 eval, +4.3+/-1.1 natural_test | hard stop met |
-| Oct 30 | adjudicator run (if Gate 0 passed) or LoRA seed 2 | todo | seed 2 first to cut if behind |
-| Oct 31 | frozen tables + figures | todo | |
+| Oct 30 | adjudicator run (if Gate 0 passed) or LoRA seed 2 | DONE (Oct 21): stack stable across seeds; single-analyst natural_test exact seed-unstable (53.4 vs 74.8) | queue_seed2.sh, seed2_report.out |
+| Oct 31 | frozen tables + figures | DRAFT DONE (Oct 21), rerun Nov 1 with seed 2 | results_frozen.md |
 | Nov 1 | freeze + angle decision + deck rebuild | todo | hard stop; catch-up in the morning |
 | Nov 2–7 | one paper section per day (user writes) | todo | |
 | Nov 8 | draft 1 to supervisor + similarity check #1 | todo | hard stop; catch-up slot |
@@ -29,3 +29,4 @@
 | 2026-10-18 | git branch `e23-leakfree-oct2026` `a1ec9fa` (code, logs, probs, small adapters; no review text) | `HEAD == origin` verified | pushed to GitHub (code only; data/.scratch not included) |
 | 2026-10-20 | `../results_archive/backups/pes_20261020_1842.tar.gz` | PASSED | NOT YET (needs user: destination?) |
 | 2026-10-20 | git `f6c4cff` pushed to origin/e23-leakfree-oct2026 | HEAD==origin verified | GitHub |
+| 2026-10-21 | git commit 190816a (local only): push REJECTED, contains 255MB enc2k_model (>100MB GitHub limit). Fix pending user: see below | NOT pushed | last pushed = b565b4d |
