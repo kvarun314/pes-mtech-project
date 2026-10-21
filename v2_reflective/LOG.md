@@ -292,3 +292,4 @@ SELF-REFLECTION is a core feature. Every step, number, and failure is logged her
 ## 2026-10-21 — `v2_reflective/PAPER_OUTLINE.md` written (outline + facts index with sources, no prose). Backup `pes_20261021_2119.tar.gz` verified. Local commit 58d3f34 NOT pushed: ancestor commit 190816a still contains the 255MB enc2k_model (GitHub rejects); needs the user's amend command (see DAILY_STATUS).
 Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 ## 2026-10-21 — Push fixed: squashed 190816a..3f56d72 into e8c7ae7 without enc2k_model (now gitignored); pushed, HEAD==origin.
+## 2026-10-21 — Deadline: user restated 'November 3rd week' = third week of November, weekend Nov 21-22 2026; submit by Fri Nov 20 as planned. Reading now CONFIRMED (no longer 'unconfirmed'). Note: if it ever meant the week of Nov 3 (weekend Nov 7-8) the plan would not hold; user to say so.

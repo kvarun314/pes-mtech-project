@@ -37,7 +37,7 @@ Companion to `PAPER_PLAN.md` (detailed paper steps S1-S6). Same rule on every it
 - Which of W3/W4/W2 is actually required, and whether co-authors or the supervisor impose a structure.
 - Is the Visual Verifier / multimodal part still in scope for the thesis, given it is excluded in the results?
 
-## DEADLINE: 3rd weekend of November 2026 = Sat Nov 21 / Sun Nov 22 (user said "November 3rd weekend" on 2026-10-17; Claude's reading, confirm). Work to finish by Fri Nov 20. User also needs to SHOW STEADY PROGRESS until then.
+## DEADLINE: 3rd weekend of November 2026 = Sat Nov 21 / Sun Nov 22 (user said "November 3rd weekend" on 2026-10-17; CONFIRMED by user 2026-10-21: third week of November). Work to finish by Fri Nov 20. User also needs to SHOW STEADY PROGRESS until then.
 
 Schedule (5 weeks). Every week ends with a visible, dated checkpoint: a `LOG.md` entry plus a one-page `progress/week_NN.md` (what ran, numbers, what changed, next week) that can be shown to the supervisor. Final days are buffer only.
 
