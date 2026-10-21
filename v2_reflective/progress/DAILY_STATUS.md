@@ -30,3 +30,4 @@
 | 2026-10-20 | `../results_archive/backups/pes_20261020_1842.tar.gz` | PASSED | NOT YET (needs user: destination?) |
 | 2026-10-20 | git `f6c4cff` pushed to origin/e23-leakfree-oct2026 | HEAD==origin verified | GitHub |
 | 2026-10-21 | git commit 190816a (local only): push REJECTED, contains 255MB enc2k_model (>100MB GitHub limit). Fix pending user: see below | NOT pushed | last pushed = b565b4d |
+| 2026-10-21 | git e8c7ae7 (4 commits squashed; enc2k_model gitignored) pushed to origin/e23-leakfree-oct2026 | HEAD==origin verified | GitHub |

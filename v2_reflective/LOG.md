@@ -291,3 +291,4 @@ SELF-REFLECTION is a core feature. Every step, number, and failure is logged her
 
 ## 2026-10-21 — `v2_reflective/PAPER_OUTLINE.md` written (outline + facts index with sources, no prose). Backup `pes_20261021_2119.tar.gz` verified. Local commit 58d3f34 NOT pushed: ancestor commit 190816a still contains the 255MB enc2k_model (GitHub rejects); needs the user's amend command (see DAILY_STATUS).
 Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
+## 2026-10-21 — Push fixed: squashed 190816a..3f56d72 into e8c7ae7 without enc2k_model (now gitignored); pushed, HEAD==origin.
