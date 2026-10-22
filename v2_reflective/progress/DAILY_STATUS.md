@@ -42,3 +42,7 @@
 | C1 LoRA-10K smoke test | DONE Oct 21: 4 it/min, 3.4 h projected | no Colab |
 | C2 LoRA-10K train+score dev | RUNNING (started 21:55 Oct 21) | queue_R10.sh, p1/stage_R10.txt; gate dev>=58 |
 | D1/D2 Reflector fit | todo | |
+| C R10 gate | DONE Oct 22: FAIL (dev 56.4 < 58) | eval/natural_test not scored |
+| F LLaMA hidden-state probe | RUNNING (started Oct 22 10:44, ETA ~15:30) | probe_agent.py, stage_F.txt; then probe_gate_F.py |
+| Polarity CIs | DONE Oct 22 | polarity_ci.out: significant on both splits/seeds |
+| D pooled-dev Reflector fit | todo | |
