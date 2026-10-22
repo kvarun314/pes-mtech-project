@@ -341,3 +341,11 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - natural_test polarity: Evidence .878 | [R+E] .907 | [R2+E] .907; +2.9 [+1.7,+4.0] p=1.8e-6 (both seeds). binary .926 -> .953 (+2.6 [+1.7,+3.7], p=3.5e-7).
 - HONESTY NOTE: polarity/binary was added as a reporting metric AFTER seeing that 5-class exact gains were small (this is a post-hoc metric choice). Defensible because: the original paper (Wang et al.) and the earlier Kaggle reproduction already reported polarity/binary; stack and metric definitions are fixed; all 12 comparisons are printed, none dropped; p-values uncorrected. State this in the paper. Even Bonferroni over the 12 comparisons (alpha .004) keeps all but none borderline: the smallest p is 4.5e-5 (eval) / 1.8e-6 (natural_test); largest p is 3.6e-4.
 - Takeaway for the thesis: Phase 2 stacking gives a consistent, significant improvement in sentiment polarity (+3 to +4.5 points) across balanced and natural test sets and across two adapter seeds, while fine-grained 5-star exact gains are smaller. This is the first clearly publishable positive Phase 2 result.
+
+## 2026-10-22 — Phase F: LLaMA hidden-state probe agent (dev-only gate)
+- Extraction: `e23/probe_agent.py` (compact prompt, last-token hidden state of base LLaMA-3-8B Q4, no LoRA), 10K balanced fit rows from evid_train + dev/natural_dev/eval/natural_test. ~15.5K s local. Marker `F_extract_DONE`.
+- Gate run: `e23/probe_gate_F.py` -> `e23/probe_gate_F.out`. LR on standardised states, C=0.01 chosen on dev (dev exact .600; C=0.1 .582; C=1 .548). Dev 5-fold CV x3.
+- dev: S0 A+E .640/.640 (exact/macro-F1); SP A+E+P .651/.650; P alone .618; A+P .626.
+- natural_dev: S0 .804/.558; SP .803/.567.
+- Pre-declared rule: SP >= S0+.010 on dev AND >= S0 on natural_dev AND dev macro-F1 >= S0. Dev passes (+.011), natural_dev misses by .001 (.803 vs .804). **GATE FAIL by the rule.** Probe NOT carried to eval/natural_test. eval and natural_test untouched by this step.
+- Note: lbfgs ConvergenceWarning at max_iter=500 for C=0.1/1 (not the chosen C). Probe alone (.618 dev) beats Evidence alone (.594 dev) and Analyst alone (.565), a finding for the paper's ablation, not a headline.

@@ -46,3 +46,4 @@
 | F LLaMA hidden-state probe | RUNNING (started Oct 22 10:44, ETA ~15:30) | probe_agent.py, stage_F.txt; then probe_gate_F.py |
 | Polarity CIs | DONE Oct 22 | polarity_ci.out: significant on both splits/seeds |
 | D pooled-dev Reflector fit | todo | |
+- 2026-10-22 Phase F probe gate: FAIL (natural_dev .803 vs .804); logged in LOG.md
