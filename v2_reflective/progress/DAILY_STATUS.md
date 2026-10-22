@@ -47,3 +47,4 @@
 | Polarity CIs | DONE Oct 22 | polarity_ci.out: significant on both splits/seeds |
 | D pooled-dev Reflector fit | todo | |
 - 2026-10-22 Phase F probe gate: FAIL (natural_dev .803 vs .804); logged in LOG.md
+- 2026-10-22 Phase D: gate PASS (dev), readout shows prior shift only; NOT adopted. Logged.
