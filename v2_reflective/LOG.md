@@ -471,3 +471,4 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - C3 errors: off-by-one = 89.8% (eval) / 86.4% (natural_test) of SH errors; 2+ stars off 33 / 66 rows. Length buckets, agent-agreement split, per-class recall and example ids in the .out.
   - C4 calibration: ECE .047 (eval) / .062 (natural_test); SH slightly under-confident (mean confidence .650 vs accuracy .675; .704 vs .757).
   - C5 cost per review on the M1: P3 ~0.67 s (LLaMA forward to layer 20), TF-IDF ~0.06 ms, Reflector ~0.06 ms. So the probe is >99% of SH's cost, which motivates the Router.
+- 2026-10-25 00:30: Phase 2 v3 spec written: `docs/superpowers/specs/2026-10-25-phase2-v3-design.md` (pending user review).
