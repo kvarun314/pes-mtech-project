@@ -48,3 +48,4 @@
 | D pooled-dev Reflector fit | todo | |
 - 2026-10-22 Phase F probe gate: FAIL (natural_dev .803 vs .804); logged in LOG.md
 - 2026-10-22 Phase D: gate PASS (dev), readout shows prior shift only; NOT adopted. Logged.
+- 2026-10-24 Phase F2 multi-layer probe: gate FAIL (dev +.005). Probe line closed.

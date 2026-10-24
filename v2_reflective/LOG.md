@@ -366,3 +366,8 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - Gate `e23/probe_gate_F2.py` (dev-only): pick layer-set + C on dev; same pass rule as F (dev +.010 over S0, natural_dev >= S0, dev macro-F1 >= S0). Plus macro-F1 on natural_dev must be >= S0 (lesson from Phase D). Multiple variants tried -> note multiplicity. eval/natural_test read once only if PASS.
 - Local, ~4.3 h, no Colab.
 - selftest: manual layer loop matches model.model output (maxdiff 0.0); vec 16384 = 3 last-token layers + mean-pool L20
+- 2026-10-22 21:40 F2 extraction paused by user (laptop heat); killed cleanly, resumable from hid2 chunks. Restart: nohup caffeinate -i sh -c '.venv/bin/python v2_reflective/e23/probe_agent2.py >> v2_reflective/e23/probe_agent2.out 2>&1 && echo F2_extract_DONE >> v2_reflective/e23/stage_F2.txt' &
+- Phase F2 extraction done (`F2_extract_DONE`, 2026-10-24; resumed after user pause). Gate `e23/probe_gate_F2.py` -> `probe_gate_F2.out`.
+- Probe alone on dev (fit 10K): L16 .622, L20 .628, L24 .584, mean20 .628 (all at C=.003; larger C worse). Chosen on dev: L20, C=.003 (tie with mean20, first wins).
+- Stack CV: dev S0 .640/.640, SP A+E+P2 .645/.644 (+.005, needs +.010); natural_dev S0 .804/.558, SP .813/.574. P2 alone dev .611, natural_dev .821/.577. GATE FAIL (dev gain +.005 < +.010). Not read on eval/natural_test.
+- Takeaway: mid layers beat last layer (L24 .584 < L20 .628) but the probe is mostly redundant with Evidence+Analyst on balanced dev. Probe family (F, F2) closed: two variants tried, both FAIL; report in ablation with multiplicity note.
