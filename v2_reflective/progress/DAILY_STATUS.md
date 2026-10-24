@@ -50,3 +50,4 @@
 - 2026-10-22 Phase D: gate PASS (dev), readout shows prior shift only; NOT adopted. Logged.
 - 2026-10-24 Phase F2 multi-layer probe: gate FAIL (dev +.005). Probe line closed.
 - 2026-10-24 Phase G2 (500K Evidence): gate FAIL; E6 alone better, stack not. Logged.
+- 2026-10-24 Phase H: gate PASS, readout eval 67.5 / natural_test 75.7 (macro-F1 .675/.612). New main config SH = P3+E6b. Logged.
