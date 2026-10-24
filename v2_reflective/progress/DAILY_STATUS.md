@@ -49,3 +49,4 @@
 - 2026-10-22 Phase F probe gate: FAIL (natural_dev .803 vs .804); logged in LOG.md
 - 2026-10-22 Phase D: gate PASS (dev), readout shows prior shift only; NOT adopted. Logged.
 - 2026-10-24 Phase F2 multi-layer probe: gate FAIL (dev +.005). Probe line closed.
+- 2026-10-24 Phase G2 (500K Evidence): gate FAIL; E6 alone better, stack not. Logged.

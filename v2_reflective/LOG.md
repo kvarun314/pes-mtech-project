@@ -371,3 +371,16 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - Probe alone on dev (fit 10K): L16 .622, L20 .628, L24 .584, mean20 .628 (all at C=.003; larger C worse). Chosen on dev: L20, C=.003 (tie with mean20, first wins).
 - Stack CV: dev S0 .640/.640, SP A+E+P2 .645/.644 (+.005, needs +.010); natural_dev S0 .804/.558, SP .813/.574. P2 alone dev .611, natural_dev .821/.577. GATE FAIL (dev gain +.005 < +.010). Not read on eval/natural_test.
 - Takeaway: mid layers beat last layer (L24 .584 < L20 .628) but the probe is mostly redundant with Evidence+Analyst on balanced dev. Probe family (F, F2) closed: two variants tried, both FAIL; report in ablation with multiplicity note.
+
+## 2026-10-24 — Phase G declared: Evidence learning curve (decides whether fetching more Electronics data is worth it)
+- `e23/evid_curve.py` -> `evid_curve.out`. Hold out 10K balanced rows of evid_train (Random(5)) as validation; train TF-IDF+LR (same config as evidence.py, title from evidence_config.json) on balanced subsets 11.25K/22.5K/45K/90K of the rest. Report val exact + macro-F1. eval/natural_test untouched.
+- Decision rule: if 45K->90K gain >= +1.0 pt on val, fetch more Electronics rows (beyond file row 2.5M, disjoint by id and text) to train a ~400K+ Evidence agent; else stop data scaling.
+- Phase G curve result (`e23/evid_curve.out`, val = 10K held-out balanced): 11.25K .535 / 22.5K .549 / 45K .552 / 90K .568 (macro-F1 .533/.548/.550/.566). 45K->90K = +1.6 >= +1.0 -> rule says fetch more data.
+
+## 2026-10-24 — Phase G2 declared: big Evidence agent (500K balanced)
+- `e23/fetch_big.py` -> `evid_big.jsonl`, `fetch_big.log`. Stream the first 6M Electronics review rows (same URL, same MIN=20 chars). Skip any row whose id is in pool.jsonl or whose text is in evid_train/dev/eval/natural_test/natural_dev or already taken. Reservoir 80K per star, Random(2025). evid_big = evid_train (100K) + these 400K = 500K balanced.
+- `e23/evidence_big.py` -> `evid6_<split>_probs.jsonl`, `evidence_big.out`: same TF-IDF+LR config as evidence.py (title from evidence_config.json, C=3) on 500K.
+- Gate (dev-only, `e23/stack_gate_G.py`): S0 A+E vs SG A+E6, 5-fold CV x3 on dev and natural_dev. PASS if dev exact >= S0+.010 AND natural_dev exact >= S0 AND macro-F1 >= S0 on both. PASS -> E6 replaces E everywhere (one readout on eval/natural_test, all paired stats rerun); FAIL -> log, keep E.
+- Phase G2 result: fetch_big DONE (6M rows streamed, 80K/star reservoir, 398,819 after exact-text dedup, 128,204 rows skipped as pool/split overlap). evidence_big.py: leak assert passed; 498,819 train rows; TF-IDF+LR fit 355 s; lbfgs ConvergenceWarning at max_iter=400 (model possibly under-converged). E6 alone: dev .602 (E .586 direct argmax), natural_dev .712 (E .714).
+- Gate `stack_gate_G.out`: dev S0 .640/.640 vs SG A+E6 .632/.631; natural_dev S0 .804/.558 vs SG .800/.562. E6 alone CV dev .613 vs E .594. **GATE FAIL.** E6 not adopted; not read on eval/natural_test.
+- Reading: 5x data makes the Evidence agent alone better (+1.9 dev CV), but the stack does not improve: the stronger Evidence agent overlaps more with the Analyst. Note the dev gates are underpowered: 500 rows gives about ±4.3 pt 95% margin on exact, so gains under ~2 pts cannot be resolved on dev.
