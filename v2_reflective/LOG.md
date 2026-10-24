@@ -425,3 +425,22 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - natural_test SH-minus-P3: +2.43 ± 1.19 pts, per seed [3.0, 1.3, 1.0, 2.8, 3.8]
   - natural_test SH-minus-S0: +1.00 ± 0.61 pts, per seed [0.1, 0.9, 0.9, 1.7, 1.3]
 - Reading: the multi-agent gain over each single agent is positive in 5/5 seeds on both splits (SH-E6b +3.3±0.6 eval, +5.2±0.8 natural_test; SH-P3 +5.2±0.9 eval, +2.4±1.2 natural_test). SH vs the old two-agent stack refit on the same dev2 bootstrap: +0.7±1.2 eval (4/5 positive), +1.0±0.6 natural_test (5/5 positive), small.
+
+## 2026-10-24 — Frozen tables regenerated with Phase H rows
+- `e23/freeze_tables.py` extended (no selection; fixed model list): adds P3 alone, E6b alone, Stack Analyst+E refit on dev2, and SH P3+E6b (dev2 fit, MAIN). Old rows kept for continuity. Probs-file loader now cached (`functools.lru_cache`): the old version re-read the file per row (O(n^2)), same numbers, 3 s instead of minutes.
+- Output `e23/results_frozen.md`, `e23/freeze_tables.out`, figure `paper/figures/e23/main_bars.png`. Previous table saved to the session scratchpad before overwrite.
+- Check: SH 67.5 / .675 eval, 75.7 / .612 natural_test, and S0 dev2-fit 65.5 / 74.2 match `readout_H.out` exactly.
+- Backup `pes_20261024_1641` re-verified PASSED; it predates variance_H, so a new snapshot follows (see DAILY_STATUS backup ledger).
+
+## 2026-10-24 (late) — Deck v6 and paper results section for Oct 25 presentation
+- Deck: `build_deck_e23.py` now writes `../Agentic_LLaMA3_Presentation_v6_phaseH.pptx` (27 slides). v5 file left untouched on disk; previous builder copy in the session scratchpad. Changes: title date; slide 12 relabelled "first stack (Oct 13), superseded by SH"; old "Phase 2 focus" slide replaced by the experiment ledger (slide 15); new slide 16 SH main result (table, paired CIs, variance, honest-read caveat); new slide 17 frozen bar chart; roadmap checkpoints updated. Rendered via LibreOffice and checked visually.
+- `freeze_tables.py` bar chart now colours the SH row red; numbers unchanged. Bootstrap CIs of rows after the inserted ones shift by about ±0.2 (rng order changed); point estimates identical.
+- Paper: new shared file `paper/e23_results.tex` (section "Results — Amazon Reviews 2023 Electronics (Leak-Free, Frozen)": main table, paired table, variance table, bar figure, candidate ledger). It is `\input` in both `paper/main.tex` (before Run 1 results) and `paper/conference/ConferencePaper.tex` (before Experiments and Results), so the two papers stay in sync. Old Run 1 sections kept as they were (added alongside, not replaced). Prose not written: facts for the author are in `% FACT` comments. Both compile (main 20 pages, conference 11 pages), no overfull boxes from the new file. Pre-edit tex copies saved in the session scratchpad.
+- Backup `pes_20261024_2301` VERIFIED (made before the deck/paper edits).
+- Backup pes_20261024_2306 VERIFIED (includes deck builder + paper edits; the .pptx itself is outside the archive scope).
+
+## 2026-10-24 (night) — Deck v6 update slide + speaker notes; presenter notes; experiments summary
+- Deck v6 rebuilt (28 slides): new slide 10 "What changed since the last review" (tried / main system / result + caveat band); title-slide system line and agenda updated; speaker notes written into the notes pane of every slide (NOTES dict in `build_deck_e23.py`; historical slides get a one-line note). Rendered and checked.
+- `Presenter_Notes.md`: new Part 0 for the Oct 25 v6 deck (slide map, scripts for slides 10/13/16/17/18, new expected questions, v6 numbers cheat sheet). Parts 1–6 kept, marked as written for the older v3 deck. Pre-edit copy in the session scratchpad.
+- New `v2_reflective/EXPERIMENTS_SUMMARY.md`: whole-project ledger of what worked (W1–W10), what failed or was not adopted (F1–F16), baselines/robustness, historical results, integrity disclosures, and next steps.
+- An email-style update draft was written and then deleted at the user's request (user wanted the update in the deck instead).

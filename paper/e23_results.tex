@@ -1,0 +1,117 @@
+% Electronics-2023 leak-free results (frozen 2026-10-24). Shared by main.tex and conference/ConferencePaper.tex
+% via \input, so both papers stay in sync. Define \efigdir (path to figures/e23/) before \input.
+% Every number comes from v2_reflective/e23/freeze_tables.out, readout_H.out, variance_H.out (LOG.md 2026-10-24).
+% AUTHOR: the prose is yours to write (AI-content limit). The facts to cover are listed in the comments marked "% FACT".
+
+\section{Results --- Amazon Reviews 2023 Electronics (Leak-Free, Frozen)}
+\label{sec:e23}
+
+% FACT: splits = evidence-train 100K balanced, dev 500 balanced, dev2 2,000 balanced, eval 1,000 balanced (read once),
+%       natural_test 2,000 with natural skew (5-star 1,301). Disjoint by review id and exact text. Zero-shot prompt (one-shot leak removed).
+% FACT: main config SH = P3 (logistic probe on frozen base-LLaMA-3-8B layer-20 last-token hidden state, 40K fit rows, C=.001)
+%       + E6b (TF-IDF 1-2-gram + LR on ~497K balanced rows), combined by an LR Reflector (C=1) fit on dev2.
+% FACT: SH was chosen on dev2 among 5 candidate agent sets by a rule written before running (gate: dev2 +1.0 pt and paired CI > 0).
+
+\begin{table}[htbp]
+\centering
+\caption{Exact accuracy (\%, 95\% bootstrap CI), macro-F1, within-one-star accuracy and MAE on the two frozen test splits. Stackers marked dev are fit on 500 dev rows; dev2 on 2\,000.}
+\label{tab:e23main}
+\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Model} & \textbf{Exact [CI]} & \textbf{Macro-F1} & \textbf{Within-1} & \textbf{MAE} \\
+\midrule
+\multicolumn{5}{l}{\textit{eval (1\,000, balanced)}} \\
+Base LLaMA-3-8B, no LoRA        & 34.3 [31.3, 37.3] & 0.269 & 83.3 & 0.824 \\
+DistilBERT, 2K rows              & 52.8 [49.6, 55.9] & 0.522 & 89.1 & 0.597 \\
+Analyst: LLaMA + LoRA, 2K rows   & 54.0 [50.9, 57.1] & 0.543 & 93.7 & 0.529 \\
+P3 probe (frozen LLaMA L20)      & 61.2 [58.1, 64.2] & 0.610 & 94.6 & 0.455 \\
+Evidence E, 100K                 & 62.4 [59.4, 65.4] & 0.622 & 93.1 & 0.457 \\
+Evidence E6b, $\sim$497K         & 62.5 [59.5, 65.4] & 0.624 & 93.4 & 0.452 \\
+Stack Analyst+E (dev)            & 63.9 [61.0, 66.9] & 0.638 & 95.5 & 0.411 \\
+Stack Analyst+E (dev2)           & 65.5 [62.5, 68.5] & 0.653 & 96.2 & 0.386 \\
+\textbf{SH: P3+E6b (dev2)}       & \textbf{67.5 [64.6, 70.3]} & \textbf{0.675} & \textbf{96.7} & \textbf{0.363} \\
+\midrule
+\multicolumn{5}{l}{\textit{natural\_test (2\,000, natural skew)}} \\
+Base LLaMA-3-8B, no LoRA        & 16.8 [15.2, 18.4] & 0.212 & 70.5 & 1.129 \\
+DistilBERT, 2K rows              & 62.5 [60.4, 64.6] & 0.462 & 90.5 & 0.512 \\
+Analyst: LLaMA + LoRA, 2K rows   & 53.4 [51.3, 55.6] & 0.488 & 94.3 & 0.539 \\
+P3 probe (frozen LLaMA L20)      & 74.3 [72.4, 76.2] & 0.606 & 96.3 & 0.307 \\
+Evidence E, 100K                 & 69.3 [67.3, 71.4] & 0.541 & 93.7 & 0.400 \\
+Evidence E6b, $\sim$497K         & 70.2 [68.3, 72.2] & 0.550 & 94.5 & 0.372 \\
+Stack Analyst+E (dev)            & 73.4 [71.4, 75.3] & 0.577 & 96.2 & 0.320 \\
+Stack Analyst+E (dev2)           & 74.2 [72.4, 76.1] & 0.587 & 96.6 & 0.307 \\
+\textbf{SH: P3+E6b (dev2)}       & \textbf{75.7 [73.8, 77.6]} & \textbf{0.612} & \textbf{96.7} & \textbf{0.288} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Paired comparisons for SH (exact-accuracy difference in points, 95\% paired bootstrap CI, exact McNemar $p$; uncorrected).}
+\label{tab:e23paired}
+\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcc}
+\toprule
+\textbf{SH vs} & \textbf{eval} & \textbf{natural\_test} \\
+\midrule
+Stack Analyst+E (dev), old headline & +3.6 [+0.9, +6.3], $p$=.011 & +2.3 [+0.6, +4.0], $p$=.0086 \\
+Stack Analyst+E (dev2), same fit set & +2.0 [$-$0.6, +4.7], $p$=.14 & +1.5 [$-$0.1, +3.0], $p$=.081 \\
+Evidence E6b alone & +5.0 [+2.4, +7.4], $p$=1.7e-4 & +5.5 [+3.8, +7.1], $p$=1.3e-10 \\
+P3 probe alone & +6.3 [+3.8, +8.8], $p$=6.4e-7 & +1.4 [$-$0.1, +2.9], $p$=.074 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Variance over 5 seeds (bootstrap of the probe fit set and of dev2; E6b held fixed). Mean $\pm$ sd.}
+\label{tab:e23var}
+\small
+\begin{tabular}{lcc}
+\toprule
+ & \textbf{eval} & \textbf{natural\_test} \\
+\midrule
+SH exact (macro-F1) & 65.8 $\pm$ 0.6 (0.657) & 75.4 $\pm$ 0.8 (0.610) \\
+SH $-$ E6b (points) & +3.3 $\pm$ 0.6, 5/5 positive & +5.2 $\pm$ 0.8, 5/5 positive \\
+SH $-$ P3 (points) & +5.2 $\pm$ 0.9, 5/5 positive & +2.4 $\pm$ 1.2, 5/5 positive \\
+SH $-$ Stack Analyst+E (dev2) & +0.7 $\pm$ 1.2, 4/5 positive & +1.0 $\pm$ 0.6, 5/5 positive \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{\efigdir main_bars.png}
+\caption{Exact accuracy with 95\% bootstrap CI for every frozen model; SH in red.}
+\label{fig:e23bars}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\caption{Phase 2 candidates tried after the first stack. Each had a dev-only gate declared before running; failed candidates were never read on eval or natural\_test.}
+\label{tab:e23ledger}
+\small
+\begin{tabular}{p{0.34\linewidth}p{0.40\linewidth}p{0.16\linewidth}}
+\toprule
+\textbf{Candidate} & \textbf{Dev result} & \textbf{Verdict} \\
+\midrule
+LLM adjudicator (Gate 0) & 54.2\% vs stack 73.3\% on 434 disagreement rows & Fail \\
+LoRA on 10K rows & dev 56.4\% $<$ gate 58\% & Fail \\
+Hidden-state probe, 10K fit (single and multi-layer) & +0.011 / +0.005 on dev; natural\_dev miss & Fail \\
+Reflector on pooled dev + natural\_dev & gate passed; gain was a class-prior shift & Not adopted \\
+Evidence on 500K rows & better alone (+1.9 CV), stack not better & Fail \\
+dev2 (2\,000) + probe on 40K (SH) & +3.9 pts, paired CI [+2.4, +5.8] & Pass \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% FACT: SH beats each single agent; gain over best single agent positive in 5/5 seeds on both splits (Table 3).
+% FACT: against the old stack refit on the same dev2 the gain is small and not significant (+2.0 / +1.5): part of the
+%       headline gain over the old stack comes from the 4x larger Reflector fit set.
+% FACT: frozen base LLaMA probe (no fine-tuning) replaces the LoRA Analyst; adding LoRA back to P3+E6b does not help (dev2 .633 < .639).
+% FACT: base LLaMA zero-shot is weak alone (34.3 eval) but its hidden states carry signal (P3 61.2 eval, 74.3 natural_test).
+% FACT: disclosures: 5 candidates compared on dev2; E6b-alone accuracy on eval/natural_test was printed before the gate (not used
+%       for any choice); E6b not retrained across variance seeds; p-values uncorrected.
+% AUTHOR: write the interpretation paragraph(s) here.

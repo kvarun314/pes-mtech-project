@@ -9,7 +9,7 @@ from pptx.enum.chart import XL_CHART_TYPE, XL_LEGEND_POSITION
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUTER = os.path.dirname(ROOT)
 SRC = os.path.join(OUTER, "Agentic_LLaMA3_Presentation_FINAL_v3_aligned.pptx")
-DST = os.path.join(OUTER, "Agentic_LLaMA3_Presentation_v5_electronics.pptx")
+DST = os.path.join(OUTER, "Agentic_LLaMA3_Presentation_v6_phaseH.pptx")
 code = open(os.path.join(ROOT, "build_presentation_v4.py")).read()
 code = code[code.index("FONT = "):code.index("# --------------------------------------------------------------- slide chrome")]
 code = "import os\nfrom pptx.util import Emu, Inches, Pt\nfrom pptx.dml.color import RGBColor\nfrom pptx.enum.shapes import MSO_SHAPE\nfrom pptx.enum.text import MSO_ANCHOR, PP_ALIGN\nfrom pptx.oxml.ns import qn\n" + code
@@ -31,9 +31,9 @@ def edit_by_text(slide, startswith, new):
 
 # ---- edits to kept slides
 edit_by_text(S[0], "Kaggle + Amazon", "Amazon Reviews 2023 · Electronics")
-edit_by_text(S[0], "LLaMA-3-8B + LoRA", "LLaMA-3-8B + LoRA    ·    Evidence agent    ·    Reflector    ·    Leak-free evaluation")
-edit_by_text(S[0], "Varun K", "Varun K    ·    PES MTech Project    ·    October 2026 update")
-edit_by_text(S[0], "PROBLEM", "PROBLEM  →  METHOD  →  LEAK AUDIT  →  ELECTRONICS RESULTS  →  PHASE 2 FOCUS  →  ROADMAP  →  HISTORICAL")
+edit_by_text(S[0], "LLaMA-3-8B + LoRA", "Frozen LLaMA-3-8B probe    ·    Evidence agent    ·    Reflector    ·    Leak-free evaluation")
+edit_by_text(S[0], "Varun K", "Varun K    ·    PES MTech Project    ·    October 25, 2026 update")
+edit_by_text(S[0], "PROBLEM", "PROBLEM  →  METHOD  →  UPDATE  →  LEAK AUDIT  →  ELECTRONICS  →  EXPERIMENTS  →  MAIN RESULT  →  ROADMAP  →  HISTORICAL")
 edit_by_text(S[3], "Phase 1 is trained", "Main results now use Amazon Reviews 2023 Electronics only; the Kaggle corpus is the original paper's data (reproduction and appendix).")
 
 def new_slide(eyebrow, title, subtitle):
@@ -53,6 +53,15 @@ def cards(sl, items, y, h, bar=ACCENT):
         _, tf = textbox(sl, x + 0.22, y + 0.56, w - 0.4, 0.6); para(tf, head, size=T_CARD, color=INK, bold=True, first=True, line=1.1)
         block(sl, x + 0.22, y + 1.22, w - 0.4, h - 1.35, lines, size=T_BODY)
 L, R, C = PP_ALIGN.LEFT, PP_ALIGN.RIGHT, None
+
+# N0 update since the Oct 17 deck (v5)
+n0 = new_slide("UPDATE · OCT 17 → OCT 24", "What Changed Since the Last Review",
+               "All planned experiments are finished a week before the Nov 1 freeze. One candidate passed its gate and became the main system.")
+cards(n0, [("TRIED", "Nine lines of work", ["— LLM adjudicator, LoRA on 10K rows, hidden-state probes, pooled-dev Reflector, 500K Evidence: all failed or not adopted", "— Base LLaMA, DistilBERT, 5-seed variance, LoRA seed 2: baselines and robustness", "— Every rule written before running; test sets untouched until a pass"]),
+           ("MAIN SYSTEM", "Probe + Evidence → Reflector", ["— Agent 1: logistic probe on frozen base-LLaMA-3-8B layer-20 hidden state (40K rows, no fine-tuning)", "— Agent 2: TF-IDF + LR Evidence model on ~497K reviews", "— Reflector: LR on both agents' log-probabilities, fit on 2,000 balanced dev rows"]),
+           ("RESULT", "Read once on both test sets", ["— Balanced eval: 67.5% exact (was 63.9%), +3.6 [+0.9, +6.3]", "— Natural test: 75.7% (was 73.4%), +2.3 [+0.6, +4.0]", "— 5 seeds: beats each single agent every time"])],
+      1.82, 3.45)
+band(n0, 5.5, "Caveat", "Part of the gain is the larger Reflector fit set: the old LoRA + Evidence stack refit on the same 2,000 rows is only 2.0 / 1.5 points behind (not significant). Fine-tuning LLaMA turned out unnecessary for the stack.", h=1.0)
 
 # N1 leak audit
 n1 = new_slide("LEAK AUDIT", "The One-Shot Label Leak Inflated Earlier Numbers",
@@ -85,7 +94,7 @@ cards(n2, [("SPLITS", "Four frozen sets", ["— evidence-train 100,000 balanced 
 band(n2, 5.65, "Note", "The original paper's adapter was trained on Kaggle reviews; Kaggle is now reproduction and appendix only. Test sets are never filtered.", h=0.9)
 
 # N3 Phase 2 results
-n3 = new_slide("PHASE 2 RESULTS", "Analyst + Evidence Stack on Electronics",
+n3 = new_slide("PHASE 2 · FIRST STACK (OCT 13)", "Analyst + Evidence Stack on Electronics (superseded by SH)",
                "Reflector = logistic regression on both agents' log-probabilities, fit on 500 balanced dev rows, read out once per split.")
 lw = 7.3
 accent_card(n3, MARGIN, 1.82, lw, 3.3)
@@ -136,15 +145,49 @@ cards(n5, [("COUNTS", "150 generations", ["— 0 unparseable", "— 80 wrong sta
       1.82, 3.0)
 band(n5, 5.05, "Implication", "Free-text reasoning from this adapter is not a trustworthy Phase 2 signal; the digit probabilities are. That is why Phase 2 combines probabilities with an independent evidence model instead of asking the LLM to explain itself. Source: e23/halluc_p1.out.", h=1.2)
 
-# N6 Phase 2 focus
-n6 = new_slide("PHASE 2 FOCUS", "Making the Agent Layer Earn Its Name",
-               "The current Reflector is a logistic regression over two probability vectors. Each candidate below has a kill criterion on dev.")
-cards(n6, [("P2-1", "Disagreement routing", ["— Route only the 44% of rows where Analyst and Evidence disagree", "— Agree-rows already 71–78% right", "— Reports LLM-call savings and accuracy on routed rows"]),
-           ("P2-2", "Evidence-grounded adjudicator", ["— Gate 0 rerun on Electronics dev", "— LLM sees the two candidate stars plus the Evidence model's top n-grams as cited evidence", "— Old adjudicator failed Gate 0 (52–57% vs 56–67%)"]),
-           ("P2-3", "Better Reflector features", ["— Margin, entropy, disagreement flag", "— Prior adjustment, abstain option", "— Cheap, expected small gain"]),
-           ("P2-4", "Ablation ladder", ["— Analyst · Evidence · + stacker · + routing · + adjudicator (only if P2-2 passes)", "— Paired CIs on eval and natural_test, each read once"])],
-      1.82, 3.4)
-band(n6, 5.45, "Also open", "Natural-prior stacker (removes the class-prior confound on natural_test); base-LLaMA-without-LoRA and a small fine-tuned encoder as baselines; variance of the +1.5. Visual Verifier stays excluded (constant output across 3 vision models) and is reported as a negative result. Plan: v2_reflective/PROJECT_ROADMAP.md.", h=1.25)
+# N6 what was tried since Oct 18 (each with a dev-only gate declared beforehand)
+n6 = new_slide("PHASE 2 · EXPERIMENTS", "Nine Lines of Work, Each Gated on Dev Before Any Test Read",
+               "Every rule was written in LOG.md before running. Failed candidates never touched eval or natural_test.")
+accent_card(n6, MARGIN, 1.82, CW, 4.3)
+make_table(n6, MARGIN + 0.26, 1.98, CW - 0.5, [3.3, 6.0, CW - 0.5 - 9.3], None, ["Experiment", "Result", "Verdict"],
+           [[("Gate 0: LLM adjudicator", INK, True), ("LLM 54.2% vs stack 73.3% on 434 disagreement rows", BODY, False), ("FAIL, dropped", NEG, True)],
+            [("Base LLaMA, no LoRA", INK, True), ("34.3% alone, but stack base+E 63.7 ≈ LoRA+E 63.9 (eval)", BODY, False), ("LoRA adds little in stack", BODY, False)],
+            [("DistilBERT 2K baseline", INK, True), ("52.8% vs LoRA 54.0% on eval, not significant", BODY, False), ("Level with LoRA", BODY, False)],
+            [("Variance (5 seeds) + LoRA seed 2", INK, True), ("Stack gain over Evidence positive in 5/5 seeds", BODY, False), ("Stable", POS, True)],
+            [("LoRA on 10K rows (R10)", INK, True), ("dev 56.4% < gate 58%", BODY, False), ("FAIL", NEG, True)],
+            [("Hidden-state probe (F, F2)", INK, True), ("dev gain +.005 to +.011, natural_dev miss", BODY, False), ("FAIL at 10K fit", NEG, True)],
+            [("Pooled-dev Reflector (D)", INK, True), ("Gate passed, but gain = class-prior shift", BODY, False), ("Not adopted", BODY, False)],
+            [("Evidence on 500K rows (G2)", INK, True), ("Better alone (+1.9 dev), stack not better", BODY, False), ("FAIL in stack", NEG, True)],
+            [("Bigger dev2 (2,000) + probe on 40K (H)", INK, True), ("dev2 +3.9 pts, CI [+2.4, +5.8]", BODY, False), ("PASS, new main", POS, True)]],
+           row_h=0.42, head_h=0.34, aligns=[L, L, L])
+band(n6, 6.25, "Source", "v2_reflective/LOG.md entries 2026-10-20 to 2026-10-24; outputs in v2_reflective/e23/*.out.", h=0.75)
+
+# NH main result (Phase H)
+nh = new_slide("PHASE 2 · MAIN RESULT", "Frozen LLaMA Probe + 500K Evidence Agent (SH)",
+               "P3 = logistic probe on base-LLaMA layer-20 hidden state (40K fit). E6b = TF-IDF LR on ~497K rows. Reflector LR fit on dev2 (2,000 balanced). Read once.")
+lw = 7.3
+accent_card(nh, MARGIN, 1.82, lw, 3.45)
+make_table(nh, MARGIN + 0.26, 2.0, lw - 0.5, [2.6, 1.2, 1.2, 1.8], None, ["Model", "eval", "natural", "macro-F1 e / n"],
+           [[("Old headline: LoRA + E (dev fit)", INK, False), ("63.9%", BODY, False), ("73.4%", BODY, False), (".638 / .577", MUTED, False)],
+            [("LoRA + E refit on dev2", INK, False), ("65.5%", BODY, False), ("74.2%", BODY, False), (".653 / .587", MUTED, False)],
+            [("P3 probe alone", INK, False), ("61.2%", BODY, False), ("74.3%", BODY, False), (".610 / .606", MUTED, False)],
+            [("E6b Evidence alone", INK, False), ("62.5%", BODY, False), ("70.2%", BODY, False), (".624 / .550", MUTED, False)],
+            [("SH  P3 + E6b (main)", ACCENT_D, True), ("67.5%", ACCENT_D, True), ("75.7%", ACCENT_D, True), (".675 / .612", ACCENT_D, True)],
+            [("SH, 5-seed mean ± sd", MUTED, False), ("65.8 ± 0.6", MUTED, False), ("75.4 ± 0.8", MUTED, False), (".657 / .610", MUTED, False)]],
+           row_h=0.44, head_h=0.36, aligns=[L, R, R, R])
+rx = MARGIN + lw + GUTTER; rw = CW - lw - GUTTER
+accent_card(nh, rx, 1.82, rw, 3.45, bar=ACCENT_D)
+_, tf = textbox(nh, rx + 0.26, 1.98, rw - 0.5, 0.3); para(tf, "Paired comparisons (SH, exact, 95% CI)", size=T_CARD, color=INK, bold=True, first=True)
+block(nh, rx + 0.26, 2.4, rw - 0.48, 2.8, ["— vs old headline: +3.6 [+0.9, +6.3] eval, +2.3 [+0.6, +4.0] natural (both p < .02)",
+     "— vs E6b alone: +5.0 [+2.4, +7.4] eval, +5.5 [+3.8, +7.1] natural",
+     "— vs P3 alone: +6.3 [+3.8, +8.8] eval, +1.4 [−0.1, +2.9] natural (ns)",
+     "— Gain over each single agent positive in 5/5 seeds on both splits"], size=T_SMALL, gap=5)
+band(nh, 5.45, "Honest read", "Against LoRA + E refit on the same dev2, SH gains only +2.0 eval / +1.5 natural (not significant): part of the gain is the bigger Reflector fit set. A frozen base LLaMA replaces the LoRA Analyst; adding LoRA back does not help. 5 candidates were compared on dev2 (disclosed). Source: e23/readout_H.out, e23/variance_H.out.", h=1.2)
+
+# NF frozen results figure
+nf = new_slide("FROZEN RESULTS", "All Models, Exact Accuracy with 95% Bootstrap CI",
+               "Recomputed from stored probabilities by e23/freeze_tables.py. Left: eval (1,000 balanced). Right: natural_test (2,000, natural skew).")
+nf.shapes.add_picture(os.path.join(ROOT, "paper/figures/e23/main_bars.png"), Inches(MARGIN), Inches(1.75), height=Inches(5.2))
 
 # N7 roadmap
 n7 = new_slide("ROADMAP", "Plan to the Nov 21–22 Deadline",
@@ -152,8 +195,8 @@ n7 = new_slide("ROADMAP", "Plan to the Nov 21–22 Deadline",
 accent_card(n7, MARGIN, 1.82, CW, 4.2)
 make_table(n7, MARGIN + 0.26, 2.0, CW - 0.5, [1.0, 1.7, 6.2, CW - 0.5 - 8.9], None, ["Week", "Dates", "Work", "Checkpoint"],
            [[("0", INK, True), ("Oct 17–18", BODY, False), ("Hallucination study, plan, roadmap, results scaffold", BODY, False), ("Done", POS, True)],
-            [("1", INK, True), ("Oct 19–25", BODY, False), ("Natural-prior stacker; routing analysis; Reflector features; base-LLaMA scoring", BODY, False), ("Confound resolved", BODY, False)],
-            [("2", INK, True), ("Oct 26–Nov 1", BODY, False), ("Adjudicator Gate 0; encoder baseline; variance; angle decision; numbers freeze", BODY, False), ("Claim fixed", BODY, False)],
+            [("1", INK, True), ("Oct 19–25", BODY, False), ("Natural-prior stacker; routing; base LLaMA; Gate 0; variance; probes; 500K Evidence; Phase H", BODY, False), ("Done, SH adopted", POS, True)],
+            [("2", INK, True), ("Oct 26–Nov 1", BODY, False), ("Tables regenerated (done Oct 24); paper results + deck; numbers freeze Nov 1", BODY, False), ("Claim fixed", BODY, False)],
             [("3", INK, True), ("Nov 2–8", BODY, False), ("Paper prose (author-written); figures; reproducibility pass", BODY, False), ("Draft 1, similarity check", BODY, False)],
             [("4", INK, True), ("Nov 9–15", BODY, False), ("Supervisor fixes; thesis sections; archive; deck", BODY, False), ("Draft 2, similarity check", BODY, False)],
             [("5", INK, True), ("Nov 16–20", BODY, False), ("Buffer: proofreading, final checks, submission", BODY, False), ("Submitted by Nov 20", BODY, False)]],
@@ -178,4 +221,29 @@ for i, sl in enumerate(prs.slides, 1):
             set_p(s.text_frame.paragraphs[0], (f"HISTORICAL (SUPERSEDED) · {tail}" if i >= first_hist else f"{i - 1:02d} · {tail}"))
         elif i > 1 and i < first_hist and i > 9 and s.top < 600000 and not re.match(r"\d\d · ", txt) and txt.isupper():
             pass
+
+# ---- speaker notes (slide number -> text); full script in ../Presenter_Notes.md, Part 0
+NOTES = {
+ 1: "Title. Say: this is the Oct 25 update. Main results are on Amazon Reviews 2023 Electronics only. The headline system is now a frozen LLaMA probe plus an Evidence model, combined by a Reflector.",
+ 2: "Problem. Single-pass LLM rating has no evidence check. Keep it short: 1 minute.",
+ 3: "Research question and gap. Wang et al. 2025 is the baseline paper. Our question: does adding a second, independent signal and a combiner beat a single model?",
+ 4: "Data. Say: main results now use Electronics 2023 only. Kaggle is the original paper's data and appears only as reproduction.",
+ 5: "Original paper's pipeline (TextBlob DQC, stratified, VGST, neutral oversampling). Point forward: slide 14 shows TextBlob filtering hurts on Electronics.",
+ 6: "LoRA explained. LoRA is still trained (Phase 1), but in the final stack it is an ablation row, not the main agent.",
+ 7: "Phase 1 baseline on Kaggle (historical numbers). The 60.1% here used the leaky one-shot prompt; leak-free zero-shot is 59.2%. Slide 11 explains.",
+ 8: "Original Phase 2 design (Analyst, Visual, RAG, Critic). Say: this was the starting design; the audit (slide 26) and later experiments replaced it with the probe + Evidence + Reflector system on slide 10.",
+ 9: "Original dissonance Critic. Say: in practice it fired on 0.4% of rows, so it was replaced by a learned Reflector.",
+ 10: "UPDATE SLIDE. Read the three cards left to right. Must say the caveat: against the old stack refit on the same 2,000 dev rows the gain is only 2.0 / 1.5 points and not significant.",
+ 11: "Leak audit. Picking a one-shot example whose star differs from the truth leaks about 8 points. All later numbers are zero-shot and leak-free.",
+ 12: "Protocol. Frozen disjoint splits; all choices on dev; each test split read once per declared config. Since Oct 24 there is also dev2 (2,000 balanced) for the Reflector.",
+ 13: "First stack (Oct 13). Analyst LoRA + Evidence = 63.9 / 73.4. Superseded by SH, kept for continuity.",
+ 14: "Preprocessing ablation. TextBlob DQC deletes most 1 and 2 star reviews; VGST picks long reviews; both are dropped.",
+ 15: "Hallucination study. LoRA explanations are a canned template; digit probabilities are the usable signal. That is why Phase 2 combines probabilities, not explanations.",
+ 16: "Experiment ledger. Go row by row, about 10 seconds each. Key message: every rule was fixed before running and failures never touched the test sets.",
+ 17: "MAIN RESULT. SH 67.5 eval / 75.7 natural, macro-F1 .675 / .612. Variance 65.8 +/- 0.6 and 75.4 +/- 0.8. Read the honest-read band aloud.",
+ 18: "Bar chart of all frozen models with 95% CIs; SH in red. Point out: base LLaMA zero-shot is weak (34%) but its hidden states (P3) reach 61 / 74.",
+ 19: "Roadmap. Numbers freeze Nov 1; author writes prose Nov 2-8; draft 1 to supervisor Nov 8; submit by Nov 20.",
+}
+for i, sl in enumerate(prs.slides, 1):
+    sl.notes_slide.notes_text_frame.text = NOTES.get(i, "Historical slide (Run 1, All Beauty, Kaggle-trained adapter, leaky prompt). Superseded; show only if asked.")
 prs.save(DST); print("saved", DST, n)
