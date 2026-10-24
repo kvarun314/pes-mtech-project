@@ -451,3 +451,4 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - Copied with `cp -n` (never overwrite): `pes_20261024_2306.tar.gz` (1,811,570,828 bytes) + `.sha256`. SHA-256 of the Drive copy = local = recorded: `aca255f7ee81d11df865e96aaf4a415a48ce4322862b8e791552b0beec6857c5`.
 - Cloud upload check (Drive web search): `.sha256` visible immediately; the 1.8 GB archive was still uploading at the time of this entry (see the backup ledger in progress/DAILY_STATUS.md for the confirmed state).
 - Rules for Drive (user asked for great care): only write inside `PES_backups`; copy only (`cp -n`), no sync tools, no `--delete`, no moves; never delete anything in Drive without asking the user and naming each file.
+- Confirmed: both files (archive + .sha256) visible in Drive web search, so the cloud upload is complete.

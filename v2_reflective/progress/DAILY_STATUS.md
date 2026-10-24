@@ -33,7 +33,7 @@
 | 2026-10-22 | `../results_archive/backups/pes_20261022_1502.tar.gz` | see sha256 | NOT YET |
 | 2026-10-24 | `../results_archive/backups/pes_20261024_1641.tar.gz` (after Phase H readout, before variance_H) | PASSED (re-run Oct 24 evening) | NOT YET |
 | 2026-10-24 | `../results_archive/backups/pes_20261024_2301.tar.gz` (after variance_H + tables) | PASSED | NOT YET |
-| 2026-10-24 | `../results_archive/backups/pes_20261024_2306.tar.gz` (after deck v6 + paper section; .pptx files live outside the archive, rebuild with build_deck_e23.py) | PASSED | Google Drive `My Drive/PES_backups/` (sha256 match on Drive copy; cloud upload in progress 23:40) |
+| 2026-10-24 | `../results_archive/backups/pes_20261024_2306.tar.gz` (after deck v6 + paper section; .pptx files live outside the archive, rebuild with build_deck_e23.py) | PASSED | Google Drive `My Drive/PES_backups/` (sha256 match on Drive copy; both files confirmed in Drive web, Oct 24 night) |
 | 2026-10-24 | git 3b67b86 pushed to origin/e23-leakfree-oct2026 (freeze prep, deck builder, paper section, notes) | HEAD==origin verified | GitHub |
 | 2026-10-21 | git e8c7ae7 (4 commits squashed; enc2k_model gitignored) pushed to origin/e23-leakfree-oct2026 | HEAD==origin verified | GitHub |
 
