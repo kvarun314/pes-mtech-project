@@ -444,3 +444,10 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - `Presenter_Notes.md`: new Part 0 for the Oct 25 v6 deck (slide map, scripts for slides 10/13/16/17/18, new expected questions, v6 numbers cheat sheet). Parts 1–6 kept, marked as written for the older v3 deck. Pre-edit copy in the session scratchpad.
 - New `v2_reflective/EXPERIMENTS_SUMMARY.md`: whole-project ledger of what worked (W1–W10), what failed or was not adopted (F1–F16), baselines/robustness, historical results, integrity disclosures, and next steps.
 - An email-style update draft was written and then deleted at the user's request (user wanted the update in the deck instead).
+
+## 2026-10-24 (night) — First off-disk backup: Google Drive
+- Google Drive for desktop installed by the user (Homebrew cask `google-drive`, v133.0.2), signed in as the project account; default streaming mode, no settings changed.
+- New folder created: `My Drive/PES_backups/` (did not exist before; checked). Nothing else in Drive read, moved, changed or deleted.
+- Copied with `cp -n` (never overwrite): `pes_20261024_2306.tar.gz` (1,811,570,828 bytes) + `.sha256`. SHA-256 of the Drive copy = local = recorded: `aca255f7ee81d11df865e96aaf4a415a48ce4322862b8e791552b0beec6857c5`.
+- Cloud upload check (Drive web search): `.sha256` visible immediately; the 1.8 GB archive was still uploading at the time of this entry (see the backup ledger in progress/DAILY_STATUS.md for the confirmed state).
+- Rules for Drive (user asked for great care): only write inside `PES_backups`; copy only (`cp -n`), no sync tools, no `--delete`, no moves; never delete anything in Drive without asking the user and naming each file.
