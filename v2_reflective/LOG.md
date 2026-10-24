@@ -406,3 +406,22 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - SH vs best single agent: vs E6b eval +5.0 [+2.4,+7.4] p 1.7e-4, natural_test +5.5 [+3.8,+7.1] p 1.3e-10; vs P3 eval +6.3 [+3.8,+8.8] p 6.4e-7, natural_test +1.4 [-0.1,+2.9] p .074.
   - Polarity: SH vs E6b +3.1 [+1.0,+5.2] eval, +2.6 [+1.6,+3.6] natural_test. SH vs old headline polarity ns (-0.4 / +0.9).
 - Verdict: SH adopted as the new main Phase 2 configuration (dev2-gated, read once). The LoRA Analyst becomes an ablation row. To do before freeze: variance over seeds for SH, regenerate frozen tables/figures, update outline + deck. Uncorrected p-values; 5-candidate selection on dev2 disclosed; evid_H eval/natural_test print slip disclosed above.
+
+## 2026-10-24 — Phase H variance declared (before running)
+- `e23/variance_H.py` -> `variance_H.out`, `variance_H_seed{0-4}.json` (resumable per seed). Per seed: bootstrap the 40K probe fit set and refit P3 (L20, C=.001); bootstrap dev2 for the Reflector (both SH and S0 refit on the same bootstrap). E6b held fixed (500K retrain x5 too slow; disclosed). Report mean ± sd over 5 seeds on eval and natural_test: SH, S0 (dev2 fit), E6b, P3 exact + macro-F1, and SH-minus-E6b, SH-minus-P3, SH-minus-S0. Post-selection robustness check, not a selection step.
+- Phase H variance result (`e23/variance_H.out`, 5 seeds, E6b fixed):
+  - eval SH: exact 65.8 ± 0.6  macroF1 0.657 ± 0.007
+  - eval S0: exact 65.1 ± 0.8  macroF1 0.650 ± 0.007
+  - eval E6b: exact 62.5 ± 0.0  macroF1 0.624 ± 0.000
+  - eval P3: exact 60.7 ± 1.1  macroF1 0.605 ± 0.010
+  - eval SH-minus-E6b: +3.34 ± 0.61 pts, per seed [3.9, 3.4, 3.5, 3.6, 2.3]
+  - eval SH-minus-P3: +5.18 ± 0.86 pts, per seed [4.5, 5.9, 6.3, 4.4, 4.8]
+  - eval SH-minus-S0: +0.70 ± 1.23 pts, per seed [2.1, 0.7, 1.6, 0.1, -1.0]
+  - natural_test SH: exact 75.4 ± 0.8  macroF1 0.610 ± 0.005
+  - natural_test S0: exact 74.4 ± 0.9  macroF1 0.591 ± 0.010
+  - natural_test E6b: exact 70.2 ± 0.0  macroF1 0.550 ± 0.000
+  - natural_test P3: exact 73.0 ± 0.7  macroF1 0.586 ± 0.012
+  - natural_test SH-minus-E6b: +5.19 ± 0.82 pts, per seed [5.7, 4.8, 3.9, 6.0, 5.4]
+  - natural_test SH-minus-P3: +2.43 ± 1.19 pts, per seed [3.0, 1.3, 1.0, 2.8, 3.8]
+  - natural_test SH-minus-S0: +1.00 ± 0.61 pts, per seed [0.1, 0.9, 0.9, 1.7, 1.3]
+- Reading: the multi-agent gain over each single agent is positive in 5/5 seeds on both splits (SH-E6b +3.3±0.6 eval, +5.2±0.8 natural_test; SH-P3 +5.2±0.9 eval, +2.4±1.2 natural_test). SH vs the old two-agent stack refit on the same dev2 bootstrap: +0.7±1.2 eval (4/5 positive), +1.0±0.6 natural_test (5/5 positive), small.
