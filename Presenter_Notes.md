@@ -2,7 +2,7 @@
 
 ## Part 0 — Oct 25 presentation (deck v6). READ THIS FIRST
 
-Deck: `../Agentic_LLaMA3_Presentation_v6_phaseH.pptx` (28 slides; built by `v2_reflective/build_deck_e23.py`). Short speaker notes are also in the PowerPoint notes pane of every slide.
+Deck: `../Agentic_LLaMA3_Presentation_v6_phaseH.pptx` (28 slides; built by `v2_reflective/build_deck_e23.py`). Short speaker notes are also in the PowerPoint notes pane of every slide. Full project history (what failed, what worked, why this direction): `Project_Journey.md`, next to this file.
 Parts 1–6 below were written for the older v3 deck (22 slides). Their slide numbers no longer match. Use the glossary and metric explanations, but take numbers and slide order from this part.
 
 Suggested timing (about 20 minutes): slides 1–9 background (6 min), slide 10 update (2 min), slides 11–15 protocol and audits (4 min), slides 16–18 experiments and main result (6 min), slide 19 roadmap (1 min). Slides 20–28 are historical backups; show them only if asked.

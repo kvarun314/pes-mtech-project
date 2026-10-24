@@ -452,3 +452,11 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - Cloud upload check (Drive web search): `.sha256` visible immediately; the 1.8 GB archive was still uploading at the time of this entry (see the backup ledger in progress/DAILY_STATUS.md for the confirmed state).
 - Rules for Drive (user asked for great care): only write inside `PES_backups`; copy only (`cp -n`), no sync tools, no `--delete`, no moves; never delete anything in Drive without asking the user and naming each file.
 - Confirmed: both files (archive + .sha256) visible in Drive web search, so the cloud upload is complete.
+
+## 2026-10-24 (night) — Phase A1 DECLARED (before running): bigger probe fit (P3b), part of the Phase 2 v3 plan
+- Why: P3 improved from a 10K to a 40K fit and is the best single agent on natural_test (74.3); the Phase G curve says more fit data still helps. Local only: the probe must use the same MLX Q4 model as the demo.
+- Data: `e23/build_A1.py` -> `fit3.jsonl` = 80K balanced (16K/star, Random(2027)) from `evid_big_extra_nodev2` (asserted disjoint from dev, dev2, fit2, eval, natural_test, natural_dev).
+- Extraction: `e23/probe_agent4.py` = probe_agent3 with the L20 last-token state only (the P3 feature; same prompt, same model, layers[:20]), chunks of 500 in `e23/hid4/`, resumable. Queue `e23/queue_A1.sh`, marker `stage_A1.txt`, log `probe_agent4.out`. ~5K rows/h, so about 16 h (2 nights); `caffeinate -i`.
+- P3b = LR on standardised L20 last-token features of fit (10K) + fit2 (30K) + fit3 (80K) = 120K; C in {.0003, .001, .003} chosen on dev2 CV.
+- Gate (dev2 + natural_dev only; script written before extraction ends): P3b+E6b vs SH (P3+E6b), stacker LR C=1, 5-fold CV x3. PASS if dev2 exact >= SH+.010 AND paired bootstrap CI lower bound > 0 (repeat 0) AND macro-F1 >= SH on dev2 and natural_dev AND natural_dev exact >= SH. One candidate. PASS -> single readout on eval/natural_test, SH replaced. FAIL -> logged, SH stays. If extraction is cut short for schedule reasons, the gate runs on the rows done by then (stated in the result).
+- 2026-10-24 night: `Project_Journey.md` written next to `Presenter_Notes.md` (full Phase 1 to now history, failures, successes, lessons, why the v3 direction; linked from Presenter_Notes Part 0).
