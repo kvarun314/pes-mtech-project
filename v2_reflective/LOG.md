@@ -838,3 +838,11 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - **Gate: FAIL** (condition 2). Per the declaration, no readout on eval or natural_test.
 - Reading: escalation clearly corrects draft stars on dev2. The chosen tau 0.60 is slightly too aggressive on natural-mix data.
 - Any retry must be declared as a new candidate (B1-b) and disclosed as the second Router attempt.
+
+### 2026-10-25 — B1-b Router (second attempt) + SC1 DECLARED (before running); user approved
+- **Why a second attempt:** B1 failed only its natural_dev check (−0.3 pt) at tau 0.60. Disclosed as the second Router candidate.
+- **What was already seen:** the dev2 CV curve (dev data), and natural_dev at tau 0.60 only. No test data.
+- **The one change:** tau = the smallest of 0.30, 0.35, …, 0.95 whose dev2 5-fold CV routed exact is ≥ the full stack's (tolerance 0 instead of 0.5 pt). Same folds (seed 0).
+- **Everything else is identical to B1:** draft and revised definitions, SC1 counts, the natural_dev check (routed ≥ full − 0.005), SC1 on dev2 (fixed > broken, p < .05), and on PASS a single readout on eval + natural_test.
+- **Multiplicity:** two Router candidates were tried. Both are reported in the paper, and the readout p-values join the Holm family at freeze.
+- **Script:** `gate_B1.py` called with `TOL=0 OUT=gate_B1b`. The code is otherwise unchanged; outputs are `gate_B1b.out` and `gate_B1b.json`.
