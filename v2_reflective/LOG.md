@@ -633,3 +633,8 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - `v2_reflective/e23/persist_agents.py` started: it refits E6b, P3 and the Reflector with the frozen configs and asserts they reproduce the stored probabilities (max diff < 1e-6) and the main stack's 0.675 on eval.
   - Pre-flight: AC power, battery 100%, swap 2.1 GB, no other model job.
   - Output: `persist_agents.out`. Agents go to `v2_reflective/e23/agents/`, which is now gitignored along with `b2/`.
+- Rebuild finished in 611 s (Evidence model fit 549 s). Verification:
+  - E6b max |diff| vs `evid6b_eval_probs` = 0.0.
+  - P3 max |diff| vs `evid7_eval_probs` = 0.0.
+  - Reflector eval exact = 0.675, matching the frozen main stack.
+- The saved agents reproduce the frozen results exactly. Files: `agents/e6b.joblib` (30.8 MB), `p3.joblib` (177 KB), `reflector.joblib` (2 KB). Task 3 complete.
