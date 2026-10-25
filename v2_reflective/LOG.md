@@ -526,3 +526,19 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - It is still in the git history. Purging that history needs a rewrite and a force-push, and the user decides on that.
 - Also gitignored: `fit3.jsonl`, `hid4/`, and the demo notebooks (which can contain review text).
 - Now tracked: `probe_agent4.out`, `stage_A1.txt`, `variance_H2.out`, and `docs/archive/CODE_EXPLAINED_2026-10-11.md`.
+
+### 2026-10-25 — Spec approved; implementation plan written; Instruct model downloaded
+- The user approved the Phase 2 v3 spec, including the Phase 1 + Phase 2 demo for the December final presentation.
+- Plan: `docs/superpowers/plans/2026-10-25-phase2-v3-plan.md`, 14 tasks:
+  - A1 resume and gate
+  - text, Evidence and Reflector modules, with the persisted SH agents verified against the frozen probabilities
+  - shared LLaMA with a LoRA toggle
+  - B1 Router gate
+  - pack and Critic, Explainer, LangGraph v3
+  - B2 runner, deletion test and report
+  - C6 audit table
+  - final demo with a headless check
+  - freeze stage 1
+  - A2 on Colab
+- Downloaded Llama-3-8B-Instruct 4-bit MLX (`mlx-community/Meta-Llama-3-8B-Instruct-4bit`, 4.9 GB) to `.scratch/mlx-llama3-8b-instruct-q4`. The user approved this.
+- Repo visibility: the GitHub repo is public. `dev2.jsonl` (review text) is still in its history. The history purge was blocked by the permission system and is waiting on the user (see the session reply).
