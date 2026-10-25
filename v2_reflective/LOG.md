@@ -783,3 +783,13 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
      - Conclusions gain a LIMITS card: one dataset; part of the gain is the fit set; agentic numbers pending.
 - Speaker notes updated for problem, solves, Phase 1 results and conclusions. `Presenter_Notes.md` Part 0 is reorganised to the new order, with updated timing.
 - The deck now has 24 slides. Rendered and checked; synced to Google Slides.
+
+### 2026-10-25 — Presenter notes: Q&A from the pre-presentation questions
+- `Presenter_Notes.md` "New questions to expect" gains:
+  - "are these results good?", with the baseline ladder (20 / 34.3 / ~48 / 52.8 / 54.0 / 67.5), within-one 96.7, and the comparison with the paper's 92.6
+  - "what is the natural test, and which other tests?": balanced eval, natural test, dev / dev2 / natural_dev, Kaggle paper-protocol
+  - "what is the main stack / Probe + Evidence stack?"
+  - "is the tried-and-dropped table final?"
+  - a text block diagram
+- The main-result section opens with the "two readers and a learned referee" line.
+- Slide 14 (main result) speaker note now defines the main stack and gives the "is it good?" answer. Rebuilt; Google Slides synced.

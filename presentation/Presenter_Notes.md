@@ -102,7 +102,7 @@ Start with the data line in the subtitle. It answers any leakage question:
 - The paper's 92.6% used K=5 cross-validation and a 40K test set.
 
 ### 6. Results of Phase 2: the headline (slides 14–16)
-**Main result:** **Read the table top to bottom:** earlier LoRA + Evidence stack 63.9 / 73.4; the same stack refit on dev2 65.5 / 74.2; probe alone 61.2 / 74.3; Evidence alone 62.5 / 70.2; **main stack 67.5 / 75.7**; 5-seed mean 65.8 ± 0.6 / 75.4 ± 0.8.
+**Main result:** "The main stack, the Probe + Evidence stack, is two readers and a learned referee." **Read the table top to bottom:** earlier LoRA + Evidence stack 63.9 / 73.4; the same stack refit on dev2 65.5 / 74.2; probe alone 61.2 / 74.3; Evidence alone 62.5 / 70.2; **main stack 67.5 / 75.7**; 5-seed mean 65.8 ± 0.6 / 75.4 ± 0.8.
 **Paired comparisons:** versus the earlier LoRA + Evidence stack +3.6 [+0.9, +6.3] eval and +2.3 [+0.6, +4.0] natural, both significant. Versus Evidence alone +5.0 and +5.5. Versus the probe alone +6.3 eval; +1.4 natural (not significant).
 **Key message:** "Combining two different kinds of signal beats either one alone, every seed. The frozen LLaMA model already contains the useful information; fine-tuning it was not needed for the stack."
 
@@ -141,6 +141,30 @@ Start with the data line in the subtitle. It answers any leakage question:
 End with the dates: freeze Nov 1 / 5, draft Nov 8, submit Nov 20, final presentation in December with a live demo.
 
 ### New questions to expect
+- **"Are these results good or bad?"** Good, and they hold up. Exact five-star rating is hard, because 4★ vs 5★ is often a judgement call.
+  - On the same balanced eval: random 20%, base LLaMA 34.3%, SVM / Naive Bayes ~47–48%, DistilBERT 52.8%, Phase 1 (the paper's method) 54.0%, **main stack 67.5%**.
+  - Within one star 96.7%; 90% of errors are one star off; macro-F1 .675.
+  - The paper's 92.6% came from skewed Kaggle data with a different protocol. On that kind of data our leak-free reproduction gets 69.1%, while always guessing 5★ gets 63.8%.
+- **"What is the natural test, and what other tests did you use?"**
+  - **Balanced eval:** 1,000 reviews, 200 per star. Skill on every star equally; random gets 20%.
+  - **Natural test:** 2,000 reviews with the real mix (65% 5★). What real use looks like; always guessing 5★ gets ~65%, so macro-F1 is reported too.
+  - **Development sets:** dev (500) and dev2 (2,000, balanced) plus natural_dev (500), used for every decision. Test sets are read once.
+  - **Kaggle paper-protocol test:** 4,000 reviews, used only to reproduce the paper.
+  - No review appears in two sets (checked by id and by exact text).
+- **"What is the main stack / Probe + Evidence stack?"** Same thing, two names.
+  - Two readers: the **LLaMA probe**, frozen LLaMA-3-8B whose layer-20 state goes to a small classifier and reads meaning, and the **Evidence model**, TF-IDF on ~497K reviews, which reads key words.
+  - A **Reflector** (a learned referee) combines them into the final star.
+  - The two readers make different mistakes: alone 61–62%, together 67.5%.
+  - It changes only if the bigger probe (A1) or DeBERTa (A2) passes its dev check.
+- **"Is the tried-and-dropped table final?"** For everything run so far, yes. A pending experiment that fails adds a row; one that passes moves to "What We Kept". This is updated at the Nov 1 / Nov 5 freezes.
+
+**Block diagram (draw it if asked):**
+```
+Review ─┬─► LLaMA probe (meaning)  ─► P(1..5★) ─┐
+        └─► Evidence model (words) ─► P(1..5★) ─┴─► Reflector ─► final star
+Phase 2 v3 around it: Router (skip LLaMA if Evidence is confident; escalate if unsure) ·
+LLM re-rating of uncertain reviews (gated) · Explainer ⇄ Critic loop (max 2 rewrites) → checked explanation
+```
 - **"Why did the gain over the old system shrink in the fair comparison?"** The old Reflector was fit on only 500 rows. Given 2,000 rows it improves too. The main stack is still ahead in 4 of 5 seeds on eval and 5 of 5 on natural, but the margin is small (+0.7 ± 1.2 and +1.0 ± 0.6).
 - **"You tried many things; isn't the winner luck?"** Every rule was written before running, and failures never touched the test sets. Five candidates were compared on dev2, and I disclose that. The test sets were read once.
 - **"Then what is the role of LoRA?"** Phase 1 is still the paper's baseline reproduction. Inside Phase 2 it is an ablation row: adding it to the main stack did not help (dev2 .633 versus .639).
