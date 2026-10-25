@@ -688,3 +688,24 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 ### 2026-10-25 — Deck confirmed in Google Slides
 - Opened `PES_backups/current_deck/Agentic_LLaMA3_Presentation.pptx` from Drive in Google Slides: https://docs.google.com/presentation/d/1V08iho4p7gdllKPxRVroaPhj6oo8Km1_/edit
 - Shows "39 total slides" and the speaker notes. The link is added to `README.md`.
+
+### 2026-10-25 — Deck restructured: 22-slide main talk + appendix; presenter notes rebuilt to match
+- User feedback: "ordering seems off and number of slides is way too much. Make it cleaner." Also: "Make sure presenter notes also is being reflected the same."
+- **Main talk (22 slides), in story order:**
+  - title, problem, gap
+  - key terms ×2, at a glance
+  - Electronics protocol, how one experiment flows
+  - Phase 1 method, leak audit
+  - where Phase 2 started (original design, retitled), hallucination study
+  - tried/dropped ×2, kept
+  - main result, Phase 1 → Phase 2, bar chart, robustness
+  - next (v3), build schedule, roadmap
+- **Appendix (18 slides) after a divider with a contents list:** datasets, Phase 1 pipeline, Kaggle baseline, dissonance Critic, first stack, preprocessing ablation, nine-lines summary, code workspace, and historical Run 1 ×9. Nothing deleted.
+- **Builder refactor:**
+  - Slides are ordered by key (`MAIN` / `APPX` lists), and speaker notes are keyed by slide name.
+  - Every cross-reference is a `§key§` token resolved after ordering, so reordering no longer breaks references.
+  - Eyebrows: main slides numbered 01–21; appendix slides "APPENDIX · …" and "HISTORICAL (SUPERSEDED) · …".
+  - The "At a glance" slide was retitled from "What Changed Since the Last Review". The eyebrow "CODE · WORKFLOW" became "HOW WE RUN EXPERIMENTS".
+  - Every build writes `presentation/deck_slide_map.md`: slide number, section, title and the speaker note.
+- **Presenter notes:** `Presenter_Notes.md` Part 0 rewritten in deck order, without slide numbers (numbers live in the auto-generated map). It covers the structure, timing for the 22-minute main talk, the main-talk list, longer scripts per slide, and an appendix section. `V2_Reflective_Guide.md` references are now by slide name.
+- Deck: 40 slides in total (22 main). Rendered and checked. Synced to Drive `current_deck/` (Google Slides link unchanged).

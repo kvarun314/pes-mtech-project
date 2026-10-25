@@ -1,7 +1,7 @@
 # Presenter guide: the `v2_reflective/` folder
 
 Use this when someone asks "where is the code?", "how did you run the experiments?" or "how do we know the numbers are real?".
-- Deck slides 29–30 show this material. Slides 31–39 are historical backups.
+- Deck: the main talk has "How One Experiment Flows"; the appendix has "Where the Work Lives". Slide numbers: `deck_slide_map.md` (auto-generated).
 - Companion files (same folder, `presentation/`): `Presenter_Notes.md` (slide-by-slide script) and `Project_Journey.md` (full history).
 
 ---
@@ -12,7 +12,7 @@ Use this when someone asks "where is the code?", "how did you run the experiment
 
 ## 2. Why it is called "v2_reflective"
 
-- **Oct 10:** the folder was created for **"Reflective Orchestration v2"** (historical slide 39). That design had an uncertainty gate, a Reflector and a pair adjudicator on top of the Phase 1 model.
+- **Oct 10:** the folder was created for **"Reflective Orchestration v2"** (historical appendix slide). That design had an uncertainty gate, a Reflector and a pair adjudicator on top of the Phase 1 model.
 - **Oct 11–12:** the first experiments here found:
   - the one-shot label leak,
   - that the recalibration gain was not real,
@@ -72,7 +72,7 @@ v2_reflective/
 
 **Run control:** `queue_*.sh` starts a long job. A `stage_*.txt` marker records how far it got. Hidden-state extraction saves in chunks, so a stopped run (sleep, battery, planned pause) resumes where it left off.
 
-## 5. How one experiment flows (slide 30)
+## 5. How one experiment flows (main-talk slide)
 
 1. **Declare.** Write the candidate, the data and the exact pass rule in `LOG.md`. Example: "dev2 +1.0 point, paired CI > 0, macro-F1 not lower, natural_dev not lower".
 2. **Run.** The script is resumable, logs to a `.log` file, and writes its result to a `.out` file.
@@ -83,10 +83,10 @@ v2_reflective/
 
 **Say:** "The rule is written before the run, so I cannot move the goalposts after seeing the result. Failed ideas never see the test sets. That is why I can report 16 failures and still trust the one pass."
 
-## 6. Talking script (2 minutes, slides 29–30)
+## 6. Talking script (2 minutes)
 
-- **Slide 29:** "This is where all the Phase 2 work lives. The top level holds the October Kaggle close-out. That's where the label leak was found and the first LLM adjudicator failed. Everything current is in `e23`, Electronics 2023. The pipeline runs left to right: build frozen splits, let each agent write its probabilities, gate on dev, read the test sets once, freeze the tables. Every agent leaves a probability file per split, so any table can be recomputed in seconds without rerunning LLaMA."
-- **Slide 30:** "This is the discipline behind every number. The rule goes in the log first, the run is resumable, the gate uses dev data only, a pass is read once, and the freeze script regenerates the tables. There are 177 files in `e23`, and every result in the deck traces back to one of them."
+- **"Where the Work Lives" (appendix):** "This is where all the Phase 2 work lives. The top level holds the October Kaggle close-out. That's where the label leak was found and the first LLM adjudicator failed. Everything current is in `e23`, Electronics 2023. The pipeline runs left to right: build frozen splits, let each agent write its probabilities, gate on dev, read the test sets once, freeze the tables. Every agent leaves a probability file per split, so any table can be recomputed in seconds without rerunning LLaMA."
+- **"How One Experiment Flows" (main talk):** "This is the discipline behind every number. The rule goes in the log first, the run is resumable, the gate uses dev data only, a pass is read once, and the freeze script regenerates the tables. There are 177 files in `e23`, and every result in the deck traces back to one of them."
 
 ## 7. Questions to expect
 
