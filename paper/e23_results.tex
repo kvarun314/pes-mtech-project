@@ -170,4 +170,11 @@ Calibration: ECE; mean confidence vs accuracy & .047; .650 vs .675 & .062; .704 
 % FACT: when the agents disagree, the Reflector picks right 55.6% / 55.8% vs 42.7 / 35.7 (Evidence model (~497K)) and 39.1 / 50.1 (LLaMA probe).
 % FACT: main stack is slightly under-confident (ECE .047 / .062), so its probabilities can be used as confidence.
 % FACT: cost per review on an M1 16 GB: LLaMA probe forward to layer 20 ~0.67 s; TF-IDF transform and Reflector each well under 0.1 ms (0.04-0.06 ms across runs).
+% FACT (Phase 2 v3, Router + self-correction 1; LOG.md 2026-10-25, e23/gate_B1.out, gate_B1b.out):
+%   - Router: skip the LLaMA probe when the Evidence model's max probability >= tau; otherwise escalate and let the Reflector revise the draft star.
+%   - Attempt 1 (tau 0.60, tolerance 0.5 pt) failed its natural_dev check by 0.3 pt; no test read. Attempt 2 (tau 0.70, tolerance 0) declared and passed.
+%   - Readout: probe skipped on 39% (eval) / 48% (natural_test); routed exact 67.4 vs 67.5 and 75.5 vs 75.7 (McNemar p 1.0 / 0.68).
+%   - Self-correction 1 (escalated reviews): eval 607 escalated, fixed 92 / broken 50, net +42, binomial p 5.3e-4;
+%     natural_test 1,035 escalated, fixed 152 / broken 78, net +74, p 1.2e-6. dev2 (CV): fixed 194 / broken 101, p 6.7e-8.
+%   - Disclose: two Router candidates tried; readout p-values join the Holm family at freeze.
 % AUTHOR: write the robustness paragraph(s) here.

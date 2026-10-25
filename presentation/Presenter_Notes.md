@@ -1,6 +1,6 @@
 # Presenter Notes — Agentic Self-Correction in LLaMA-3
 
-## Part 0 — Current deck (24 slides). READ THIS FIRST
+## Part 0 — Current deck (25 slides). READ THIS FIRST
 
 Deck: `PES_Project_Phase1/Agentic_LLaMA3_Presentation.pptx`, the only current deck, built by `v2_reflective/build_deck_e23.py`. Google Slides (always current): https://docs.google.com/presentation/d/1V08iho4p7gdllKPxRVroaPhj6oo8Km1_/edit
 **Flow (as agreed 2026-10-25):** Intro → Phase 1, the baseline paper (what it does) → its shortcomings → Phase 2 intro → in depth → how it solves the problem → results of Phase 1 → results of Phase 2 → in depth → conclusions. At most 25 slides.
@@ -14,7 +14,7 @@ Slides no longer in the deck (Run 1 historical, Kaggle baseline, dissonance Crit
 - Phase 2 intro, system, and how it answers each shortcoming: 4 min
 - Phase 1 results (with the data line): 1 min
 - Phase 2 results (main result, gain, all models): 3 min
-- In depth (errors, why it works, tried/dropped/kept, robustness): 5 min
+- In depth (errors, why it works, tried/dropped/kept, robustness, self-correction 1): 6 min
 - Schedule and conclusions: 2 min
 
 ### 1. Intro: title and problem (slides 1–2)
@@ -88,7 +88,7 @@ Use these when explaining or when someone asks what a word means.
   - Two agents instead of one pass.
   - LLMs explain and check instead of judging, because the judge failed twice.
   - Template justifications replaced by evidence-based explanations that a Critic checks.
-  - The self-correction rows are being measured now (Router fixed vs broken, faithfulness, deletion test).
+  - Self-correction 1 is now measured (see its slide). Faithfulness and the deletion test come next.
 
 ### 5. Results of Phase 1 (slide 13)
 Start with the data line in the subtitle. It answers any leakage question:
@@ -110,7 +110,7 @@ Start with the data line in the subtitle. It answers any leakage question:
 
 **All models:** **Say:** "Every model, with 95% confidence intervals. The main stack is in red. Notice base LLaMA: as a zero-shot rater it gets 34%, but a probe on its hidden state gets 61 and 74."
 
-### 7. In depth (slides 17–22)
+### 7. In depth (slides 17–23)
 **Where the main stack is right and where it errs:**
 - Left, the confusion matrix: mistakes hug the diagonal, and 90% of errors are one star off.
 - Right, the share of each star found, Phase 1 vs Phase 2.
@@ -129,13 +129,21 @@ Start with the data line in the subtitle. It answers any leakage question:
 - **Calibration:** ECE .047 and .062, slightly under-confident. The confidence can be trusted, which is what the Router needs.
 - **Cost:** the LLaMA probe takes about 0.67 s per review; TF-IDF and the Reflector take under 0.1 ms each.
 
-### 8. Build schedule and conclusions (slides 23–24)
+**Self-correction 1, measured (slide 23):**
+- **Say:** "When the quick Evidence-model draft is unsure, the system calls the LLaMA probe and the Reflector revises the star."
+- **Numbers:**
+  - Balanced eval: 607 reviews escalated, 92 fixed vs 50 broken, p = 0.0005.
+  - Natural test: 1,035 escalated, 152 fixed vs 78 broken, p = 0.000001.
+  - LLaMA was skipped on 39% / 48% of reviews, with no significant accuracy change (67.4 vs 67.5; 75.5 vs 75.7).
+- **Be open about it:** "This was our second threshold. The first (0.60) missed its natural-dev check by 0.3 points and was never tested on the test sets. The second was declared before running, and both are reported."
+
+### 8. Build schedule and conclusions (slides 24–25)
 **Say:** "This is the build plan for the next ten days. Today the saved agents were rebuilt and match the frozen results exactly. Next come the shared LLaMA model and the Router with the first level of self-correction, then the Critic, the Explainer and the LLM re-rating check. The heavy runs (the bigger probe, explanations on all 3,000 test reviews, the deletion test) run overnight on the charger. Numbers freeze in two stages: Nov 1 for local work, Nov 5 once the Colab result is in or out."
 
 **Conclusions:** four cards.
 - Phase 1 was reproduced honestly, and two problems were found in the original protocol.
 - Phase 2's two-agent stack beats the single fine-tuned model, significantly.
-- The agentic layer is being built and measured.
+- The agentic layer's first part is measured: escalation fixes about two stars per one broken, and LLaMA is skipped on 39–48%. Explanations come next.
 - **Limits, said plainly:** one dataset; part of the gain comes from the larger Reflector fit set; agentic-layer numbers are still pending.
 
 End with the dates: freeze Nov 1 / 5, draft Nov 8, submit Nov 20, final presentation in December with a live demo.

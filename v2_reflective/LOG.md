@@ -861,3 +861,9 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 
 - **Reading:** the Router skips the slow LLaMA call on 39–48% of test reviews with no significant accuracy change. On escalated reviews, revising the draft star fixes about 2 stars for each one it breaks, significant on both test sets. This is measured self-correction of the rating (SC1).
 - **Disclosure:** this was the second Router attempt; B1 at tau 0.60 failed natural_dev.
+- **Deck, notes and paper updated with the B1-b / SC1 results:**
+  - New slide 23, "Self-Correction 1: Two Stars Fixed for Each One Broken": readout table, cost saving, and the attempt-1 / attempt-2 disclosure.
+  - The "How Phase 2 Answers" rows now show the measured numbers. The Conclusions agentic card reads "first part measured". The schedule row is marked Done.
+  - The deck has 25 slides.
+  - `Presenter_Notes.md` Part 0 has a new SC1 section, plus updated sections, ranges and timing.
+  - `paper/e23_results.tex` has FACT notes for the Router and SC1 (both attempts disclosed). Build OK.

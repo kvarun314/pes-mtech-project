@@ -353,7 +353,7 @@ ns = new_slide("SCHEDULE · OCT 25 → NOV 5", "Phase 2 v3 Build Schedule",
 accent_card(ns, MARGIN, 1.82, CW, 4.55)
 make_table(ns, MARGIN + 0.26, 1.95, CW - 0.5, [1.7, 6.6, 1.9, CW - 0.5 - 10.2], None, ["When", "Work", "Compute", "Status"],
            [[("Oct 25", INK, True), ("Shared agents rebuilt and verified (exact match to the frozen results)", BODY, False), ("10 min CPU", BODY, False), ("Done", POS, True)],
-            [("Oct 25–26", INK, True), ("Shared LLaMA (Phase 1 LoRA on / off); Router + escalation (self-correction 1)", BODY, False), ("minutes", BODY, False), ("Next", BODY, True)],
+            [("Oct 25", INK, True), ("Shared LLaMA (Phase 1 LoRA on / off); Router + escalation (self-correction 1): passed, measured", BODY, False), ("minutes", BODY, False), ("Done", POS, True)],
             [("Oct 26–27", INK, True), ("Evidence pack, Critic, Explainer; LLM re-rating check (self-correction 2); LangGraph wiring", BODY, False), ("~15 min model", BODY, False), ("Planned", BODY, False)],
             [("One night", INK, True), ("LLaMA probe on 120K reviews (35K left) + gate; variance rerun", BODY, False), ("~6 h + 1.5 h", BODY, False), ("Waiting for go", BODY, False)],
             [("Oct 28", INK, True), ("Explanation prompts tuned on 500 dev reviews, then frozen and declared", BODY, False), ("~1.5 h", BODY, False), ("Planned", BODY, False)],
@@ -476,8 +476,8 @@ con = new_slide("CONCLUSIONS", "Conclusions",
                 "What the project shows so far, and what is still being measured before the Nov 1 / Nov 5 freezes.")
 cards(con, [("PHASE 1", "Baseline reproduced, honestly", ["— Paper's LLaMA + LoRA on Electronics: 54.0 / 53.4 exact, ~94% within one star", "— Found a one-shot label leak (~8 pts) and that TextBlob filtering hurts"]),
             ("PHASE 2", "Two agents beat one model", ["— Main stack: 67.5% / 75.7% exact (+13.5 / +22.3 over Phase 1)", "— Significant after Holm; stable over 5 seeds", "— An LLM works better as a feature source than as a judge"]),
-            ("AGENTIC LAYER", "Being built, all measured", ["— Router + escalation, LLM re-rating (gated)", "— Explainer + Critic loop on all 3,000 test reviews", "— Deletion test for faithfulness"]),
-            ("LIMITS", "Stated plainly", ["— One dataset (Electronics 2023)", "— Part of the gain is the larger Reflector fit set", "— Agentic-layer numbers still pending"])],
+            ("AGENTIC LAYER", "First part measured", ["— Router + escalation: fixes ~2 stars per 1 broken (p < .001); LLaMA skipped on 39–48%", "— Next: LLM re-rating; Explainer + Critic loop and deletion test on all 3,000"]),
+            ("LIMITS", "Stated plainly", ["— One dataset (Electronics 2023)", "— Part of the gain is the larger Reflector fit set", "— Explanation results still pending"])],
       1.82, 3.4)
 band(con, 5.45, "Next", "Freeze Nov 1 and Nov 5 → paper draft to supervisor Nov 8 → submission by Nov 20 → final presentation in December with a live demo of Phase 1 and Phase 2.", h=0.9)
 
@@ -487,13 +487,30 @@ sv = new_slide("PHASE 2 · HOW IT SOLVES THE PROBLEM", "How Phase 2 Answers Each
 small_table(sv, [[(a, INK, True), (b, BODY, False), (c, POS, True)] for a, b, c in [
     ("One pass, no second opinion", "Two independent agents (LLaMA probe + Evidence model) and a learned Reflector", "Stack vs each agent: +5.0 to +6.3 eval, 5/5 seeds"),
     ("LLM as judge failed (Gate 0, twice)", "Specialists decide the star; LLMs explain and check instead", "LLM re-rating kept only if its dev check passes"),
-    ("Wrong stars go uncorrected", "Unsure draft stars escalated and revised (self-correction 1)", "Fixed vs broken on escalated reviews"),
+    ("Wrong stars go uncorrected", "Unsure draft stars escalated and revised (self-correction 1)", "Measured: fixed 92 vs broken 50 (eval), 152 vs 78 (natural)"),
     ("Template justifications", "Explainer writes only from the evidence pack; Critic forces rewrites (self-correction 3)", "Faithfulness before vs after; deletion test, all 3,000"),
     ("Fragile, leaky evaluation", "Leak-free prompt, frozen disjoint splits, rules written before runs, tests read once", "Leak audit −7.7 [−13.3, −2.0]"),
     ("Data cleaning backfires", "Raw balanced training data", "+2.5 to +3.5 pts"),
     ("Photos and similar-review votes did not help", "Visual Verifier excluded; RAG votes replaced by the Evidence model", "Constant output; 37.5% vs 54.2%"),
-    ("LLaMA is slow (0.67 s / review)", "Router skips LLaMA when the Evidence model is confident", "LLaMA calls saved, accuracy within 0.5 pt")]],
+    ("LLaMA is slow (0.67 s / review)", "Router skips LLaMA when the Evidence model is confident", "Measured: skipped on 39% / 48%, accuracy unchanged")]],
     [3.1, 5.4, CW - 0.4 - 8.5], ["Shortcoming", "Phase 2 answer", "Checked by"], row_h=0.48)
+
+# NSC1 self-correction 1 measured (gate_B1b: second Router attempt; first attempt disclosed)
+sc1 = new_slide("PHASE 2 · SELF-CORRECTION 1", "Self-Correction 1: Two Stars Fixed for Each One Broken",
+                "Unsure draft star (Evidence confidence < 0.70) → LLaMA probe called → Reflector revises it. Read once on both test sets.")
+lw = 7.7
+accent_card(sc1, MARGIN, 1.82, lw, 3.3)
+make_table(sc1, MARGIN + 0.26, 2.0, lw - 0.5, [1.7, 1.25, 1.0, 1.0, 0.9, 1.35], None, ["Test set", "Escalated", "Fixed", "Broken", "Net", "p"],
+           [[("Balanced eval", INK, True), ("607 of 1,000", BODY, False), ("92", POS, True), ("50", NEG, True), ("+42", POS, True), ("0.0005", BODY, False)],
+            [("Natural test", INK, True), ("1,035 of 2,000", BODY, False), ("152", POS, True), ("78", NEG, True), ("+74", POS, True), ("0.000001", BODY, False)]],
+           row_h=0.55, head_h=0.36, aligns=[L, R, R, R, R, R])
+_, tf = textbox(sc1, MARGIN + 0.26, 3.65, lw - 0.5, 1.3)
+para(tf, "Cost saving: LLaMA skipped on 39% (eval) / 48% (natural) of reviews; accuracy 67.4% vs 67.5% and 75.5% vs 75.7% for the full stack (no significant change).", size=T_SMALL, color=BODY, first=True)
+rx = MARGIN + lw + GUTTER; rw = CW - lw - GUTTER
+accent_card(sc1, rx, 1.82, rw, 3.3, bar=ACCENT_D)
+_, tf = textbox(sc1, rx + 0.26, 1.98, rw - 0.5, 0.3); para(tf, "How it was tested", size=T_CARD, color=INK, bold=True, first=True)
+block(sc1, rx + 0.26, 2.4, rw - 0.48, 2.6, ["— Rule written before running; threshold chosen on dev data only", "— Attempt 1 (0.60) failed its natural-dev check by 0.3 pt: no test read", "— Attempt 2 (0.70, declared and disclosed) passed; tests read once"], size=T_SMALL, gap=5)
+band(sc1, 5.35, "Read", "When the system is unsure, a second agent revises the star, and the revision is right about twice as often as it is wrong. This is measured self-correction of the rating, not an assumption.", h=0.9)
 
 # ---- appendix divider
 apx = new_slide("APPENDIX", "Appendix", "Background, superseded results and historical Run 1 slides. Shown only if asked.")
@@ -505,7 +522,7 @@ cards(apx, [("BACKGROUND", "Original setup", ["— Datasets (Kaggle vs Amazon 20
 SL = {"title": S[0], "problem": S[1], "gap": S[2], "data_kaggle": S[3], "p1_pipeline": S[4], "lora": S[5], "kaggle_baseline": S[6], "orig_design": S[7],
       "dissonance": S[8], **{f"hist{k}": S[8 + k] for k in range(1, 10)}, "g1": g1, "g2": g2, "glance": n0, "leak": n1, "protocol": n2, "first_stack": n3,
       "preproc": n4, "halluc": n5, "ledger9": n6, "x1": xs[0], "x2": xs[1], "kept": nk, "main": nh, "p1p2": np_, "bars": nf, "robust": nr, "next": nn,
-      "schedule": ns, "roadmap": n7, "code": nv1, "workflow": nv2, "appendix": apx, "p1results": p1r, "arch": arc, "conclusions": con, "paper_what": pw, "paper_fails": pf, "errors": ner, "complement": ncm, "solves": sv}
+      "schedule": ns, "roadmap": n7, "code": nv1, "workflow": nv2, "appendix": apx, "p1results": p1r, "arch": arc, "conclusions": con, "paper_what": pw, "paper_fails": pf, "errors": ner, "complement": ncm, "solves": sv, "sc1": sc1}
 MAIN = ["title", "problem",                                               # intro (key terms live in Presenter_Notes.md, not on slides; user 2026-10-25)
         "paper_what", "paper_fails",                                       # Phase 1: the baseline paper, what it does, why it falls short
         "p1_pipeline", "lora",                                             # how it works in detail
@@ -513,7 +530,7 @@ MAIN = ["title", "problem",                                               # intr
         "orig_design", "arch", "solves",                                   # Phase 2: intro, in depth, how it solves each shortcoming
         "p1results",                                                       # results: Phase 1 (carries the data / split facts)
         "main", "p1p2", "bars",                                            # results: Phase 2 headline first
-        "errors", "complement", "x1", "x2", "kept", "robust",              # in depth
+        "errors", "complement", "x1", "x2", "kept", "robust", "sc1",       # in depth
         "schedule", "conclusions"]                                         # plan, conclusions
 APPX = []   # max 25 slides (user, 2026-10-25); the rest lives in old_decks/ and stays defined above
 ORDER = MAIN + APPX
@@ -574,7 +591,8 @@ NOTES = {
  "errors": "Results in detail. Left: confusion matrix, mistakes hug the diagonal, 90% of errors are one star off. Right: per-star recall, Phase 1 vs Phase 2. Be honest about the one exception: on natural test Phase 1 finds more 4-star reviews, because it over-predicts 4-star; Phase 2 is far better on 5-star, the most common class.",
  "complement": "Why it works. Left: the Evidence model wins on short reviews, the LLaMA probe on long reviews, the stack is best or near-best in every length band. Right: when the two agents disagree, the stack still gets 56% right, versus 36-50% for either alone. That is the case for stacking two different kinds of signal.",
  "solves": "How Phase 2 answers each shortcoming. Read the left column as the problems the audience just saw, then the fix, then the number that checks it. Spend time on three rows: two agents instead of one pass; LLMs explain and check instead of judging (because the judge failed twice); and template justifications replaced by evidence-based explanations checked by a Critic. The self-correction rows are being measured now.",
- "conclusions": "Conclusions. Four cards: Phase 1 reproduced honestly (and two problems found in the original protocol); Phase 2's two-agent stack beats the single fine-tuned model, significantly; the agentic layer is being built and measured; and the limits, said plainly (one dataset, part of the gain from the bigger fit set, agentic numbers pending). End with the dates: freeze Nov 1 / 5, draft Nov 8, submit Nov 20, final presentation in December.",
+ "sc1": "Self-correction 1, measured. Say: the Evidence model gives a quick draft; when it is unsure, the LLaMA probe is called and the Reflector revises the star. On the test sets the revision fixed 92 stars and broke 50 on balanced eval, 152 vs 78 on natural test, both highly significant. And LLaMA was skipped on 39-48% of reviews with no accuracy change. Be open that this was the second attempt: the first threshold failed its natural-dev check by 0.3 points and was never tested.",
+ "conclusions": "Conclusions. Four cards: Phase 1 reproduced honestly (and two problems found in the original protocol); Phase 2's two-agent stack beats the single fine-tuned model, significantly; the agentic layer's first part is measured (escalation fixes about two stars per one broken, LLaMA skipped on 39-48%); and the limits, said plainly (one dataset, part of the gain from the bigger fit set, agentic numbers pending). End with the dates: freeze Nov 1 / 5, draft Nov 8, submit Nov 20, final presentation in December.",
  "p1p2": "Phase 1 to Phase 2. Lead with the gain: +13.5 points on balanced eval and +22.3 on natural test, 29% and 48% fewer errors, significant after Holm. Then why: the agents complement (Evidence model on short reviews, probe on long ones). Say the caveat yourself: the earlier stack refit on the same dev reviews is only 2.0 / 1.5 behind. Never quote 70.7 / 60.1 (leaky), 74.8 (one seed) or 79.9 (class-mix correction).",
  "bars": "Bar chart of all frozen models with 95% CIs; main stack in red. Point out: base LLaMA zero-shot is weak (34%) but a probe on its hidden states reaches 61 / 74.",
  "robust": "Robustness. After Holm correction 5 of 8 comparisons stay significant, including the main stack vs the earlier LoRA + Evidence stack on both splits. Most errors are one star off. Calibration is good (ECE .05-.06). The probe costs 0.67 s per review, the rest is under 0.1 ms: that is why the next step adds a Router.",
