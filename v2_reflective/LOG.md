@@ -903,3 +903,14 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - **Issues noted for the Task 9 dev2 prompt tuning:**
   1. TF-IDF phrases include weak fragments ("not", "but that") and title words ("Three Stars"). Filter stop-word-only phrases and prefer review-text phrases.
   2. The Explainer called an against-phrase ("my complaint") a positive aspect, and the LLM check did not catch it. Consider a rule that against-phrases must not be described as supporting, and clearer prompt wording ("supporting" vs "positive").
+
+### 2026-10-25 — SC2 reflective re-rating DECLARED (before running)
+- **Uncertain reviews:** main-stack top-2 probability margin < 0.20. Candidates are the stack's top-2 stars.
+- **LLM:** Llama-3-8B-Instruct 4-bit MLX, greedy, max 4 tokens.
+  - Prompt: review + the Evidence-model phrases supporting each candidate (top 5 each).
+  - Asked twice with the candidate order swapped. Different or unparsable answers → abstain (keep the stack's star).
+- **dev2:** stack predictions come from 5-fold CV (StratifiedKFold seed 0), so there is no in-sample advantage. natural_dev uses the stack fit on dev2.
+- **Gate:** dev2 fixed > broken with exact binomial p < .05, AND natural_dev net ≥ 0.
+- **PASS** → SC2 joins the system; one readout on eval + natural_test.
+- **FAIL** → reported as a negative result: the third test of an LLM revising the rating, after the two Gate 0 runs.
+- **Script:** `v2_reflective/e23/gate_SC2.py`. `tests/v3/test_sc.py` (3 tests) is green. Must finish before the 22:30 A1 run.
