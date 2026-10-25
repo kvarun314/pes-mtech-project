@@ -472,3 +472,9 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - C4 calibration: ECE .047 (eval) / .062 (natural_test); SH slightly under-confident (mean confidence .650 vs accuracy .675; .704 vs .757).
   - C5 cost per review on the M1: P3 ~0.67 s (LLaMA forward to layer 20), TF-IDF ~0.06 ms, Reflector ~0.06 ms. So the probe is >99% of SH's cost, which motivates the Router.
 - 2026-10-25 00:30: Phase 2 v3 spec written: `docs/superpowers/specs/2026-10-25-phase2-v3-design.md` (pending user review).
+
+### 2026-10-25 08:00 — A1 planned pause
+- The auto-pause timer stopped `probe_agent4.py` at 08:00 IST, before the presentation.
+- Progress: fit3 45,000 / 80,000 rows (91 chunks in `hid4/`). Total time so far is about 8 h.
+- `stage_A1.txt` shows `A1_extract_FAILED`. This is the expected result of the planned kill, not a crash.
+- Resume after the presentation: `sh v2_reflective/e23/queue_A1.sh` from the repo root. Saved chunks are skipped. About 35K rows remain, about 6 h.
