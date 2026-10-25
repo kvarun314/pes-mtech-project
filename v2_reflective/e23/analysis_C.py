@@ -39,7 +39,7 @@ for s in ("eval", "natural_test"):
     c = P["SH"].max(1); ok = h == yy; bins = np.linspace(0, 1, 16); idx = np.digitize(c, bins[1:-1]); ece = sum(abs(c[idx == k].mean() - ok[idx == k].mean()) * (idx == k).mean() for k in range(15) if (idx == k).any())
     print(f"SH ECE {ece:.3f} | mean confidence {c.mean():.3f} vs accuracy {ok.mean():.3f}")
     plt.figure(figsize=(3.6, 3.4)); xs = [c[idx == k].mean() for k in range(15) if (idx == k).sum() >= 10]; ys = [ok[idx == k].mean() for k in range(15) if (idx == k).sum() >= 10]
-    plt.plot([0, 1], [0, 1], "--", color="grey"); plt.plot(xs, ys, "o-", color="#C44E52"); plt.xlabel("SH confidence"); plt.ylabel("accuracy"); plt.title(f"{s}, ECE {ece:.3f}"); plt.tight_layout(); plt.savefig(f"{FIG}reliability_SH_{s}.png", dpi=150); plt.close()
+    plt.plot([0, 1], [0, 1], "--", color="grey"); plt.plot(xs, ys, "o-", color="#C44E52"); plt.xlabel("main stack confidence"); plt.ylabel("accuracy"); plt.title(f"{s}, ECE {ece:.3f}"); plt.tight_layout(); plt.savefig(f"{FIG}reliability_SH_{s}.png", dpi=150); plt.close()
 print("\n===== Holm correction over 8 SH comparisons (exact McNemar p)")
 pvals.sort(key=lambda t: t[2]); m = len(pvals); run = 0
 for k, (n, d, p) in enumerate(pvals):

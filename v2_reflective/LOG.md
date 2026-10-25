@@ -607,3 +607,18 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - Slide references updated in the builder (slide 4 and slide 8 subtitles, speaker notes), in `Presenter_Notes.md` Part 0 (slide map, timing, a new script for slide 18, renumbered headings) and in `V2_Reflective_Guide.md`.
 - Rendered and checked visually.
 - Rounding note: readout_H prints the natural gain as +22.2. The exact value is 445/2000 = 22.25, and the deck and paper round half up to +22.3, the same convention as the 5.45 → 5.5 note above.
+
+### 2026-10-25 — Neutral names in the deck and paper (internal IDs stay in LOG and code)
+- User request: neutral names for the presentation and paper. Mapping:
+  - SH → "main stack" / "Probe + Evidence stack"
+  - P3 → "LLaMA probe"; P3b → "LLaMA probe (120K)"
+  - E6b → "Evidence model (~497K)"; E → "Evidence model (100K)"
+  - S0 / Analyst+E → "LoRA + Evidence stack"
+  - Analyst arm R → "Phase 1 LoRA"
+  - The phase letters (R10, F/F2, D, G2, H) were removed from slide text.
+- Where it changed:
+  - Deck builder: all visible text and speaker notes. A scan of the built deck finds no SH/P3/E6b/S0.
+  - `freeze_tables.py`: model labels only. This changes the `results_frozen.md` labels and the `main_bars.png` bar labels; the main bar is coloured by "(main)". A diff of every table value before and after shows them identical.
+  - `analysis_C.py`: reliability x-axis label "main stack confidence". After the rerun, `analysis_C.out` is identical except the live timing line: TF-IDF 0.06 → 0.04 ms, Reflector 0.06 → 0.05 ms. Run-to-run noise; the paper and deck say "well under 0.1 ms".
+  - `paper/e23_results.tex`: tables, captions and FACT comments renamed, plus a NAMING comment block mapping neutral names to internal IDs. The `pdftotext` output of both PDFs contains no SH/P3/E6b. 0 LaTeX errors.
+  - `presentation/Presenter_Notes.md` Part 0: renamed, plus a new "Names to say out loud" section.

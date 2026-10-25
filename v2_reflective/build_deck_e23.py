@@ -95,18 +95,18 @@ band(n1, 5.6, "Source", "v2_reflective/LOG.md, entries 2026-10-11 (Phase 1 close
 n2 = new_slide("ELECTRONICS PROTOCOL", "Amazon Reviews 2023 Electronics: Frozen, Disjoint Splits",
                "One dataset for all reported results. Splits drawn once (seed 2023), disjoint by review id and exact text.")
 cards(n2, [("SPLITS", "Four frozen sets", ["— evidence-train 100,000 balanced (20K per star)", "— dev 500 balanced (all choices made here)", "— eval 1,000 balanced (read once)", "— natural_test 2,000 natural skew: 1★ 189 · 2★ 83 · 3★ 150 · 4★ 277 · 5★ 1,301"]),
-           ("PHASE 1", "Analyst: LLaMA-3-8B + LoRA", ["— Retrained on Electronics: 2,000 rows, paper Table 1 hyperparameters", "— MLX QLoRA, ≈3 epochs (400 updates, batch 12), zero-shot prompt", "— Prediction = argmax of first-digit probabilities over 1–5"]),
+           ("PHASE 1", "Phase 1 model: LLaMA-3-8B + LoRA", ["— Retrained on Electronics: 2,000 rows, paper Table 1 hyperparameters", "— MLX QLoRA, ≈3 epochs (400 updates, batch 12), zero-shot prompt", "— Prediction = argmax of first-digit probabilities over 1–5"]),
            ("ARM CHOICE", "Dev only (500 rows, ±4.4)", ["— Arm P, the paper's pipeline (TextBlob + stratified + VGST + neutral ×2): 52.2%", "— Arm R, raw balanced rows: 55.2%", "— R chosen; the 3.0-point gap is within noise"]),
            ("EVIDENCE", "Second, independent signal", ["— TF-IDF (1–2-gram, 300K features) + logistic regression", "— Trained on the 100K raw balanced Electronics rows", "— CPU only, no filtering"])],
       1.82, 3.6)
 band(n2, 5.65, "Note", "The original paper's adapter was trained on Kaggle reviews; Kaggle is now reproduction and appendix only. Test sets are never filtered.", h=0.9)
 
 # N3 Phase 2 results
-n3 = new_slide("PHASE 2 · FIRST STACK (OCT 13)", "Analyst + Evidence Stack on Electronics (superseded by SH)",
+n3 = new_slide("PHASE 2 · FIRST STACK (OCT 13)", "LoRA + Evidence Stack on Electronics (superseded)",
                "Reflector = logistic regression on both agents' log-probabilities, fit on 500 balanced dev rows, read out once per split.")
 lw = 7.3
 accent_card(n3, MARGIN, 1.82, lw, 3.3)
-make_table(n3, MARGIN + 0.26, 2.05, lw - 0.5, [2.2, 1.45, 1.45, 1.4], None, ["Split", "Analyst (arm R)", "Evidence", "Stack"],
+make_table(n3, MARGIN + 0.26, 2.05, lw - 0.5, [2.2, 1.45, 1.45, 1.4], None, ["Split", "Phase 1 LoRA", "Evidence model", "Stack"],
            [[("eval · 1,000 balanced", INK, True), ("54.0%", BODY, False), ("62.4%", BODY, False), ("63.9%", ACCENT_D, True)],
             [("natural_test · 2,000", INK, True), ("53.4%", BODY, False), ("69.3%", BODY, False), ("73.4%", ACCENT_D, True)],
             [("eval macro-F1", MUTED, False), ("0.543", MUTED, False), ("0.622", MUTED, False), ("0.638", MUTED, False)],
@@ -116,7 +116,7 @@ make_table(n3, MARGIN + 0.26, 2.05, lw - 0.5, [2.2, 1.45, 1.45, 1.4], None, ["Sp
 rx = MARGIN + lw + GUTTER; rw = CW - lw - GUTTER
 accent_card(n3, rx, 1.82, rw, 3.3, bar=ACCENT_D)
 _, tf = textbox(n3, rx + 0.26, 1.98, rw - 0.5, 0.3); para(tf, "Paired comparisons (stack, exact)", size=T_CARD, color=INK, bold=True, first=True)
-block(n3, rx + 0.26, 2.4, rw - 0.48, 2.7, ["— vs Analyst: +9.9 [+6.7, +13.0] on eval; +20.0 [+17.8, +22.2] on natural_test (both p < 1e-9)",
+block(n3, rx + 0.26, 2.4, rw - 0.48, 2.7, ["— vs Phase 1 LoRA: +9.9 [+6.7, +13.0] on eval; +20.0 [+17.8, +22.2] on natural_test (both p < 1e-9)",
      "— vs Evidence on eval: +1.5 [−1.2, +4.1], p = 0.30, not significant",
      "— vs Evidence on natural_test: +4.0 [+2.4, +5.8], p = 5.5e-6, but the stacker was fit on balanced dev, so part is a class-prior effect",
      "— Agents disagree on 44% of rows; there the stack is right 55% (eval) / 67% (natural)"], size=T_SMALL, gap=5)
@@ -159,42 +159,42 @@ n6 = new_slide("PHASE 2 · EXPERIMENTS", "Nine Lines of Work, Each Gated on Dev 
 accent_card(n6, MARGIN, 1.82, CW, 4.3)
 make_table(n6, MARGIN + 0.26, 1.98, CW - 0.5, [3.3, 6.0, CW - 0.5 - 9.3], None, ["Experiment", "Result", "Verdict"],
            [[("Gate 0: LLM adjudicator", INK, True), ("LLM 54.2% vs stack 73.3% on 434 disagreement rows", BODY, False), ("FAIL, dropped", NEG, True)],
-            [("Base LLaMA, no LoRA", INK, True), ("34.3% alone, but stack base+E 63.7 ≈ LoRA+E 63.9 (eval)", BODY, False), ("LoRA adds little in stack", BODY, False)],
+            [("Base LLaMA, no LoRA", INK, True), ("34.3% alone, but base LLaMA + Evidence 63.7 ≈ LoRA + Evidence 63.9 (eval)", BODY, False), ("LoRA adds little in stack", BODY, False)],
             [("DistilBERT 2K baseline", INK, True), ("52.8% vs LoRA 54.0% on eval, not significant", BODY, False), ("Level with LoRA", BODY, False)],
             [("Variance (5 seeds) + LoRA seed 2", INK, True), ("Stack gain over Evidence positive in 5/5 seeds", BODY, False), ("Stable", POS, True)],
-            [("LoRA on 10K rows (R10)", INK, True), ("dev 56.4% < gate 58%", BODY, False), ("FAIL", NEG, True)],
-            [("Hidden-state probe (F, F2)", INK, True), ("dev gain +.005 to +.011, natural_dev miss", BODY, False), ("FAIL at 10K fit", NEG, True)],
-            [("Pooled-dev Reflector (D)", INK, True), ("Gate passed, but gain = class-prior shift", BODY, False), ("Not adopted", BODY, False)],
-            [("Evidence on 500K rows (G2)", INK, True), ("Better alone (+1.9 dev), stack not better", BODY, False), ("FAIL in stack", NEG, True)],
-            [("Bigger dev2 (2,000) + probe on 40K (H)", INK, True), ("dev2 +3.9 pts, CI [+2.4, +5.8]", BODY, False), ("PASS, new main", POS, True)]],
+            [("LoRA on 10K rows", INK, True), ("dev 56.4% < gate 58%", BODY, False), ("FAIL", NEG, True)],
+            [("LLaMA probe, 10K rows / multi-layer", INK, True), ("dev gain +.005 to +.011, natural_dev miss", BODY, False), ("FAIL at 10K fit", NEG, True)],
+            [("Pooled-dev Reflector", INK, True), ("Gate passed, but gain = class-prior shift", BODY, False), ("Not adopted", BODY, False)],
+            [("Evidence model on 500K rows", INK, True), ("Better alone (+1.9 dev), stack not better", BODY, False), ("FAIL in stack", NEG, True)],
+            [("Bigger dev2 (2,000) + probe on 40K", INK, True), ("dev2 +3.9 pts, CI [+2.4, +5.8]", BODY, False), ("PASS, new main", POS, True)]],
            row_h=0.42, head_h=0.34, aligns=[L, L, L])
 band(n6, 6.25, "Source", "v2_reflective/LOG.md entries 2026-10-20 to 2026-10-24; outputs in v2_reflective/e23/*.out.", h=0.75)
 
 # NH main result (Phase H)
-nh = new_slide("PHASE 2 · MAIN RESULT", "Frozen LLaMA Probe + 500K Evidence Agent (SH)",
-               "P3 = logistic probe on base-LLaMA layer-20 hidden state (40K fit). E6b = TF-IDF LR on ~497K rows. Reflector LR fit on dev2 (2,000 balanced). Read once.")
+nh = new_slide("PHASE 2 · MAIN RESULT", "Main System: LLaMA Probe + Evidence Model Stack",
+               "LLaMA probe: classifier on frozen LLaMA-3-8B layer-20 state (40K reviews). Evidence model: TF-IDF + LR (~497K reviews). Reflector fit on 2,000 dev reviews.")
 lw = 7.3
 accent_card(nh, MARGIN, 1.82, lw, 3.45)
 make_table(nh, MARGIN + 0.26, 2.0, lw - 0.5, [2.6, 1.2, 1.2, 1.8], None, ["Model", "eval", "natural", "macro-F1 e / n"],
-           [[("Old headline: LoRA + E (dev fit)", INK, False), ("63.9%", BODY, False), ("73.4%", BODY, False), (".638 / .577", MUTED, False)],
-            [("LoRA + E refit on dev2", INK, False), ("65.5%", BODY, False), ("74.2%", BODY, False), (".653 / .587", MUTED, False)],
-            [("P3 probe alone", INK, False), ("61.2%", BODY, False), ("74.3%", BODY, False), (".610 / .606", MUTED, False)],
-            [("E6b Evidence alone", INK, False), ("62.5%", BODY, False), ("70.2%", BODY, False), (".624 / .550", MUTED, False)],
-            [("SH  P3 + E6b (main)", ACCENT_D, True), ("67.5%", ACCENT_D, True), ("75.7%", ACCENT_D, True), (".675 / .612", ACCENT_D, True)],
-            [("SH, 5-seed mean ± sd", MUTED, False), ("65.8 ± 0.6", MUTED, False), ("75.4 ± 0.8", MUTED, False), (".657 / .610", MUTED, False)]],
+           [[("Earlier LoRA + Evidence stack (dev fit)", INK, False), ("63.9%", BODY, False), ("73.4%", BODY, False), (".638 / .577", MUTED, False)],
+            [("LoRA + Evidence stack, refit on dev2", INK, False), ("65.5%", BODY, False), ("74.2%", BODY, False), (".653 / .587", MUTED, False)],
+            [("LLaMA probe alone", INK, False), ("61.2%", BODY, False), ("74.3%", BODY, False), (".610 / .606", MUTED, False)],
+            [("Evidence model alone", INK, False), ("62.5%", BODY, False), ("70.2%", BODY, False), (".624 / .550", MUTED, False)],
+            [("Probe + Evidence stack (main)", ACCENT_D, True), ("67.5%", ACCENT_D, True), ("75.7%", ACCENT_D, True), (".675 / .612", ACCENT_D, True)],
+            [("Main stack, 5-seed mean ± sd", MUTED, False), ("65.8 ± 0.6", MUTED, False), ("75.4 ± 0.8", MUTED, False), (".657 / .610", MUTED, False)]],
            row_h=0.44, head_h=0.36, aligns=[L, R, R, R])
 rx = MARGIN + lw + GUTTER; rw = CW - lw - GUTTER
 accent_card(nh, rx, 1.82, rw, 3.45, bar=ACCENT_D)
-_, tf = textbox(nh, rx + 0.26, 1.98, rw - 0.5, 0.3); para(tf, "Paired comparisons (SH, exact, 95% CI)", size=T_CARD, color=INK, bold=True, first=True)
-block(nh, rx + 0.26, 2.4, rw - 0.48, 2.8, ["— vs old headline: +3.6 [+0.9, +6.3] eval, +2.3 [+0.6, +4.0] natural (Holm-adjusted p < .05)",
-     "— vs E6b alone: +5.0 [+2.4, +7.4] eval, +5.5 [+3.8, +7.1] natural",
-     "— vs P3 alone: +6.3 [+3.8, +8.8] eval, +1.4 [−0.1, +2.9] natural (ns)",
+_, tf = textbox(nh, rx + 0.26, 1.98, rw - 0.5, 0.3); para(tf, "Paired comparisons (main stack, exact, 95% CI)", size=T_CARD, color=INK, bold=True, first=True)
+block(nh, rx + 0.26, 2.4, rw - 0.48, 2.8, ["— vs earlier LoRA + Evidence stack: +3.6 [+0.9, +6.3] eval, +2.3 [+0.6, +4.0] natural (Holm-adjusted p < .05)",
+     "— vs Evidence model alone: +5.0 [+2.4, +7.4] eval, +5.5 [+3.8, +7.1] natural",
+     "— vs LLaMA probe alone: +6.3 [+3.8, +8.8] eval, +1.4 [−0.1, +2.9] natural (ns)",
      "— Gain over each single agent positive in 5/5 seeds on both splits"], size=T_SMALL, gap=5)
-band(nh, 5.45, "Honest read", "Against LoRA + E refit on the same dev2, SH gains only +2.0 eval / +1.5 natural (not significant): part of the gain is the bigger Reflector fit set. A frozen base LLaMA replaces the LoRA Analyst; adding LoRA back does not help. 5 candidates were compared on dev2 (disclosed). Source: e23/readout_H.out, e23/variance_H.out.", h=1.2)
+band(nh, 5.45, "Honest read", "Against the LoRA + Evidence stack refit on the same dev2, the main stack gains only +2.0 eval / +1.5 natural (not significant): part of the gain is the bigger Reflector fit set. A frozen base LLaMA replaces the Phase 1 LoRA; adding LoRA back does not help. 5 candidates were compared on dev2 (disclosed). Source: e23/readout_H.out, e23/variance_H.out.", h=1.2)
 
 # NP Phase 1 -> Phase 2, framed honestly (FACT notes in paper/e23_results.tex)
 np_ = new_slide("PHASE 1 → PHASE 2", "How Far Phase 2 Moves the Baseline",
-                "Same Electronics test sets, same rows. Phase 1 = LLaMA-3-8B + LoRA (the baseline paper's method); Phase 2 = SH.")
+                "Same Electronics test sets, same rows. Phase 1 = LLaMA-3-8B + LoRA (the baseline paper's method); Phase 2 = the Probe + Evidence stack.")
 cards(np_, [("GAIN", "+13.5 and +22.3 points", ["— Balanced eval: 54.0% → 67.5% (29% fewer errors)", "— Natural test: 53.4% → 75.7% (48% fewer errors)", "— Both significant (paired bootstrap, McNemar)"]),
             ("PHASE 1 STRENGTHS", "Direction is right", ["— Within one star: 93.7% / 94.4%", "— Positive vs negative (3★ excluded): 91.2% / 92.9%", "— The exact star between neighbours is the hard part"]),
             ("WHY 53.4% NATURAL", "A class-mix effect", ["— Phase 1 was trained on balanced data", "— 65% of natural-test reviews are 5★, which it under-predicts", "— Macro-F1 is reported beside exact for this reason"]),
@@ -209,18 +209,18 @@ nf.shapes.add_picture(os.path.join(ROOT, "paper/figures/e23/main_bars.png"), Inc
 
 # NR robustness checks (C2-C5, e23/analysis_C.out)
 nr = new_slide("PHASE 2 · ROBUSTNESS", "Does the Result Hold Up? Corrections, Errors, Calibration, Cost",
-               "Computed from the frozen SH probabilities on eval (1,000) and natural_test (2,000). No new test reads, no refits.")
-cards(nr, [("HOLM", "5 of 8 comparisons survive", ["— SH beats E6b on both splits and P3 on eval (adj. p ≤ .001)", "— SH beats the old headline: adj. p .045 eval, .043 natural", "— Not significant: SH vs P3 on natural; SH vs old stack refit on dev2"]),
-           ("ERRORS", "Mostly one star off", ["— 90% (eval) / 86% (natural) of errors are adjacent stars", "— Hardest classes: 2★ and 3★ (recall .46–.60)", "— Agents agree on 64–72% of rows: SH 74–84% right; disagree: 56%"]),
+               "Computed from the frozen main-stack probabilities on eval (1,000) and natural_test (2,000). No new test reads, no refits.")
+cards(nr, [("HOLM", "5 of 8 comparisons survive", ["— Beats the Evidence model on both splits and the LLaMA probe on eval (adj. p ≤ .001)", "— Beats the earlier LoRA + Evidence stack: adj. p .045 eval, .043 natural", "— Not significant: vs LLaMA probe on natural; vs earlier stack refit on dev2"]),
+           ("ERRORS", "Mostly one star off", ["— 90% (eval) / 86% (natural) of errors are adjacent stars", "— Hardest classes: 2★ and 3★ (recall .46–.60)", "— Agents agree on 64–72% of rows: stack 74–84% right; disagree: 56%"]),
            ("CALIBRATION", "Slightly under-confident", ["— ECE .047 eval, .062 natural", "— Mean confidence .650 vs accuracy .675 (eval)", "— Probabilities are usable as confidence for routing"]),
            ("COST", "The probe is the slow part", ["— LLaMA probe: ~0.67 s per review (M1, Q4)", "— TF-IDF Evidence and Reflector: under 0.1 ms each", "— Motivates a Router that calls LLaMA only when needed"])],
       1.82, 3.6)
-band(nr, 5.65, "Source", "e23/analysis_C.py, e23/analysis_C.out (LOG.md 2026-10-25). Reliability figures: paper/figures/e23/reliability_SH_*.png.", h=0.8)
+band(nr, 5.65, "Source", "e23/analysis_C.py, e23/analysis_C.out (LOG.md 2026-10-25). Reliability figures: paper/figures/e23/reliability_*.png.", h=0.8)
 
 # NN next: Phase 2 v3 plan (docs/superpowers/specs/2026-10-25-phase2-v3-design.md)
 nn = new_slide("NEXT · PHASE 2 v3", "Agents That Route, Explain and Check Themselves",
                "The specialists keep deciding the star. LLM agents route work, explain each decision, and a Critic forces rewrites until the explanation is faithful.")
-cards(nn, [("ROUTE", "Router agent", ["— Evidence confident: skip the slow LLaMA probe", "— Unsure: call the probe, Reflector combines", "— Gate: within 0.5 pt of SH on dev2; report probe calls saved"]),
+cards(nn, [("ROUTE", "Router agent", ["— Evidence confident: skip the slow LLaMA probe", "— Unsure: call the probe, Reflector combines", "— Gate: within 0.5 pt of the full stack on dev2; report probe calls saved"]),
            ("EXPLAIN", "Explainer agent", ["— Evidence pack: top phrases for / against, agent shares, agreement", "— LLaMA-3-8B-Instruct writes a 1–2 sentence rationale from the pack only"]),
            ("CHECK", "Critic loop", ["— Star matches; quoted phrases occur in the review", "— Disagreement mentioned; no invented claims", "— Fails: specific feedback, rewrite (max 2 rounds)"]),
            ("ACCURACY", "Gated candidates", ["— A1: probe fit 40K → 120K rows (running, 45K / 80K new rows done)", "— A2: DeBERTa-v3 specialist on Colab, Nov 1", "— Each must pass a dev-only gate before any test read"])],
@@ -233,7 +233,7 @@ n7 = new_slide("ROADMAP", "Plan to Submission and the December Final Presentatio
 accent_card(n7, MARGIN, 1.82, CW, 4.2)
 make_table(n7, MARGIN + 0.26, 2.0, CW - 0.5, [1.0, 1.7, 6.2, CW - 0.5 - 8.9], None, ["Week", "Dates", "Work", "Checkpoint"],
            [[("0", INK, True), ("Oct 17–18", BODY, False), ("Hallucination study, plan, roadmap, results scaffold", BODY, False), ("Done", POS, True)],
-            [("1", INK, True), ("Oct 19–25", BODY, False), ("Natural-prior stacker; routing; base LLaMA; Gate 0; variance; probes; 500K Evidence; Phase H", BODY, False), ("Done, SH adopted", POS, True)],
+            [("1", INK, True), ("Oct 19–25", BODY, False), ("Natural-prior stacker; routing; base LLaMA; Gate 0; variance; probes; 500K Evidence; Phase H", BODY, False), ("Done, main stack adopted", POS, True)],
             [("2", INK, True), ("Oct 26–Nov 1", BODY, False), ("A1 bigger probe (running); Router, Explainer, Critic agents; explanation metrics on all 3,000 test reviews; demo notebook", BODY, False), ("Freeze stage 1: Nov 1", BODY, False)],
             [("3", INK, True), ("Nov 2–8", BODY, False), ("DeBERTa on Colab (A2, Nov 1) and its gate; paper prose (author-written); figures", BODY, False), ("Freeze stage 2: Nov 5; draft 1 Nov 8", BODY, False)],
             [("4", INK, True), ("Nov 9–15", BODY, False), ("Supervisor fixes; thesis sections; archive; deck", BODY, False), ("Draft 2, similarity check", BODY, False)],
@@ -250,7 +250,7 @@ make_table(nv1, MARGIN + 0.26, 1.98, CW - 0.5, [2.6, 5.2, CW - 0.5 - 7.8], None,
            [[("Lab notebook", INK, True), ("LOG.md, EXPERIMENTS_SUMMARY.md, progress/", BODY, False), ("Rule declared before each run; result and decision after", BODY, False)],
             [("Kaggle close-out (Oct 9–12)", INK, True), ("phase1_final.py, reflective.py, gate0.py, stack_experiment.py", BODY, False), ("Leak audit, retracted calibrator, first LLM adjudicator, first second-signal test", BODY, False)],
             [("e23 · data", INK, True), ("fetch.py, build_splits.py, build_H.py, build_A1.py", BODY, False), ("Frozen disjoint splits (seed 2023): train, dev, dev2, eval, natural", BODY, False)],
-            [("e23 · agents", INK, True), ("evidence*.py, probe_agent*.py, eval_p1.py, encoder_2k.py", BODY, False), ("Each agent writes 5 star probabilities per split (evid7 = P3, evid6b = E6b)", BODY, False)],
+            [("e23 · agents", INK, True), ("evidence*.py, probe_agent*.py, eval_p1.py, encoder_2k.py", BODY, False), ("Each agent writes 5 star probabilities per split (evid7 = LLaMA probe, evid6b = Evidence model)", BODY, False)],
             [("e23 · gates and readouts", INK, True), ("gate_*.py, stack_gate_*.py, readout_H.py, phase2_e23.py", BODY, False), ("Dev-only pass/fail; a pass reads eval and natural_test once", BODY, False)],
             [("e23 · robustness", INK, True), ("variance*.py, base_vs_lora.py, halluc_p1.py, analysis_C.py", BODY, False), ("Seeds, baselines, ablations, Holm, errors, calibration", BODY, False)],
             [("e23 · freeze", INK, True), ("freeze_tables.py → results_frozen.md, figures", BODY, False), ("Recomputes every table in ~3 s; deck and paper copy from it", BODY, False)]],
@@ -271,7 +271,7 @@ for i, (tag, head, body) in enumerate([("1", "Declare", "Candidate, data and exa
     accent_card(nv2, x, 1.9, w_, 2.2); auto_pill(nv2, x + 0.2, 2.08, 0.24, tag)
     _, tf = textbox(nv2, x + 0.2, 2.5, w_ - 0.35, 0.4); para(tf, head, size=T_CARD, color=INK, bold=True, first=True)
     block(nv2, x + 0.2, 3.0, w_ - 0.35, 1.7, [body], size=T_SMALL)
-band(nv2, 4.4, "Why it matters", "16 ideas failed and are reported; none of them ever touched eval or natural_test. That is what makes the one pass (SH) trustworthy. Example: Phase H rule 'dev2 +1.0 pt, CI > 0' → +3.9 [+2.4, +5.8] → PASS → readout_H.out.", h=1.1)
+band(nv2, 4.4, "Why it matters", "16 ideas failed and are reported; none of them ever touched eval or natural_test. That is what makes the one pass (the main stack) trustworthy. Example: Phase H rule 'dev2 +1.0 pt, CI > 0' → +3.9 [+2.4, +5.8] → PASS → readout_H.out.", h=1.1)
 
 # ---- reorder: 1-9, new, then historical (old results/audit/v2 plan), conclusion dropped
 ids = prs.slides._sldIdLst; els = list(ids); orig = els[:19]; new = els[19:]
@@ -306,14 +306,14 @@ NOTES = {
  10: "UPDATE SLIDE. Read the three cards left to right. Must say the caveat: against the old stack refit on the same 2,000 dev rows the gain is only 2.0 / 1.5 points and not significant.",
  11: "Leak audit. Picking a one-shot example whose star differs from the truth leaks about 8 points. All later numbers are zero-shot and leak-free.",
  12: "Protocol. Frozen disjoint splits; all choices on dev; each test split read once per declared config. Since Oct 24 there is also dev2 (2,000 balanced) for the Reflector.",
- 13: "First stack (Oct 13). Analyst LoRA + Evidence = 63.9 / 73.4. Superseded by SH, kept for continuity.",
+ 13: "First stack (Oct 13). Phase 1 LoRA + Evidence = 63.9 / 73.4. Superseded by the main Probe + Evidence stack, kept for continuity.",
  14: "Preprocessing ablation. TextBlob DQC deletes most 1 and 2 star reviews; VGST picks long reviews; both are dropped.",
  15: "Hallucination study. LoRA explanations are a canned template; digit probabilities are the usable signal. That is why Phase 2 combines probabilities, not explanations.",
  16: "Experiment ledger. Go row by row, about 10 seconds each. Key message: every rule was fixed before running and failures never touched the test sets.",
- 17: "MAIN RESULT. SH 67.5 eval / 75.7 natural, macro-F1 .675 / .612. Variance 65.8 +/- 0.6 and 75.4 +/- 0.8. Read the honest-read band aloud.",
+ 17: "MAIN RESULT. Probe + Evidence stack 67.5 eval / 75.7 natural, macro-F1 .675 / .612. Variance 65.8 +/- 0.6 and 75.4 +/- 0.8. Read the honest-read band aloud.",
  18: "Phase 1 to Phase 2. Lead with the gain: +13.5 points on balanced eval and +22.3 on natural test, i.e. 29% and 48% fewer errors. Then be fair to Phase 1: it gets the direction right (within one star 94%, positive vs negative 91-93%); the exact star is the hard part. Its 53.4% on natural test is a class-mix effect: trained balanced, while 65% of natural reviews are 5-star. On its home data with the paper's protocol, leak-free, it reaches 69.1% (always-5 already gives 63.8%). Do not quote the old 70.7 / 60.1: they used the leaky prompt.",
- 19: "Bar chart of all frozen models with 95% CIs; SH in red. Point out: base LLaMA zero-shot is weak (34%) but its hidden states (P3) reach 61 / 74.",
- 20: "Robustness. After Holm correction 5 of 8 comparisons stay significant, including SH vs the old headline on both splits. Most errors are one star off. Calibration is good (ECE .05-.06). The probe costs 0.67 s per review, the rest is under 0.1 ms: that is why the next step adds a Router.",
+ 19: "Bar chart of all frozen models with 95% CIs; main stack in red. Point out: base LLaMA zero-shot is weak (34%) but a probe on its hidden states reaches 61 / 74.",
+ 20: "Robustness. After Holm correction 5 of 8 comparisons stay significant, including the main stack vs the earlier LoRA + Evidence stack on both splits. Most errors are one star off. Calibration is good (ECE .05-.06). The probe costs 0.67 s per review, the rest is under 0.1 ms: that is why the next step adds a Router.",
  21: "Next: Phase 2 v3. Say: the specialists decide the star because an LLM choosing the star failed twice (Gate 0). The agents now do what LLMs are good at: routing, explaining, and checking explanations. Every explanation is checked by the Critic and measured on all 3,000 test reviews. A1 is running; DeBERTa runs on Colab Nov 1. Final demo is a local notebook.",
  23: "Code workspace. v2_reflective started as the Oct 10 'reflective v2' design (historical slide 33); the name stayed and it now holds every Phase 2 experiment. Top level = Kaggle close-out; e23 = Electronics 2023, all current results. Walk the table top to bottom: data, agents, gates, robustness, freeze. Full guide: presentation/V2_Reflective_Guide.md.",
  24: "Workflow. Six steps for every experiment: declare in LOG.md, run resumably, gate on dev only, read the tests once, freeze, record and back up. Say: 16 failures are reported and none touched the test sets, which is why the one pass can be trusted.",

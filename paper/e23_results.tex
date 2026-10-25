@@ -1,6 +1,9 @@
 % Electronics-2023 leak-free results (frozen 2026-10-24). Shared by main.tex and conference/ConferencePaper.tex
 % via \input, so both papers stay in sync. Define \efigdir (path to figures/e23/) before \input.
 % Every number comes from v2_reflective/e23/freeze_tables.out, readout_H.out, variance_H.out (LOG.md 2026-10-24).
+% NAMING (deck and paper use these neutral names; internal IDs stay in LOG.md): main stack / Probe + Evidence stack = SH;
+%   LLaMA probe = P3 (evid7); Evidence model (~497K) = E6b (evid6b); Evidence model (100K) = E (evid);
+%   LoRA + Evidence stack = S0 / first stack; Phase 1 LoRA = Analyst arm R; LLaMA probe (120K) = P3b (A1).
 % AUTHOR: the prose is yours to write (AI-content limit). The facts to cover are listed in the comments marked "% FACT".
 
 \section{Results --- Amazon Reviews 2023 Electronics (Leak-Free, Frozen)}
@@ -9,9 +12,9 @@
 
 % FACT: splits = evidence-train 100K balanced, dev 500 balanced, dev2 2,000 balanced, eval 1,000 balanced (read once),
 %       natural_test 2,000 with natural skew (5-star 1,301). Disjoint by review id and exact text. Zero-shot prompt (one-shot leak removed).
-% FACT: main config SH = P3 (logistic probe on frozen base-LLaMA-3-8B layer-20 last-token hidden state, 40K fit rows, C=.001)
-%       + E6b (TF-IDF 1-2-gram + LR on ~497K balanced rows), combined by an LR Reflector (C=1) fit on dev2.
-% FACT: SH was chosen on dev2 among 5 candidate agent sets by a rule written before running (gate: dev2 +1.0 pt and paired CI > 0).
+% FACT: main config main stack = LLaMA probe (logistic probe on frozen base-LLaMA-3-8B layer-20 last-token hidden state, 40K fit rows, C=.001)
+%       + Evidence model (~497K) (TF-IDF 1-2-gram + LR on ~497K balanced rows), combined by an LR Reflector (C=1) fit on dev2.
+% FACT: main stack was chosen on dev2 among 5 candidate agent sets by a rule written before running (gate: dev2 +1.0 pt and paired CI > 0).
 
 \begin{table}[htbp]
 \centering
@@ -25,59 +28,59 @@
 \multicolumn{5}{l}{\textit{eval (1\,000, balanced)}} \\
 Base LLaMA-3-8B, no LoRA        & 34.3 [31.3, 37.3] & 0.269 & 83.3 & 0.824 \\
 DistilBERT, 2K rows              & 52.8 [49.6, 55.9] & 0.522 & 89.1 & 0.597 \\
-Analyst: LLaMA + LoRA, 2K rows   & 54.0 [50.9, 57.1] & 0.543 & 93.7 & 0.529 \\
-P3 probe (frozen LLaMA L20)      & 61.2 [58.1, 64.2] & 0.610 & 94.6 & 0.455 \\
-Evidence E, 100K                 & 62.4 [59.4, 65.4] & 0.622 & 93.1 & 0.457 \\
-Evidence E6b, $\sim$497K         & 62.5 [59.5, 65.4] & 0.624 & 93.4 & 0.452 \\
-Stack Analyst+E (dev)            & 63.9 [61.0, 66.9] & 0.638 & 95.5 & 0.411 \\
-Stack Analyst+E (dev2)           & 65.5 [62.5, 68.5] & 0.653 & 96.2 & 0.386 \\
-\textbf{SH: P3+E6b (dev2)}       & \textbf{67.5 [64.6, 70.3]} & \textbf{0.675} & \textbf{96.7} & \textbf{0.363} \\
+Phase 1: LLaMA + LoRA, 2K rows   & 54.0 [50.9, 57.1] & 0.543 & 93.7 & 0.529 \\
+LLaMA probe (frozen, layer 20)      & 61.2 [58.1, 64.2] & 0.610 & 94.6 & 0.455 \\
+Evidence model, 100K                 & 62.4 [59.4, 65.4] & 0.622 & 93.1 & 0.457 \\
+Evidence model, $\sim$497K         & 62.5 [59.5, 65.4] & 0.624 & 93.4 & 0.452 \\
+LoRA + Evidence stack (dev)            & 63.9 [61.0, 66.9] & 0.638 & 95.5 & 0.411 \\
+LoRA + Evidence stack (dev2)           & 65.5 [62.5, 68.5] & 0.653 & 96.2 & 0.386 \\
+\textbf{Probe + Evidence stack (main)}       & \textbf{67.5 [64.6, 70.3]} & \textbf{0.675} & \textbf{96.7} & \textbf{0.363} \\
 \midrule
 \multicolumn{5}{l}{\textit{natural\_test (2\,000, natural skew)}} \\
 Base LLaMA-3-8B, no LoRA        & 16.8 [15.2, 18.4] & 0.212 & 70.5 & 1.129 \\
 DistilBERT, 2K rows              & 62.5 [60.4, 64.6] & 0.462 & 90.5 & 0.512 \\
-Analyst: LLaMA + LoRA, 2K rows   & 53.4 [51.3, 55.6] & 0.488 & 94.3 & 0.539 \\
-P3 probe (frozen LLaMA L20)      & 74.3 [72.4, 76.2] & 0.606 & 96.3 & 0.307 \\
-Evidence E, 100K                 & 69.3 [67.3, 71.4] & 0.541 & 93.7 & 0.400 \\
-Evidence E6b, $\sim$497K         & 70.2 [68.3, 72.2] & 0.550 & 94.5 & 0.372 \\
-Stack Analyst+E (dev)            & 73.4 [71.4, 75.3] & 0.577 & 96.2 & 0.320 \\
-Stack Analyst+E (dev2)           & 74.2 [72.4, 76.1] & 0.587 & 96.6 & 0.307 \\
-\textbf{SH: P3+E6b (dev2)}       & \textbf{75.7 [73.8, 77.6]} & \textbf{0.612} & \textbf{96.7} & \textbf{0.288} \\
+Phase 1: LLaMA + LoRA, 2K rows   & 53.4 [51.3, 55.6] & 0.488 & 94.3 & 0.539 \\
+LLaMA probe (frozen, layer 20)      & 74.3 [72.4, 76.2] & 0.606 & 96.3 & 0.307 \\
+Evidence model, 100K                 & 69.3 [67.3, 71.4] & 0.541 & 93.7 & 0.400 \\
+Evidence model, $\sim$497K         & 70.2 [68.3, 72.2] & 0.550 & 94.5 & 0.372 \\
+LoRA + Evidence stack (dev)            & 73.4 [71.4, 75.3] & 0.577 & 96.2 & 0.320 \\
+LoRA + Evidence stack (dev2)           & 74.2 [72.4, 76.1] & 0.587 & 96.6 & 0.307 \\
+\textbf{Probe + Evidence stack (main)}       & \textbf{75.7 [73.8, 77.6]} & \textbf{0.612} & \textbf{96.7} & \textbf{0.288} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{table}[htbp]
 \centering
-\caption{Paired comparisons for SH (exact-accuracy difference in points, 95\% paired bootstrap CI, exact McNemar $p$, and Holm-adjusted $p$ over these 8 comparisons).}
+\caption{Paired comparisons for the main stack (exact-accuracy difference in points, 95\% paired bootstrap CI, exact McNemar $p$, and Holm-adjusted $p$ over these 8 comparisons).}
 \label{tab:e23paired}
 \small
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{lcc}
 \toprule
-\textbf{SH vs} & \textbf{eval} & \textbf{natural\_test} \\
+\textbf{Main stack vs} & \textbf{eval} & \textbf{natural\_test} \\
 \midrule
-Stack Analyst+E (dev), old headline & +3.6 [+0.9, +6.3], $p$=.011 (Holm .045) & +2.3 [+0.6, +4.0], $p$=.0086 (Holm .043) \\
-Stack Analyst+E (dev2), same fit set & +2.0 [$-$0.6, +4.7], $p$=.14 (Holm .22) & +1.5 [$-$0.1, +3.0], $p$=.081 (Holm .22) \\
-Evidence E6b alone & +5.0 [+2.4, +7.4], $p$=1.7e-4 (Holm .001) & +5.5 [+3.8, +7.1], $p$=1.3e-10 (Holm 1e-9) \\
-P3 probe alone & +6.3 [+3.8, +8.8], $p$=6.4e-7 (Holm 4.4e-6) & +1.4 [$-$0.1, +2.9], $p$=.074 (Holm .22) \\
+LoRA + Evidence stack (dev), earlier headline & +3.6 [+0.9, +6.3], $p$=.011 (Holm .045) & +2.3 [+0.6, +4.0], $p$=.0086 (Holm .043) \\
+LoRA + Evidence stack (dev2), same fit set & +2.0 [$-$0.6, +4.7], $p$=.14 (Holm .22) & +1.5 [$-$0.1, +3.0], $p$=.081 (Holm .22) \\
+Evidence model alone & +5.0 [+2.4, +7.4], $p$=1.7e-4 (Holm .001) & +5.5 [+3.8, +7.1], $p$=1.3e-10 (Holm 1e-9) \\
+LLaMA probe alone & +6.3 [+3.8, +8.8], $p$=6.4e-7 (Holm 4.4e-6) & +1.4 [$-$0.1, +2.9], $p$=.074 (Holm .22) \\
 \bottomrule
 \end{tabular}}
 \end{table}
 
 \begin{table}[htbp]
 \centering
-\caption{Variance over 5 seeds (bootstrap of the probe fit set and of dev2; E6b held fixed). Mean $\pm$ sd.}
+\caption{Variance over 5 seeds (bootstrap of the probe fit set and of dev2; Evidence model held fixed). Mean $\pm$ sd.}
 \label{tab:e23var}
 \small
 \begin{tabular}{lcc}
 \toprule
  & \textbf{eval} & \textbf{natural\_test} \\
 \midrule
-SH exact (macro-F1) & 65.8 $\pm$ 0.6 (0.657) & 75.4 $\pm$ 0.8 (0.610) \\
-SH $-$ E6b (points) & +3.3 $\pm$ 0.6, 5/5 positive & +5.2 $\pm$ 0.8, 5/5 positive \\
-SH $-$ P3 (points) & +5.2 $\pm$ 0.9, 5/5 positive & +2.4 $\pm$ 1.2, 5/5 positive \\
-SH $-$ Stack Analyst+E (dev2) & +0.7 $\pm$ 1.2, 4/5 positive & +1.0 $\pm$ 0.6, 5/5 positive \\
+Main stack exact (macro-F1) & 65.8 $\pm$ 0.6 (0.657) & 75.4 $\pm$ 0.8 (0.610) \\
+Main stack $-$ Evidence model (points) & +3.3 $\pm$ 0.6, 5/5 positive & +5.2 $\pm$ 0.8, 5/5 positive \\
+Main stack $-$ LLaMA probe (points) & +5.2 $\pm$ 0.9, 5/5 positive & +2.4 $\pm$ 1.2, 5/5 positive \\
+Main stack $-$ LoRA + Evidence stack (dev2) & +0.7 $\pm$ 1.2, 4/5 positive & +1.0 $\pm$ 0.6, 5/5 positive \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -85,7 +88,7 @@ SH $-$ Stack Analyst+E (dev2) & +0.7 $\pm$ 1.2, 4/5 positive & +1.0 $\pm$ 0.6, 5
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{\efigdir main_bars.png}
-\caption{Exact accuracy with 95\% bootstrap CI for every frozen model; SH in red.}
+\caption{Exact accuracy with 95\% bootstrap CI for every frozen model; main stack in red.}
 \label{fig:e23bars}
 \end{figure}
 
@@ -103,20 +106,20 @@ LoRA on 10K rows & dev 56.4\% $<$ gate 58\% & Fail \\
 Hidden-state probe, 10K fit (single and multi-layer) & +0.011 / +0.005 on dev; natural\_dev miss & Fail \\
 Reflector on pooled dev + natural\_dev & gate passed; gain was a class-prior shift & Not adopted \\
 Evidence on 500K rows & better alone (+1.9 CV), stack not better & Fail \\
-dev2 (2\,000) + probe on 40K (SH) & +3.9 pts, paired CI [+2.4, +5.8] & Pass \\
+dev2 (2\,000) + probe on 40K (main stack) & +3.9 pts, paired CI [+2.4, +5.8] & Pass \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-% FACT: SH beats each single agent; gain over best single agent positive in 5/5 seeds on both splits (Table 3).
+% FACT: main stack beats each single agent; gain over best single agent positive in 5/5 seeds on both splits (Table 3).
 % FACT: against the old stack refit on the same dev2 the gain is small and not significant (+2.0 / +1.5): part of the
 %       headline gain over the old stack comes from the 4x larger Reflector fit set.
-% FACT: frozen base LLaMA probe (no fine-tuning) replaces the LoRA Analyst; adding LoRA back to P3+E6b does not help (dev2 .633 < .639).
-% FACT: base LLaMA zero-shot is weak alone (34.3 eval) but its hidden states carry signal (P3 61.2 eval, 74.3 natural_test).
-% FACT: disclosures: 5 candidates compared on dev2; E6b-alone accuracy on eval/natural_test was printed before the gate (not used
-%       for any choice); E6b not retrained across variance seeds (rerun C1 pending); Holm correction applied over the 8 SH comparisons (Table 2).
+% FACT: frozen base LLaMA probe (no fine-tuning) replaces the LoRA Analyst; adding LoRA back to LLaMA probe+Evidence model (~497K) does not help (dev2 .633 < .639).
+% FACT: base LLaMA zero-shot is weak alone (34.3 eval) but its hidden states carry signal (LLaMA probe 61.2 eval, 74.3 natural_test).
+% FACT: disclosures: 5 candidates compared on dev2; Evidence model (~497K)-alone accuracy on eval/natural_test was printed before the gate (not used
+%       for any choice); Evidence model (~497K) not retrained across variance seeds (rerun C1 pending); Holm correction applied over the 8 main stack comparisons (Table 2).
 % FACT (framing the Phase 1 baseline honestly; agreed with the author 2026-10-25):
-%   - Lead with the gain: SH vs Phase 1 LoRA = +13.5 pts eval (54.0 -> 67.5) and +22.3 pts natural_test (53.4 -> 75.7),
+%   - Lead with the gain: main stack vs Phase 1 LoRA = +13.5 pts eval (54.0 -> 67.5) and +22.3 pts natural_test (53.4 -> 75.7),
 %     i.e. 29.3% and 47.9% fewer errors (relative error reduction = gain / (100 - baseline)).
 %   - What Phase 1 does well on Electronics (e23/metrics_extra.out): within-one-star 93.7 / 94.4; binary (3-star excluded) 91.2 / 92.9;
 %     so it gets the direction right, the exact star is the hard part.
@@ -130,7 +133,7 @@ dev2 (2\,000) + probe on 40K (SH) & +3.9 pts, paired CI [+2.4, +5.8] & Pass \\
 % ---- Robustness analyses (2026-10-25; source v2_reflective/e23/analysis_C.out; no new test reads, no refits)
 \begin{table}[htbp]
 \centering
-\caption{Error analysis for SH on the frozen test splits.}
+\caption{Error analysis for the main stack on the frozen test splits.}
 \label{tab:e23errors}
 \small
 \resizebox{\linewidth}{!}{%
@@ -142,10 +145,10 @@ Errors (of 1\,000 / 2\,000) & 325 & 486 \\
 Errors one star off & 89.8\% & 86.4\% \\
 Errors two or more stars off & 33 & 66 \\
 Per-class recall 1$\star$ / 2$\star$ / 3$\star$ / 4$\star$ / 5$\star$ & .725 / .595 / .535 / .665 / .855 & .741 / .458 / .540 / .639 / .829 \\
-Agents agree (share of rows): SH exact & 64.2\%: 74.1 & 72.0\%: 83.5 \\
-Agents disagree: SH / E6b / P3 exact & 55.6 / 42.7 / 39.1 & 55.8 / 35.7 / 50.1 \\
-Shortest quartile: SH / E6b / P3 exact & 71.5 / 70.0 / 54.6 & 82.4 / 79.4 / 77.3 \\
-Longest quartile: SH / E6b / P3 exact & 64.7 / 55.8 / 64.3 & 68.4 / 60.6 / 70.0 \\
+Agents agree (share of rows): stack exact & 64.2\%: 74.1 & 72.0\%: 83.5 \\
+Agents disagree: Stack / Evidence / Probe exact & 55.6 / 42.7 / 39.1 & 55.8 / 35.7 / 50.1 \\
+Shortest quartile: Stack / Evidence / Probe exact & 71.5 / 70.0 / 54.6 & 82.4 / 79.4 / 77.3 \\
+Longest quartile: Stack / Evidence / Probe exact & 64.7 / 55.8 / 64.3 & 68.4 / 60.6 / 70.0 \\
 Calibration: ECE; mean confidence vs accuracy & .047; .650 vs .675 & .062; .704 vs .757 \\
 \bottomrule
 \end{tabular}}
@@ -155,16 +158,16 @@ Calibration: ECE; mean confidence vs accuracy & .047; .650 vs .675 & .062; .704 
 \centering
 \includegraphics[width=0.48\linewidth]{\efigdir reliability_SH_eval.png}\hfill
 \includegraphics[width=0.48\linewidth]{\efigdir reliability_SH_natural_test.png}
-\caption{Reliability diagrams for SH (left: eval, right: natural\_test).}
+\caption{Reliability diagrams for the main stack (left: eval, right: natural\_test).}
 \label{fig:e23reliability}
 \end{figure}
 
-% FACT: after Holm over 8 comparisons, 5 remain significant: SH > E6b (both splits), SH > P3 (eval), SH > old headline (both splits).
-%       Not significant: SH vs P3 on natural_test; SH vs the old stack refit on the same dev2 (both splits).
-% FACT: 86-90% of SH errors are adjacent-star confusions; 2-star and 3-star are hardest (recall .46-.60).
-% FACT: the agents are complementary: TF-IDF E6b is strong on short reviews (eval shortest quartile 70.0 vs P3 54.6),
-%       the LLaMA probe on long ones (eval longest quartile 64.3 vs E6b 55.8); SH is best or near-best in every quartile.
-% FACT: when the agents disagree, the Reflector picks right 55.6% / 55.8% vs 42.7 / 35.7 (E6b) and 39.1 / 50.1 (P3).
-% FACT: SH is slightly under-confident (ECE .047 / .062), so its probabilities can be used as confidence.
-% FACT: cost per review on an M1 16 GB: LLaMA probe forward to layer 20 ~0.67 s; TF-IDF transform ~0.06 ms; Reflector ~0.06 ms.
+% FACT: after Holm over 8 comparisons, 5 remain significant: main stack > Evidence model (~497K) (both splits), main stack > LLaMA probe (eval), main stack > old headline (both splits).
+%       Not significant: main stack vs LLaMA probe on natural_test; main stack vs the old stack refit on the same dev2 (both splits).
+% FACT: 86-90% of main stack errors are adjacent-star confusions; 2-star and 3-star are hardest (recall .46-.60).
+% FACT: the agents are complementary: TF-IDF Evidence model (~497K) is strong on short reviews (eval shortest quartile 70.0 vs LLaMA probe 54.6),
+%       the LLaMA probe on long ones (eval longest quartile 64.3 vs Evidence model (~497K) 55.8); main stack is best or near-best in every quartile.
+% FACT: when the agents disagree, the Reflector picks right 55.6% / 55.8% vs 42.7 / 35.7 (Evidence model (~497K)) and 39.1 / 50.1 (LLaMA probe).
+% FACT: main stack is slightly under-confident (ECE .047 / .062), so its probabilities can be used as confidence.
+% FACT: cost per review on an M1 16 GB: LLaMA probe forward to layer 20 ~0.67 s; TF-IDF transform and Reflector each well under 0.1 ms (0.04-0.06 ms across runs).
 % AUTHOR: write the robustness paragraph(s) here.

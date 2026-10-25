@@ -19,7 +19,7 @@ Suggested timing (about 22 minutes): slides 1–9 background (6 min), slide 10 u
 | 14 | Preprocessing ablation | unchanged |
 | 15 | Hallucination study | unchanged |
 | 16 | Experiment ledger (nine lines of work) | NEW |
-| 17 | Main result: SH | NEW |
+| 17 | Main result: main stack | NEW |
 | 18 | Phase 1 → Phase 2: gain, Phase 1 strengths, class-mix note, reproduction | NEW (Oct 25) |
 | 19 | Frozen bar chart, all models | NEW |
 | 20 | Robustness: Holm, errors, calibration, cost | NEW (Oct 25) |
@@ -31,7 +31,7 @@ Suggested timing (about 22 minutes): slides 1–9 background (6 min), slide 10 u
 
 ### Slide 10 — What changed since the last review
 **Say:** "Since the last review I finished every planned experiment. Each one had a pass/fail rule written down before it ran, checked only on development data. Five ideas failed. One passed, and it is now the main system."
-**Explain the main system (SH) in one breath:** "Two agents. The first reads the hidden state of the base LLaMA-3-8B model at layer 20 and puts a small logistic classifier on top. LLaMA is frozen, with no fine-tuning. The second is a TF-IDF keyword model trained on about half a million reviews. A Reflector, which is a logistic regression, combines the two agents' probabilities. It is fit on 2,000 balanced development reviews."
+**Explain the main system (main stack) in one breath:** "Two agents. The first reads the hidden state of the base LLaMA-3-8B model at layer 20 and puts a small logistic classifier on top. LLaMA is frozen, with no fine-tuning. The second is a TF-IDF keyword model trained on about half a million reviews. A Reflector, which is a logistic regression, combines the two agents' probabilities. It is fit on 2,000 balanced development reviews."
 **Numbers:** balanced eval 67.5% exact (was 63.9%); natural test 75.7% (was 73.4%).
 **Caveat (say it, don't wait to be asked):** "Part of the gain comes from fitting the Reflector on 2,000 rows instead of 500. The old system given those same 2,000 rows is only 2.0 and 1.5 points behind, and that gap is not significant."
 
@@ -51,7 +51,7 @@ Go row by row, about 10 seconds each.
 - **Phase H:** 2,000-row dev set plus the probe fit on 40K rows. Passed: +3.9 points on dev2, CI [+2.4, +5.8].
 
 ### Slide 17 — Main result
-**Read the table top to bottom:** old headline 63.9 / 73.4; old stack refit on dev2 65.5 / 74.2; probe alone 61.2 / 74.3; Evidence alone 62.5 / 70.2; **SH 67.5 / 75.7**; 5-seed mean 65.8 ± 0.6 / 75.4 ± 0.8.
+**Read the table top to bottom:** old headline 63.9 / 73.4; old stack refit on dev2 65.5 / 74.2; probe alone 61.2 / 74.3; Evidence alone 62.5 / 70.2; **main stack 67.5 / 75.7**; 5-seed mean 65.8 ± 0.6 / 75.4 ± 0.8.
 **Paired comparisons:** versus the old headline +3.6 [+0.9, +6.3] eval and +2.3 [+0.6, +4.0] natural, both significant. Versus Evidence alone +5.0 and +5.5. Versus the probe alone +6.3 eval; +1.4 natural (not significant).
 **Key message:** "Combining two different kinds of signal beats either one alone, every seed. The frozen LLaMA model already contains the useful information; fine-tuning it was not needed for the stack."
 
@@ -63,12 +63,12 @@ Go row by row, about 10 seconds each.
 **Never quote** 70.7 / 60.1 (leaky prompt, withdrawn by my own audit), 74.8 (one unstable seed) or 79.9 (a class-mix correction, not skill).
 
 ### Slide 19 — Bar chart
-**Say:** "Every model, with 95% confidence intervals. SH is in red. Notice base LLaMA: as a zero-shot rater it gets 34%, but a probe on its hidden state gets 61 and 74."
+**Say:** "Every model, with 95% confidence intervals. main stack is in red. Notice base LLaMA: as a zero-shot rater it gets 34%, but a probe on its hidden state gets 61 and 74."
 
 ### Slide 20 — Robustness
 **Say:** "I checked whether the result survives four questions."
-- **Multiple comparisons:** after Holm correction over 8 comparisons, 5 stay significant. SH beats Evidence alone on both splits, the probe on eval, and the old headline on both splits (adjusted p .045 and .043). The probe on natural test and the old stack refit on dev2 are not significant.
-- **Errors:** 90% (eval) and 86% (natural) of errors are one star off. 2★ and 3★ are hardest. When the two agents agree (64–72% of rows) SH is right 74–84% of the time; when they disagree, 56%.
+- **Multiple comparisons:** after Holm correction over 8 comparisons, 5 stay significant. main stack beats Evidence alone on both splits, the probe on eval, and the old headline on both splits (adjusted p .045 and .043). The probe on natural test and the old stack refit on dev2 are not significant.
+- **Errors:** 90% (eval) and 86% (natural) of errors are one star off. 2★ and 3★ are hardest. When the two agents agree (64–72% of rows) main stack is right 74–84% of the time; when they disagree, 56%.
 - **Calibration:** ECE .047 and .062, slightly under-confident. The confidence can be trusted, which is what the Router needs.
 - **Cost:** the LLaMA probe takes about 0.67 s per review; TF-IDF and the Reflector take under 0.1 ms each.
 
@@ -85,27 +85,30 @@ Freeze stage 1 on Nov 1 (local work), stage 2 on Nov 5 (Colab result in or out).
 Full script, folder map, file-name key and expected questions: **`V2_Reflective_Guide.md`** (next to this file). Short version: "Every Phase 2 number comes from a script in `v2_reflective/`, a saved `.out` file, and a `LOG.md` entry whose rule was written before the run. `freeze_tables.py` recomputes every table in 3 seconds."
 
 ### New questions to expect
-- **"Why did the gain over the old system shrink in the fair comparison?"** The old Reflector was fit on only 500 rows. Given 2,000 rows it improves too. SH is still ahead in 4 of 5 seeds on eval and 5 of 5 on natural, but the margin is small (+0.7 ± 1.2 and +1.0 ± 0.6).
+- **"Why did the gain over the old system shrink in the fair comparison?"** The old Reflector was fit on only 500 rows. Given 2,000 rows it improves too. main stack is still ahead in 4 of 5 seeds on eval and 5 of 5 on natural, but the margin is small (+0.7 ± 1.2 and +1.0 ± 0.6).
 - **"You tried many things; isn't the winner luck?"** Every rule was written before running, and failures never touched the test sets. Five candidates were compared on dev2, and I disclose that. The test sets were read once.
-- **"Then what is the role of LoRA?"** Phase 1 is still the paper's baseline reproduction. Inside Phase 2 it is an ablation row: adding it to SH did not help (dev2 .633 versus .639).
+- **"Then what is the role of LoRA?"** Phase 1 is still the paper's baseline reproduction. Inside Phase 2 it is an ablation row: adding it to main stack did not help (dev2 .633 versus .639).
 - **"Why is natural-test accuracy higher than balanced?"** About 65% of natural reviews are 5-star, which are easier. That is why macro-F1 (.612) is reported next to it.
 - **"Is this agentic?"** Today: two independent agents plus a learned Reflector that arbitrates between them. The LLM-as-judge version (Gate 0) was tested and failed, and that is reported. Phase 2 v3 (slide 21) adds LLM agents for routing, explanation and self-correction of explanations, each measured.
 - **"One slip?"** Yes, disclosed: Evidence-alone test accuracy was printed once before the gate ran. It was not used for any choice.
 
+### Names to say out loud
+Say **"main stack"** (or "Probe + Evidence stack"), **"LLaMA probe"**, **"Evidence model"**, **"earlier LoRA + Evidence stack"** and **"Phase 1 LoRA"**. The internal IDs (SH, P3, E6b, S0) live only in `LOG.md` and the code.
+
 ### Numbers cheat sheet
 | | eval (1,000 balanced) | natural_test (2,000) |
 |---|---|---|
-| SH exact / macro-F1 | 67.5 / .675 | 75.7 / .612 |
-| SH 5-seed mean | 65.8 ± 0.6 | 75.4 ± 0.8 |
-| Old headline (LoRA + E, dev fit) | 63.9 / .638 | 73.4 / .577 |
-| LoRA + E refit on dev2 | 65.5 / .653 | 74.2 / .587 |
-| P3 probe alone | 61.2 | 74.3 |
-| Evidence E6b alone | 62.5 | 70.2 |
+| main stack exact / macro-F1 | 67.5 / .675 | 75.7 / .612 |
+| main stack 5-seed mean | 65.8 ± 0.6 | 75.4 ± 0.8 |
+| Earlier LoRA + Evidence stack (dev fit) | 63.9 / .638 | 73.4 / .577 |
+| LoRA + Evidence stack refit on dev2 | 65.5 / .653 | 74.2 / .587 |
+| LLaMA probe alone | 61.2 | 74.3 |
+| Evidence model alone | 62.5 | 70.2 |
 | LoRA Analyst alone | 54.0 | 53.4 |
 | Base LLaMA zero-shot | 34.3 | 16.8 |
-| SH within-1 / polarity | 96.7 / 82.0 | 96.7 / 91.5 |
-| SH errors one star off | 90% | 86% |
-| SH ECE | .047 | .062 |
+| main stack within-1 / polarity | 96.7 / 82.0 | 96.7 / 91.5 |
+| main stack errors one star off | 90% | 86% |
+| main stack ECE | .047 | .062 |
 
 Sources: `v2_reflective/e23/results_frozen.md`, `readout_H.out`, `variance_H.out`; full history in `v2_reflective/EXPERIMENTS_SUMMARY.md`.
 

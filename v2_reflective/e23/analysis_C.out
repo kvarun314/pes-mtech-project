@@ -47,4 +47,4 @@ natural_test: SH vs P3 alone               +1.4 pts  p 0.074  Holm-adj 0.22  ns
 natural_test: SH vs S0 dev2                +1.4 pts  p 0.081  Holm-adj 0.22  ns
 eval: SH vs S0 dev2                        +2.0 pts  p 0.14  Holm-adj 0.22  ns
 
-===== C5 cost per review (M1, 16 GB): P3 probe = LLaMA-3-8B Q4 forward to layer 20 ~0.67 s (A1 log: 500 rows in 335 s) | TF-IDF transform ~0.06 ms (+ LR dot product) | Reflector ~0.06 ms
+===== C5 cost per review (M1, 16 GB): P3 probe = LLaMA-3-8B Q4 forward to layer 20 ~0.67 s (A1 log: 500 rows in 335 s) | TF-IDF transform ~0.04 ms (+ LR dot product) | Reflector ~0.05 ms
