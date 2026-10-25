@@ -68,10 +68,10 @@ Go row by row, about 10 seconds each.
 **Say:** "An LLM choosing the star failed twice, so the specialists keep deciding the star. The agents now do three things: a Router skips the slow LLaMA call when the Evidence agent is confident; an Explainer writes a short rationale from the evidence; and a Critic checks it and sends it back with specific feedback until it is faithful, at most twice."
 **Measured:** on all 3,000 test reviews: faithfulness before and after the Critic loop, rewrite rate, a deletion test (remove the cited phrases versus random words), and latency with and without the Router.
 **Accuracy candidates:** A1, the probe on 120K rows instead of 40K, is running (45K of 80K new rows extracted). A2, a DeBERTa-v3 specialist, runs on Colab on Nov 1. Each needs to pass a dev-only gate first.
-**Demo:** one local notebook, about 2 minutes, no network.
+**Demo (December final presentation):** one local notebook, Phase 1 and Phase 2 running live on five reviews plus the paper's frozen results, 3 minutes or less, no network. A cached result backs every live cell.
 
 ### Slide 21 — Roadmap
-Freeze stage 1 on Nov 1 (local work), stage 2 on Nov 5 (Colab result in or out). I write the prose from Nov 2; draft 1 to the supervisor Nov 8; submit by Nov 20.
+Freeze stage 1 on Nov 1 (local work), stage 2 on Nov 5 (Colab result in or out). I write the prose from Nov 2; draft 1 to the supervisor Nov 8; submit by Nov 20. December: final presentation with the live demo.
 
 ### Slides 22–23 — The `v2_reflective/` workspace
 Full script, folder map, file-name key and expected questions: **`V2_Reflective_Guide.md`** (next to this file). Short version: "Every Phase 2 number comes from a script in `v2_reflective/`, a saved `.out` file, and a `LOG.md` entry whose rule was written before the run. `freeze_tables.py` recomputes every table in 3 seconds."

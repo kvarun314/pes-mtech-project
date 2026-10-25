@@ -215,10 +215,10 @@ cards(nn, [("ROUTE", "Router agent", ["— Evidence confident: skip the slow LLa
            ("CHECK", "Critic loop", ["— Star matches; quoted phrases occur in the review", "— Disagreement mentioned; no invented claims", "— Fails: specific feedback, rewrite (max 2 rounds)"]),
            ("ACCURACY", "Gated candidates", ["— A1: probe fit 40K → 120K rows (running, 45K / 80K new rows done)", "— A2: DeBERTa-v3 specialist on Colab, Nov 1", "— Each must pass a dev-only gate before any test read"])],
       1.82, 3.6)
-band(nn, 5.65, "Evaluation", "On all 3,000 test reviews: faithfulness before vs after the Critic loop (McNemar), rewrite rate, deletion test (cited phrases vs random words), latency with and without the Router. Demo: one local notebook, ~2 minutes.", h=1.0)
+band(nn, 5.65, "Evaluation", "On all 3,000 test reviews: faithfulness before vs after the Critic loop (McNemar), rewrite rate, deletion test (cited phrases vs random words), latency with and without the Router. Final demo (December): one local notebook, Phase 1 + Phase 2 live, ≤ 3 minutes.", h=1.0)
 
 # N7 roadmap
-n7 = new_slide("ROADMAP", "Plan to the Nov 21–22 Deadline",
+n7 = new_slide("ROADMAP", "Plan to Submission and the December Final Presentation",
                "Weekly checkpoints, each logged in LOG.md and progress/week_NN.md. Numbers freeze Nov 1. Last days are buffer only.")
 accent_card(n7, MARGIN, 1.82, CW, 4.2)
 make_table(n7, MARGIN + 0.26, 2.0, CW - 0.5, [1.0, 1.7, 6.2, CW - 0.5 - 8.9], None, ["Week", "Dates", "Work", "Checkpoint"],
@@ -227,8 +227,9 @@ make_table(n7, MARGIN + 0.26, 2.0, CW - 0.5, [1.0, 1.7, 6.2, CW - 0.5 - 8.9], No
             [("2", INK, True), ("Oct 26–Nov 1", BODY, False), ("A1 bigger probe (running); Router, Explainer, Critic agents; explanation metrics on all 3,000 test reviews; demo notebook", BODY, False), ("Freeze stage 1: Nov 1", BODY, False)],
             [("3", INK, True), ("Nov 2–8", BODY, False), ("DeBERTa on Colab (A2, Nov 1) and its gate; paper prose (author-written); figures", BODY, False), ("Freeze stage 2: Nov 5; draft 1 Nov 8", BODY, False)],
             [("4", INK, True), ("Nov 9–15", BODY, False), ("Supervisor fixes; thesis sections; archive; deck", BODY, False), ("Draft 2, similarity check", BODY, False)],
-            [("5", INK, True), ("Nov 16–20", BODY, False), ("Buffer: proofreading, final checks, submission", BODY, False), ("Submitted by Nov 20", BODY, False)]],
-           row_h=0.5, head_h=0.36, aligns=[L, L, L, L])
+            [("5", INK, True), ("Nov 16–20", BODY, False), ("Buffer: proofreading, final checks, submission", BODY, False), ("Submitted by Nov 20", BODY, False)],
+            [("6", INK, True), ("December", BODY, False), ("Final presentation: deck + live demo notebook (Phase 1 and Phase 2, ≤ 3 min, checked the day before)", BODY, False), ("Final presentation", BODY, False)]],
+           row_h=0.44, head_h=0.36, aligns=[L, L, L, L])
 band(n7, 6.2, "Integrity", "Plagiarism and AI-content each under 5%: the author writes the prose; analysis supplies facts, tables and figures; similarity checks on every full draft.", h=0.75)
 
 # NV1 code workspace map (V2_Reflective_Guide.md)
@@ -305,7 +306,7 @@ NOTES = {
  20: "Next: Phase 2 v3. Say: the specialists decide the star because an LLM choosing the star failed twice (Gate 0). The agents now do what LLMs are good at: routing, explaining, and checking explanations. Every explanation is checked by the Critic and measured on all 3,000 test reviews. A1 is running; DeBERTa runs on Colab Nov 1. Final demo is a local notebook.",
  22: "Code workspace. v2_reflective started as the Oct 10 'reflective v2' design (historical slide 32); the name stayed and it now holds every Phase 2 experiment. Top level = Kaggle close-out; e23 = Electronics 2023, all current results. Walk the table top to bottom: data, agents, gates, robustness, freeze. Full guide: presentation/V2_Reflective_Guide.md.",
  23: "Workflow. Six steps for every experiment: declare in LOG.md, run resumably, gate on dev only, read the tests once, freeze, record and back up. Say: 16 failures are reported and none touched the test sets, which is why the one pass can be trusted.",
- 21: "Roadmap. Freeze stage 1 Nov 1 (local work), stage 2 Nov 5 (Colab result in or out). Author writes the prose from Nov 2; draft 1 to supervisor Nov 8; submit by Nov 20.",
+ 21: "Roadmap. Freeze stage 1 Nov 1 (local work), stage 2 Nov 5 (Colab result in or out). Author writes the prose from Nov 2; draft 1 to supervisor Nov 8; submit by Nov 20. December: final presentation with the live demo notebook (Phase 1 and Phase 2).",
 }
 for i, sl in enumerate(prs.slides, 1):
     sl.notes_slide.notes_text_frame.text = NOTES.get(i, "Historical slide (Run 1, All Beauty, Kaggle-trained adapter, leaky prompt). Superseded; show only if asked.")

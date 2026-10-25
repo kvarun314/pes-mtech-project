@@ -557,3 +557,8 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - quoted phrases, straight and curly quotes
   - token drop for the deletion test
 - `tests/v3/test_text.py`: 5 tests, red before the code and green after. Full suite: 134 passed (129 old + 5 new).
+
+### 2026-10-25 — Deck brought in line with today's decisions
+- Slide 20 now describes the final demo for the December presentation: Phase 1 and Phase 2 live, 3 minutes or less.
+- Slide 21 roadmap: retitled to "Plan to Submission and the December Final Presentation", with a new row 6 (December final presentation and demo).
+- Speaker notes and `presentation/Presenter_Notes.md` (slides 20–21) updated to match. Rebuilt and rendered; checked visually. The deck still has 32 slides.
