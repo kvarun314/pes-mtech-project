@@ -547,3 +547,13 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - User decision: do not purge `dev2.jsonl` from the git history. Keep the details for future reference.
 - Saved in `docs/maintenance/git_history_dev2_purge.md`: the issue, when to revisit, the exact commands, and the consequences.
 - `README.md` now lists `docs/maintenance/`. `CLAUDE.md` now forbids history rewrites and force-pushes.
+
+### 2026-10-25 — Plan execution started (inline, user check-in after each task)
+- Task 1 (A1 resume and gate, C1) is deferred until the user gives the go.
+- Task 2 done. Created `src/agentic_sentiment/v3/paths.py` (all model and artifact paths) and `src/agentic_sentiment/v3/text.py`:
+  - tokens, using the same pattern as sklearn TF-IDF
+  - contiguous phrase containment
+  - display span ("doesn work" → "doesn't work")
+  - quoted phrases, straight and curly quotes
+  - token drop for the deletion test
+- `tests/v3/test_text.py`: 5 tests, red before the code and green after. Full suite: 134 passed (129 old + 5 new).
