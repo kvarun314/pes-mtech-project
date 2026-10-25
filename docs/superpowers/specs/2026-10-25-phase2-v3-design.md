@@ -10,7 +10,7 @@ Date: 2026-10-25. Status: draft for user review.
 2. **Agentic layer:** add LLM agents whose benefit is measured. They route, explain, and self-correct explanations. The specialists keep deciding the star.
 3. **Explainability:** every prediction comes with evidence and a rationale, and the rationale's faithfulness is measured.
 4. **Paper rigor:** close the open disclosures and add an error analysis, calibration, cost, and an agent-audit table.
-5. **Demo:** one local notebook that runs end to end in about 2 minutes.
+5. **Demo:** one local notebook showing Phase 1 and Phase 2 live, plus the paper's frozen results, in 3 minutes or less (December final presentation).
 
 ### Constraints
 
@@ -99,18 +99,37 @@ Measured on **all 3,000 test reviews** (eval 1,000 + natural_test 2,000), read o
 - **Deletion test, sufficiency:** the predicted star's probability when only the cited phrases are kept.
 - **LLM calls and latency per review**, with and without the Router.
 
-## 4. Demo notebook
+## 4. Demo notebook (Phase 1 + Phase 2, for the December final presentation)
 
-`Phase2_Demo.ipynb` (local Jupyter, ~2 min):
-1. Load the saved agents.
-2. Run 5 chosen reviews live through the graph. For each, show:
-   - highlighted evidence phrases
-   - the agent votes and the Router decision
-   - the final star
-   - the rationale before and after the Critic, with the faithfulness verdict
-3. Load the frozen tables and figures: main bars, reliability curves, deletion-test plot, agent-audit table.
+**One notebook:** `presentation/Final_Demo.ipynb`, built by `v2_reflective/build_final_demo.py`. It replaces the Kaggle-era `Presentation_Demo.ipynb`, which stays in `presentation/` unchanged.
 
-The notebook never needs Colab or a network. The model files are already local; the Instruct download happens once, beforehand.
+**Requirements:**
+- Runs locally on the M1 in **3 minutes or less** from a fresh kernel.
+- No network and no Colab.
+- Every number shown is read from the frozen output files, so it is identical to the paper.
+
+**Model handling:**
+- The base LLaMA-3-8B Q4 MLX model (`v2_reflective/mlx_model`) is loaded **once**, in about 20 s.
+- The Phase 1 LoRA adapter (`e23/p1/adapter_R`) is attached for Phase 1 and switched off (LoRA scale 0) for the Phase 2 probe. One model in memory, about 5 GB.
+- The Instruct model for the Explainer is loaded only in the Phase 2 section.
+
+**Fallback:** every live cell has a cached result (`presentation/demo_cache.json`), produced by the same code on the same 5 reviews. If a model is missing or slow, the cell prints the cached result and says so. The demo never breaks on stage.
+
+**Sections:**
+
+| # | Section | Live part | Frozen part (from paper files) |
+|---|---|---|---|
+| 0 | Setup and the 5 demo reviews (one per star, from eval) | load model once | — |
+| 1 | **Phase 1, the baseline paper's pipeline:** TextBlob DQC, stratified sampling, VGST, neutral oversampling on a 20-row toy table; then why DQC was dropped (deletes 52% of 1★ and 67% of 2★) | pipeline runs on 20 rows (< 1 s) | ablation numbers (`ablate_preproc.log`) |
+| 2 | **Phase 1 model:** LLaMA-3-8B + LoRA rates the 5 reviews; first-digit probabilities shown as bars | 5 predictions (~1 s each) | Phase 1 numbers on eval / natural_test (54.0 / 53.4); leak audit table (one-shot leak ~8 pts) |
+| 3 | **Phase 2 agents:** Evidence agent (top phrases), Router decision, probe agent, Reflector, final star | 5 reviews through the LangGraph graph | — |
+| 4 | **Phase 2 explanation:** evidence pack → Explainer rationale → Critic checks → rewrite if unfaithful | 1–2 reviews live (~10 s each) | faithfulness before/after the loop and deletion test on all 3,000 reviews |
+| 5 | **The paper's results:** main table, paired tests, Holm, bar chart, reliability curves, agent-audit table | — | `results_frozen.md`, `paper/figures/e23/*.png` |
+| 6 | **Phase 1 vs Phase 2 side by side:** the same 5 reviews, Phase 1 star vs Phase 2 star vs truth, plus the headline gain | table from sections 2–3 | 54.0 → 67.5 eval, 53.4 → 75.7 natural_test |
+
+**Acceptance check:** a script runs the notebook headless (`jupyter nbconvert --execute`), asserts the runtime is ≤ 3 min, and asserts every printed paper number equals `results_frozen.md`. It runs again after each freeze (Nov 1, Nov 5) and before December.
+
+**Demo v1 (Oct 31):** sections 0–2, 5, 6, plus 3 without the Router/Explainer if those are not ready. **Final (after Nov 5):** all sections.
 
 ## 5. Schedule
 
@@ -121,10 +140,11 @@ The notebook never needs Colab or a network. The model files are already local; 
 | Oct 28 | A1 gate; B1 gate; B2 dev check on dev2 (500); C1 when GPU idle | CPU |
 | Oct 29 night | B2 readout part 1: Explainer + Critic on all 3,000 (~8–9 h) | GPU |
 | Oct 30 night | B2 readout part 2: deletion test on all 3,000 (~5 h) | GPU |
-| Oct 31 | Demo v1, tables, figures, deck, paper section update | — |
+| Oct 31 | Demo v1 (Phase 1 + Phase 2 sections that exist), tables, figures, deck, paper section update | — |
 | **Nov 1** | **Freeze stage 1.** A2 on Colab | Colab ~2–3 h |
 | Nov 2–4 | A2 gate, then readout if it passes; demo final | CPU |
-| **Nov 5** | **Freeze stage 2** | — |
+| **Nov 5** | **Freeze stage 2.** Final demo built from frozen files; headless check passes | — |
+| December | Final presentation: deck + `Final_Demo.ipynb` (rerun the headless check the day before) | — |
 
 Prose (the user writes it) starts Nov 2. Draft 1 goes to the supervisor on Nov 8. Submission by Nov 20.
 
