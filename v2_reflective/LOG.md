@@ -759,3 +759,12 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - New `results/README.md` covers e23 (current) and run1/run2 (historical).
 - `CLAUDE.md`: `collect_results.py` added to the after-each-step routine, plus a file-placement row. The `README.md` map now points to `results/e23/INDEX.md`.
 - Side note: the original `v2_reflective/e23/halluc_p1.out` with review excerpts is tracked in git, the same class of issue as `dev2.jsonl`. The user decided against history rewrites; this is to be added to the maintenance note.
+
+### 2026-10-25 — Presenter notes check
+- Checked: all 25 slides have their own speaker note, and the `Presenter_Notes.md` Part 0 sections and slide ranges match `deck_slide_map.md`.
+- Fixed:
+  - Slide 12 note said "A1 is running"; it is paused at 45K / 80K.
+  - Slide 12 note and Part 0 now mention the three self-correction levels.
+  - "Old headline" wording replaced with "earlier LoRA + Evidence stack".
+  - Sentence-start capitalisation of "main stack".
+- Rebuilt; Google Slides synced.
