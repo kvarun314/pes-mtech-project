@@ -1,0 +1,17 @@
+tau 0.30: routed 0.600 (full 0.642) skip 0.99
+tau 0.35: routed 0.604 (full 0.642) skip 0.96
+tau 0.40: routed 0.613 (full 0.642) skip 0.89
+tau 0.45: routed 0.615 (full 0.642) skip 0.81
+tau 0.50: routed 0.622 (full 0.642) skip 0.70
+tau 0.55: routed 0.634 (full 0.642) skip 0.60
+tau 0.60: routed 0.637 (full 0.642) skip 0.52
+tau 0.65: routed 0.638 (full 0.642) skip 0.43
+tau 0.70: routed 0.642 (full 0.642) skip 0.37
+tau 0.75: routed 0.642 (full 0.642) skip 0.30
+tau 0.80: routed 0.642 (full 0.642) skip 0.25
+tau 0.85: routed 0.642 (full 0.642) skip 0.20
+tau 0.90: routed 0.643 (full 0.642) skip 0.15
+tau 0.95: routed 0.642 (full 0.642) skip 0.09
+SC1 dev2 (CV): {'escalated': 961, 'changed': 326, 'fixed': 169, 'broken': 85, 'net': 84, 'p': 1.4855809678538804e-07}
+natural_dev: full 0.784 routed 0.776 skip 0.64
+=== GATE B1 + SC1: FAIL tau 0.6

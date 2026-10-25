@@ -829,3 +829,12 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - **If PASS:** one readout on eval and natural_test. Report routed vs full-stack exact, McNemar p, share of probe calls saved, and SC1 fixed / broken / net / p.
 - **If FAIL:** reported as is; no test read.
 - Script: `v2_reflective/e23/gate_B1.py` (code from the plan, Task 5). Probe probabilities: `evid7` (A1 not passed, so P3 stays).
+
+### 2026-10-25 — B1 Router + SC1 RESULT: FAIL (natural_dev check missed by 0.3 pt); no test read
+- tau chosen on dev2 CV = **0.60**: routed 0.637 vs full stack 0.642 (within 0.5 pt), Evidence-only on 52% of dev2 reviews.
+  - The full curve is in `gate_B1.out`. At tau ≥ 0.70 routed equals the full stack (0.642), with 37% skipped at 0.70.
+- **SC1 on dev2 (CV): PASS.** 961 reviews escalated, 326 changed; **fixed 169, broken 85, net +84, binomial p = 1.5e-7**.
+- **natural_dev: FAIL.** Routed 0.776 vs full 0.784, required ≥ 0.779. Missed by 0.3 pt (about 2 reviews of 500); 64% skipped.
+- **Gate: FAIL** (condition 2). Per the declaration, no readout on eval or natural_test.
+- Reading: escalation clearly corrects draft stars on dev2. The chosen tau 0.60 is slightly too aggressive on natural-mix data.
+- Any retry must be declared as a new candidate (B1-b) and disclosed as the second Router attempt.
