@@ -867,3 +867,13 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - The deck has 25 slides.
   - `Presenter_Notes.md` Part 0 has a new SC1 section, plus updated sections, ranges and timing.
   - `paper/e23_results.tex` has FACT notes for the Router and SC1 (both attempts disclosed). Build OK.
+
+### 2026-10-25 18:29 — A1 scheduled for tonight (user request)
+- `v2_reflective/e23/night_A1.sh` is running in the background (nohup, pid 63966). Sequence:
+  1. Wait until **22:30**.
+  2. Require AC power (wait up to 2 h, otherwise skip and log) and swap under 6 GB.
+  3. `caffeinate -is` the resume of `queue_A1.sh`: 35K reviews left (70 chunks), about 6.5 h, done around 05:00.
+  4. The declared A1 gate (`gate_A1.py`, dev2 + natural_dev only, no test read) writes `gate_A1.out`.
+- Status goes to `stage_A1.txt` and `night_A1.log`. The lid must stay open, because caffeinate does not prevent lid-close sleep.
+- No other GPU job may run from 22:30 until it finishes. Tasks 6–7 run before then.
+- If the gate passes, the readout on eval and natural_test happens in the next working session, after the result is logged.
