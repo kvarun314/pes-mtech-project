@@ -793,3 +793,9 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - a text block diagram
 - The main-result section opens with the "two readers and a learned referee" line.
 - Slide 14 (main result) speaker note now defines the main stack and gives the "is it good?" answer. Rebuilt; Google Slides synced.
+
+### 2026-10-25 — A2 relabelled in the deck
+- User: keep the DeBERTa run (A2) under wraps for now and label it something else.
+- The deck and speaker notes now say "optional extra specialist (GPU run, kept only if it passes its check)". The schedule row is marked "Optional".
+- The `Presenter_Notes.md` mention was neutralised the same way. A scan of the built deck finds 0 mentions of "DeBERTa".
+- The plan and spec (`docs/superpowers/`) keep the technical name as internal documents. The experiment itself is unchanged: optional, dev-gated, Nov 1.

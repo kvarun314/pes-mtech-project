@@ -155,7 +155,7 @@ End with the dates: freeze Nov 1 / 5, draft Nov 8, submit Nov 20, final presenta
   - Two readers: the **LLaMA probe**, frozen LLaMA-3-8B whose layer-20 state goes to a small classifier and reads meaning, and the **Evidence model**, TF-IDF on ~497K reviews, which reads key words.
   - A **Reflector** (a learned referee) combines them into the final star.
   - The two readers make different mistakes: alone 61–62%, together 67.5%.
-  - It changes only if the bigger probe (A1) or DeBERTa (A2) passes its dev check.
+  - It changes only if the bigger probe (A1) or the optional extra specialist (A2) passes its dev check.
 - **"Is the tried-and-dropped table final?"** For everything run so far, yes. A pending experiment that fails adds a row; one that passes moves to "What We Kept". This is updated at the Nov 1 / Nov 5 freezes.
 
 **Block diagram (draw it if asked):**
