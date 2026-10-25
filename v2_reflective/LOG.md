@@ -622,3 +622,14 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - `analysis_C.py`: reliability x-axis label "main stack confidence". After the rerun, `analysis_C.out` is identical except the live timing line: TF-IDF 0.06 → 0.04 ms, Reflector 0.06 → 0.05 ms. Run-to-run noise; the paper and deck say "well under 0.1 ms".
   - `paper/e23_results.tex`: tables, captions and FACT comments renamed, plus a NAMING comment block mapping neutral names to internal IDs. The `pdftotext` output of both PDFs contains no SH/P3/E6b. 0 LaTeX errors.
   - `presentation/Presenter_Notes.md` Part 0: renamed, plus a new "Names to say out loud" section.
+
+### 2026-10-25 — Task 3: Evidence agent and Reflector code; rebuild of the saved agents started
+- `src/agentic_sentiment/v3/evidence.py`: `EvidenceAgent` returns probabilities plus per-phrase contributions (coef[star] × tf-idf). Each phrase has `phrase`, `display` (original wording) and `weight`; top 5 for the star, top 3 against.
+- `src/agentic_sentiment/v3/reflector.py`:
+  - `Reflector.combine(probe or None, evidence)` returns the star, the probabilities and each agent's share. With no probe it uses an Evidence-only fallback.
+  - `fit_reflector`
+  - `choose_tau`: the smallest threshold whose routed 5-fold CV accuracy is within 0.5 points of the full stack.
+- Tests: `tests/v3/test_evidence.py` (2) and `tests/v3/test_reflector.py` (3), red before the code and green after. `tests/v3` total: 10 passed.
+- `v2_reflective/e23/persist_agents.py` started: it refits E6b, P3 and the Reflector with the frozen configs and asserts they reproduce the stored probabilities (max diff < 1e-6) and the main stack's 0.675 on eval.
+  - Pre-flight: AC power, battery 100%, swap 2.1 GB, no other model job.
+  - Output: `persist_agents.out`. Agents go to `v2_reflective/e23/agents/`, which is now gitignored along with `b2/`.
