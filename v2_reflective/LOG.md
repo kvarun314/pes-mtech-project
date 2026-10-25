@@ -478,3 +478,21 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - Progress: fit3 45,000 / 80,000 rows (91 chunks in `hid4/`). Total time so far is about 8 h.
 - `stage_A1.txt` shows `A1_extract_FAILED`. This is the expected result of the planned kill, not a crash.
 - Resume after the presentation: `sh v2_reflective/e23/queue_A1.sh` from the repo root. Saved chunks are skipped. About 35K rows remain, about 6 h.
+
+### 2026-10-25 — One deck; deck updated for the presentation
+- There is now one current deck: `../Agentic_LLaMA3_Presentation.pptx` (30 slides), built by `v2_reflective/build_deck_e23.py`.
+- All 14 older `.pptx` files were moved, unchanged, to `../old_decks/`. Nothing was deleted.
+  - The builder's template now lives at `../old_decks/Agentic_LLaMA3_Presentation_FINAL_v3_aligned.pptx`.
+  - `Agentic_LLaMA3_Presentation_v3.pptx` was removed from git tracking. It remains in git history and in `old_decks/`.
+- New slide 19, robustness: Holm correction, error analysis, calibration and cost, all from `e23/analysis_C.out`.
+- New slide 20, next steps: the Phase 2 v3 plan from `docs/superpowers/specs/2026-10-25-phase2-v3-design.md`. A1 status is shown as 45K / 80K.
+- Consistency fixes:
+  - Slide 4 Phase 2 card now says Electronics only.
+  - Slide 7 is marked leaky and withdrawn.
+  - Slides 8 and 9 are marked as the original design.
+  - Slide 17 now reports Holm-adjusted p.
+  - The roadmap shows the two-stage freeze (Nov 1 and Nov 5).
+  - The agenda line is updated.
+  - Section numbers now run 01–20 on every non-title slide.
+- Updated `Presenter_Notes.md` Part 0: new slide map, scripts for slides 19–21, timing and cheat-sheet rows.
+- Rounding note: `analysis_C.out` prints SH vs E6b on natural_test as +5.4 and SH vs S0 dev2 as +1.4. The exact values are 109/2000 = 5.45 and 29/2000 = 1.45. The deck and paper use the `readout_H.out` values, +5.5 and +1.5. It is the same number with different rounding.

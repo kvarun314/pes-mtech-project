@@ -8,8 +8,8 @@ from pptx.enum.chart import XL_CHART_TYPE, XL_LEGEND_POSITION
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUTER = os.path.dirname(ROOT)
-SRC = os.path.join(OUTER, "Agentic_LLaMA3_Presentation_FINAL_v3_aligned.pptx")
-DST = os.path.join(OUTER, "Agentic_LLaMA3_Presentation_v6_phaseH.pptx")
+SRC = os.path.join(OUTER, "old_decks", "Agentic_LLaMA3_Presentation_FINAL_v3_aligned.pptx")  # template only, never modified
+DST = os.path.join(OUTER, "Agentic_LLaMA3_Presentation.pptx")  # the one current deck
 code = open(os.path.join(ROOT, "build_presentation_v4.py")).read()
 code = code[code.index("FONT = "):code.index("# --------------------------------------------------------------- slide chrome")]
 code = "import os\nfrom pptx.util import Emu, Inches, Pt\nfrom pptx.dml.color import RGBColor\nfrom pptx.enum.shapes import MSO_SHAPE\nfrom pptx.enum.text import MSO_ANCHOR, PP_ALIGN\nfrom pptx.oxml.ns import qn\n" + code
@@ -33,8 +33,16 @@ def edit_by_text(slide, startswith, new):
 edit_by_text(S[0], "Kaggle + Amazon", "Amazon Reviews 2023 · Electronics")
 edit_by_text(S[0], "LLaMA-3-8B + LoRA", "Frozen LLaMA-3-8B probe    ·    Evidence agent    ·    Reflector    ·    Leak-free evaluation")
 edit_by_text(S[0], "Varun K", "Varun K    ·    PES MTech Project    ·    October 25, 2026 update")
-edit_by_text(S[0], "PROBLEM", "PROBLEM  →  METHOD  →  UPDATE  →  LEAK AUDIT  →  ELECTRONICS  →  EXPERIMENTS  →  MAIN RESULT  →  ROADMAP  →  HISTORICAL")
+edit_by_text(S[0], "PROBLEM", "PROBLEM  →  METHOD  →  UPDATE  →  AUDITS  →  EXPERIMENTS  →  MAIN RESULT  →  ROBUSTNESS  →  NEXT: PHASE 2 v3  →  ROADMAP")
 edit_by_text(S[3], "Phase 1 is trained", "Main results now use Amazon Reviews 2023 Electronics only; the Kaggle corpus is the original paper's data (reproduction and appendix).")
+edit_by_text(S[3], "All Beauty (Run 1)", "Electronics only: train ~497K · dev 500 + dev2 2,000 · eval 1,000 · natural_test 2,000")
+edit_by_text(S[3], "text · metadata", "review text and star rating (images tested, excluded)")
+edit_by_text(S[3], "Enables —", "Used — review text only; splits frozen and disjoint (slide 12)")
+edit_by_text(S[3], "Review data:", "All Beauty (Run 1) and image/metadata runs are historical (slides 22–30).")
+for p in [p for s_ in S[3].shapes if s_.has_text_frame and s_.text_frame.text.startswith("All Beauty (Run 1) and") for p in s_.text_frame.paragraphs][1:]: p._p.getparent().remove(p._p)
+edit_by_text(S[6], "Class-balanced 1,000-row", "Historical Kaggle run with the leaky one-shot prompt: 60.1% is withdrawn (slide 11). Leak-free zero-shot: 59.2%.")
+edit_by_text(S[7], "Add three independent", "Original design (Sept–Oct). Audits and gated experiments replaced it with probe + Evidence + Reflector (slides 17, 20).")
+edit_by_text(S[8], "The Critic converts", "Original Critic. In practice its override reached 0.4% of rows, so a learned Reflector replaced it.")
 
 def new_slide(eyebrow, title, subtitle):
     sl = prs.slides.add_slide(BLANK)
@@ -55,7 +63,7 @@ def cards(sl, items, y, h, bar=ACCENT):
 L, R, C = PP_ALIGN.LEFT, PP_ALIGN.RIGHT, None
 
 # N0 update since the Oct 17 deck (v5)
-n0 = new_slide("UPDATE · OCT 17 → OCT 24", "What Changed Since the Last Review",
+n0 = new_slide("UPDATE · OCT 17 → OCT 25", "What Changed Since the Last Review",
                "All planned experiments are finished a week before the Nov 1 freeze. One candidate passed its gate and became the main system.")
 cards(n0, [("TRIED", "Nine lines of work", ["— LLM adjudicator, LoRA on 10K rows, hidden-state probes, pooled-dev Reflector, 500K Evidence: all failed or not adopted", "— Base LLaMA, DistilBERT, 5-seed variance, LoRA seed 2: baselines and robustness", "— Every rule written before running; test sets untouched until a pass"]),
            ("MAIN SYSTEM", "Probe + Evidence → Reflector", ["— Agent 1: logistic probe on frozen base-LLaMA-3-8B layer-20 hidden state (40K rows, no fine-tuning)", "— Agent 2: TF-IDF + LR Evidence model on ~497K reviews", "— Reflector: LR on both agents' log-probabilities, fit on 2,000 balanced dev rows"]),
@@ -178,7 +186,7 @@ make_table(nh, MARGIN + 0.26, 2.0, lw - 0.5, [2.6, 1.2, 1.2, 1.8], None, ["Model
 rx = MARGIN + lw + GUTTER; rw = CW - lw - GUTTER
 accent_card(nh, rx, 1.82, rw, 3.45, bar=ACCENT_D)
 _, tf = textbox(nh, rx + 0.26, 1.98, rw - 0.5, 0.3); para(tf, "Paired comparisons (SH, exact, 95% CI)", size=T_CARD, color=INK, bold=True, first=True)
-block(nh, rx + 0.26, 2.4, rw - 0.48, 2.8, ["— vs old headline: +3.6 [+0.9, +6.3] eval, +2.3 [+0.6, +4.0] natural (both p < .02)",
+block(nh, rx + 0.26, 2.4, rw - 0.48, 2.8, ["— vs old headline: +3.6 [+0.9, +6.3] eval, +2.3 [+0.6, +4.0] natural (Holm-adjusted p < .05)",
      "— vs E6b alone: +5.0 [+2.4, +7.4] eval, +5.5 [+3.8, +7.1] natural",
      "— vs P3 alone: +6.3 [+3.8, +8.8] eval, +1.4 [−0.1, +2.9] natural (ns)",
      "— Gain over each single agent positive in 5/5 seeds on both splits"], size=T_SMALL, gap=5)
@@ -189,6 +197,26 @@ nf = new_slide("FROZEN RESULTS", "All Models, Exact Accuracy with 95% Bootstrap 
                "Recomputed from stored probabilities by e23/freeze_tables.py. Left: eval (1,000 balanced). Right: natural_test (2,000, natural skew).")
 nf.shapes.add_picture(os.path.join(ROOT, "paper/figures/e23/main_bars.png"), Inches(MARGIN), Inches(1.75), height=Inches(5.2))
 
+# NR robustness checks (C2-C5, e23/analysis_C.out)
+nr = new_slide("PHASE 2 · ROBUSTNESS", "Does the Result Hold Up? Corrections, Errors, Calibration, Cost",
+               "Computed from the frozen SH probabilities on eval (1,000) and natural_test (2,000). No new test reads, no refits.")
+cards(nr, [("HOLM", "5 of 8 comparisons survive", ["— SH beats E6b on both splits and P3 on eval (adj. p ≤ .001)", "— SH beats the old headline: adj. p .045 eval, .043 natural", "— Not significant: SH vs P3 on natural; SH vs old stack refit on dev2"]),
+           ("ERRORS", "Mostly one star off", ["— 90% (eval) / 86% (natural) of errors are adjacent stars", "— Hardest classes: 2★ and 3★ (recall .46–.60)", "— Agents agree on 64–72% of rows: SH 74–84% right; disagree: 56%"]),
+           ("CALIBRATION", "Slightly under-confident", ["— ECE .047 eval, .062 natural", "— Mean confidence .650 vs accuracy .675 (eval)", "— Probabilities are usable as confidence for routing"]),
+           ("COST", "The probe is the slow part", ["— LLaMA probe: ~0.67 s per review (M1, Q4)", "— TF-IDF Evidence and Reflector: under 0.1 ms each", "— Motivates a Router that calls LLaMA only when needed"])],
+      1.82, 3.6)
+band(nr, 5.65, "Source", "e23/analysis_C.py, e23/analysis_C.out (LOG.md 2026-10-25). Reliability figures: paper/figures/e23/reliability_SH_*.png.", h=0.8)
+
+# NN next: Phase 2 v3 plan (docs/superpowers/specs/2026-10-25-phase2-v3-design.md)
+nn = new_slide("NEXT · PHASE 2 v3", "Agents That Route, Explain and Check Themselves",
+               "The specialists keep deciding the star. LLM agents route work, explain each decision, and a Critic forces rewrites until the explanation is faithful.")
+cards(nn, [("ROUTE", "Router agent", ["— Evidence confident: skip the slow LLaMA probe", "— Unsure: call the probe, Reflector combines", "— Gate: within 0.5 pt of SH on dev2; report probe calls saved"]),
+           ("EXPLAIN", "Explainer agent", ["— Evidence pack: top phrases for / against, agent shares, agreement", "— LLaMA-3-8B-Instruct writes a 1–2 sentence rationale from the pack only"]),
+           ("CHECK", "Critic loop", ["— Star matches; quoted phrases occur in the review", "— Disagreement mentioned; no invented claims", "— Fails: specific feedback, rewrite (max 2 rounds)"]),
+           ("ACCURACY", "Gated candidates", ["— A1: probe fit 40K → 120K rows (running, 45K / 80K new rows done)", "— A2: DeBERTa-v3 specialist on Colab, Nov 1", "— Each must pass a dev-only gate before any test read"])],
+      1.82, 3.6)
+band(nn, 5.65, "Evaluation", "On all 3,000 test reviews: faithfulness before vs after the Critic loop (McNemar), rewrite rate, deletion test (cited phrases vs random words), latency with and without the Router. Demo: one local notebook, ~2 minutes.", h=1.0)
+
 # N7 roadmap
 n7 = new_slide("ROADMAP", "Plan to the Nov 21–22 Deadline",
                "Weekly checkpoints, each logged in LOG.md and progress/week_NN.md. Numbers freeze Nov 1. Last days are buffer only.")
@@ -196,8 +224,8 @@ accent_card(n7, MARGIN, 1.82, CW, 4.2)
 make_table(n7, MARGIN + 0.26, 2.0, CW - 0.5, [1.0, 1.7, 6.2, CW - 0.5 - 8.9], None, ["Week", "Dates", "Work", "Checkpoint"],
            [[("0", INK, True), ("Oct 17–18", BODY, False), ("Hallucination study, plan, roadmap, results scaffold", BODY, False), ("Done", POS, True)],
             [("1", INK, True), ("Oct 19–25", BODY, False), ("Natural-prior stacker; routing; base LLaMA; Gate 0; variance; probes; 500K Evidence; Phase H", BODY, False), ("Done, SH adopted", POS, True)],
-            [("2", INK, True), ("Oct 26–Nov 1", BODY, False), ("Tables regenerated (done Oct 24); paper results + deck; numbers freeze Nov 1", BODY, False), ("Claim fixed", BODY, False)],
-            [("3", INK, True), ("Nov 2–8", BODY, False), ("Paper prose (author-written); figures; reproducibility pass", BODY, False), ("Draft 1, similarity check", BODY, False)],
+            [("2", INK, True), ("Oct 26–Nov 1", BODY, False), ("A1 bigger probe (running); Router, Explainer, Critic agents; explanation metrics on all 3,000 test reviews; demo notebook", BODY, False), ("Freeze stage 1: Nov 1", BODY, False)],
+            [("3", INK, True), ("Nov 2–8", BODY, False), ("DeBERTa on Colab (A2, Nov 1) and its gate; paper prose (author-written); figures", BODY, False), ("Freeze stage 2: Nov 5; draft 1 Nov 8", BODY, False)],
             [("4", INK, True), ("Nov 9–15", BODY, False), ("Supervisor fixes; thesis sections; archive; deck", BODY, False), ("Draft 2, similarity check", BODY, False)],
             [("5", INK, True), ("Nov 16–20", BODY, False), ("Buffer: proofreading, final checks, submission", BODY, False), ("Submitted by Nov 20", BODY, False)]],
            row_h=0.5, head_h=0.36, aligns=[L, L, L, L])
@@ -219,8 +247,8 @@ for i, sl in enumerate(prs.slides, 1):
         elif i > 1 and re.match(r"\d\d · ", txt) and s.top < 600000:
             tail = txt.split(" · ", 1)[1]
             set_p(s.text_frame.paragraphs[0], (f"HISTORICAL (SUPERSEDED) · {tail}" if i >= first_hist else f"{i - 1:02d} · {tail}"))
-        elif i > 1 and i < first_hist and i > 9 and s.top < 600000 and not re.match(r"\d\d · ", txt) and txt.isupper():
-            pass
+        elif 9 < i < first_hist and s.top < 400000 and txt.isupper() and not re.match(r"\d\d · ", txt):
+            set_p(s.text_frame.paragraphs[0], f"{i - 1:02d} · {txt}")
 
 # ---- speaker notes (slide number -> text); full script in ../Presenter_Notes.md, Part 0
 NOTES = {
@@ -231,7 +259,7 @@ NOTES = {
  5: "Original paper's pipeline (TextBlob DQC, stratified, VGST, neutral oversampling). Point forward: slide 14 shows TextBlob filtering hurts on Electronics.",
  6: "LoRA explained. LoRA is still trained (Phase 1), but in the final stack it is an ablation row, not the main agent.",
  7: "Phase 1 baseline on Kaggle (historical numbers). The 60.1% here used the leaky one-shot prompt; leak-free zero-shot is 59.2%. Slide 11 explains.",
- 8: "Original Phase 2 design (Analyst, Visual, RAG, Critic). Say: this was the starting design; the audit (slide 26) and later experiments replaced it with the probe + Evidence + Reflector system on slide 10.",
+ 8: "Original Phase 2 design (Analyst, Visual, RAG, Critic). Say: this was the starting design; the audit (slide 28) and later experiments replaced it with the probe + Evidence + Reflector system (slide 17). Slide 20 shows how the agent idea comes back in Phase 2 v3.",
  9: "Original dissonance Critic. Say: in practice it fired on 0.4% of rows, so it was replaced by a learned Reflector.",
  10: "UPDATE SLIDE. Read the three cards left to right. Must say the caveat: against the old stack refit on the same 2,000 dev rows the gain is only 2.0 / 1.5 points and not significant.",
  11: "Leak audit. Picking a one-shot example whose star differs from the truth leaks about 8 points. All later numbers are zero-shot and leak-free.",
@@ -242,7 +270,9 @@ NOTES = {
  16: "Experiment ledger. Go row by row, about 10 seconds each. Key message: every rule was fixed before running and failures never touched the test sets.",
  17: "MAIN RESULT. SH 67.5 eval / 75.7 natural, macro-F1 .675 / .612. Variance 65.8 +/- 0.6 and 75.4 +/- 0.8. Read the honest-read band aloud.",
  18: "Bar chart of all frozen models with 95% CIs; SH in red. Point out: base LLaMA zero-shot is weak (34%) but its hidden states (P3) reach 61 / 74.",
- 19: "Roadmap. Numbers freeze Nov 1; author writes prose Nov 2-8; draft 1 to supervisor Nov 8; submit by Nov 20.",
+ 19: "Robustness. After Holm correction 5 of 8 comparisons stay significant, including SH vs the old headline on both splits. Most errors are one star off. Calibration is good (ECE .05-.06). The probe costs 0.67 s per review, the rest is under 0.1 ms: that is why the next step adds a Router.",
+ 20: "Next: Phase 2 v3. Say: the specialists decide the star because an LLM choosing the star failed twice (Gate 0). The agents now do what LLMs are good at: routing, explaining, and checking explanations. Every explanation is checked by the Critic and measured on all 3,000 test reviews. A1 is running; DeBERTa runs on Colab Nov 1. Final demo is a local notebook.",
+ 21: "Roadmap. Freeze stage 1 Nov 1 (local work), stage 2 Nov 5 (Colab result in or out). Author writes the prose from Nov 2; draft 1 to supervisor Nov 8; submit by Nov 20.",
 }
 for i, sl in enumerate(prs.slides, 1):
     sl.notes_slide.notes_text_frame.text = NOTES.get(i, "Historical slide (Run 1, All Beauty, Kaggle-trained adapter, leaky prompt). Superseded; show only if asked.")

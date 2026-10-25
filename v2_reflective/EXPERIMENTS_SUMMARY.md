@@ -104,7 +104,7 @@ Numbers freeze on Nov 1. The paper is due Nov 21–22.
 
 | When | Task | Status |
 |---|---|---|
-| Oct 25 | Present deck v6 (`../Agentic_LLaMA3_Presentation_v6_phaseH.pptx`) | ready |
+| Oct 25 | Present the deck (`../Agentic_LLaMA3_Presentation.pptx`, 30 slides) | ready |
 | Oct 25–31 | Off-disk backup to Google Drive (user installs Drive for desktop) | waiting on user |
 | by Nov 1 | **Numbers freeze.** Rerun `e23/freeze_tables.py`; lock the paper angle | tables done Oct 24 |
 | Nov 2–7 | Paper prose, one section per day. The author writes; facts are in `paper/e23_results.tex` (`% FACT` comments) and `PAPER_OUTLINE.md` | todo |
