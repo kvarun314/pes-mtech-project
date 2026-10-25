@@ -595,3 +595,15 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - Why natural_test is 53.4: a class-mix effect.
   - Reproduction on Kaggle with the paper protocol, leak-free: 69.1% exact.
 - Numbers not to use, each for a stated reason: 70.7 / 60.1 (leaky), 74.8 (seed 2, unstable), 79.9 (prior-corrected).
+
+### 2026-10-25 — Deck: Phase 1 → Phase 2 slide (honest baseline framing)
+- New slide 18, "How Far Phase 2 Moves the Baseline", with four cards and one band:
+  - Gain: +13.5 / +22.3 points, 29% / 48% fewer errors, both significant (readout_H: SH vs R p 2.1e-14 eval, 4.3e-71 natural).
+  - Phase 1 strengths: within-one 93.7 / 94.4, binary 91.2 / 92.9.
+  - Why natural is 53.4: class mix.
+  - Reproduction: Kaggle, paper protocol, leak-free 69.1% (always-5 63.8%).
+  - Band "Not used, on purpose": 70.7 / 60.1 (leaky), 74.8 (one seed), 79.9 (class-mix correction).
+- The deck now has 33 slides. Later slides shift by one; historical slides are now 25–33.
+- Slide references updated in the builder (slide 4 and slide 8 subtitles, speaker notes), in `Presenter_Notes.md` Part 0 (slide map, timing, a new script for slide 18, renumbered headings) and in `V2_Reflective_Guide.md`.
+- Rendered and checked visually.
+- Rounding note: readout_H prints the natural gain as +22.2. The exact value is 445/2000 = 22.25, and the deck and paper round half up to +22.3, the same convention as the 5.45 → 5.5 note above.
