@@ -768,3 +768,18 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - "Old headline" wording replaced with "earlier LoRA + Evidence stack".
   - Sentence-start capitalisation of "main stack".
 - Rebuilt; Google Slides synced.
+
+### 2026-10-25 — Deck review: flow and explanation fixed (24 slides)
+- User asked for a check of the deck and of the explanation flow. Problems found and fixed:
+  1. **Problem slide pitched images and photos**, contradicting the later finding that photos don't help. It is now "No Second Opinion / Unverifiable Explanations / Hard Language", with a new "gap" line.
+  2. **"Phase 2 System" and "Agents That Route…" duplicated each other**, and no slide mapped shortcomings to fixes. New slide "How Phase 2 Answers Each Shortcoming": 8 rows of shortcoming → Phase 2 answer → the number that checks it. "Agents That Route…" left the talk; it stays in the builder.
+  3. **The protocol slide was outdated** (100K training reviews, 300K features) and broke the flow. Removed. Its facts moved to the Phase 1 Results subtitle: data, frozen disjoint splits, test sets read once.
+  4. **Phase 2 results led with process.** The order is now main result → Phase 1→Phase 2 → all models (headline), then in depth: where it errs → why two agents → tried/dropped ×2 → kept → robustness.
+  5. **Smaller fixes:**
+     - The title slide says "Evidence model" plus "Self-checking agents", and the agenda line is updated.
+     - The hallucination slide is retitled "Phase 1's Justifications Are a Template" (no "adapter" jargon).
+     - The bar-chart subtitle no longer shows a file path.
+     - The schedule says "self-correction 1/2/3" instead of SC1–SC3.
+     - Conclusions gain a LIMITS card: one dataset; part of the gain is the fit set; agentic numbers pending.
+- Speaker notes updated for problem, solves, Phase 1 results and conclusions. `Presenter_Notes.md` Part 0 is reorganised to the new order, with updated timing.
+- The deck now has 24 slides. Rendered and checked; synced to Google Slides.
