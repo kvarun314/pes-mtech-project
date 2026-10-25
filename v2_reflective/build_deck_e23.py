@@ -38,7 +38,7 @@ edit_by_text(S[3], "Phase 1 is trained", "Main results now use Amazon Reviews 20
 edit_by_text(S[3], "All Beauty (Run 1)", "Electronics only: train ~497K · dev 500 + dev2 2,000 · eval 1,000 · natural_test 2,000")
 edit_by_text(S[3], "text · metadata", "review text and star rating (images tested, excluded)")
 edit_by_text(S[3], "Enables —", "Used — review text only; splits frozen and disjoint (slide 12)")
-edit_by_text(S[3], "Review data:", "All Beauty (Run 1) and image/metadata runs are historical (slides 22–30).")
+edit_by_text(S[3], "Review data:", "All Beauty (Run 1) and image/metadata runs are historical (slides 24–32).")
 for p in [p for s_ in S[3].shapes if s_.has_text_frame and s_.text_frame.text.startswith("All Beauty (Run 1) and") for p in s_.text_frame.paragraphs][1:]: p._p.getparent().remove(p._p)
 edit_by_text(S[6], "Class-balanced 1,000-row", "Historical Kaggle run with the leaky one-shot prompt: 60.1% is withdrawn (slide 11). Leak-free zero-shot: 59.2%.")
 edit_by_text(S[7], "Add three independent", "Original design (Sept–Oct). Audits and gated experiments replaced it with probe + Evidence + Reflector (slides 17, 20).")
@@ -231,6 +231,37 @@ make_table(n7, MARGIN + 0.26, 2.0, CW - 0.5, [1.0, 1.7, 6.2, CW - 0.5 - 8.9], No
            row_h=0.5, head_h=0.36, aligns=[L, L, L, L])
 band(n7, 6.2, "Integrity", "Plagiarism and AI-content each under 5%: the author writes the prose; analysis supplies facts, tables and figures; similarity checks on every full draft.", h=0.75)
 
+# NV1 code workspace map (V2_Reflective_Guide.md)
+nv1 = new_slide("CODE · v2_reflective/", "Where the Work Lives: the v2_reflective Workspace",
+                "Every Phase 2 number comes from a script here, a saved output file, and a dated LOG.md entry. e23/ = Electronics 2023 (177 files).")
+accent_card(nv1, MARGIN, 1.82, CW, 4.25)
+make_table(nv1, MARGIN + 0.26, 1.98, CW - 0.5, [2.6, 5.2, CW - 0.5 - 7.8], None, ["Part", "Main files", "What it holds"],
+           [[("Lab notebook", INK, True), ("LOG.md, EXPERIMENTS_SUMMARY.md, progress/", BODY, False), ("Rule declared before each run; result and decision after", BODY, False)],
+            [("Kaggle close-out (Oct 9–12)", INK, True), ("phase1_final.py, reflective.py, gate0.py, stack_experiment.py", BODY, False), ("Leak audit, retracted calibrator, first LLM adjudicator, first second-signal test", BODY, False)],
+            [("e23 · data", INK, True), ("fetch.py, build_splits.py, build_H.py, build_A1.py", BODY, False), ("Frozen disjoint splits (seed 2023): train, dev, dev2, eval, natural", BODY, False)],
+            [("e23 · agents", INK, True), ("evidence*.py, probe_agent*.py, eval_p1.py, encoder_2k.py", BODY, False), ("Each agent writes 5 star probabilities per split (evid7 = P3, evid6b = E6b)", BODY, False)],
+            [("e23 · gates and readouts", INK, True), ("gate_*.py, stack_gate_*.py, readout_H.py, phase2_e23.py", BODY, False), ("Dev-only pass/fail; a pass reads eval and natural_test once", BODY, False)],
+            [("e23 · robustness", INK, True), ("variance*.py, base_vs_lora.py, halluc_p1.py, analysis_C.py", BODY, False), ("Seeds, baselines, ablations, Holm, errors, calibration", BODY, False)],
+            [("e23 · freeze", INK, True), ("freeze_tables.py → results_frozen.md, figures", BODY, False), ("Recomputes every table in ~3 s; deck and paper copy from it", BODY, False)]],
+           row_h=0.5, head_h=0.34, aligns=[L, L, L])
+band(nv1, 6.2, "Run control", "queue_*.sh starts long jobs; stage_*.txt markers and chunked hidden states make every run resumable (sleep, battery, planned pause). Guide: V2_Reflective_Guide.md.", h=0.75)
+
+# NV2 how one experiment flows
+nv2 = new_slide("CODE · WORKFLOW", "How One Experiment Flows, From Rule to Paper",
+                "The same six steps for every candidate. The rule is fixed before the run, so the goalposts cannot move after seeing a result.")
+n_ = 6; w_ = (CW - (n_ - 1) * 0.18) / n_
+for i, (tag, head, body) in enumerate([("1", "Declare", "Candidate, data and exact pass rule written in LOG.md"),
+                                       ("2", "Run", "Resumable script; .log while running, .out when done"),
+                                       ("3", "Gate", "dev / dev2 / natural_dev only; a FAIL stops here"),
+                                       ("4", "Readout", "A PASS is read once on eval and natural_test, paired tests"),
+                                       ("5", "Freeze", "freeze_tables.py recomputes all tables from stored probabilities"),
+                                       ("6", "Record", "LOG.md result, verified backup + Drive copy, GitHub push")]):
+    x = MARGIN + i * (w_ + 0.18)
+    accent_card(nv2, x, 1.9, w_, 2.2); auto_pill(nv2, x + 0.2, 2.08, 0.24, tag)
+    _, tf = textbox(nv2, x + 0.2, 2.5, w_ - 0.35, 0.4); para(tf, head, size=T_CARD, color=INK, bold=True, first=True)
+    block(nv2, x + 0.2, 3.0, w_ - 0.35, 1.7, [body], size=T_SMALL)
+band(nv2, 4.4, "Why it matters", "16 ideas failed and are reported; none of them ever touched eval or natural_test. That is what makes the one pass (SH) trustworthy. Example: Phase H rule 'dev2 +1.0 pt, CI > 0' → +3.9 [+2.4, +5.8] → PASS → readout_H.out.", h=1.1)
+
 # ---- reorder: 1-9, new, then historical (old results/audit/v2 plan), conclusion dropped
 ids = prs.slides._sldIdLst; els = list(ids); orig = els[:19]; new = els[19:]
 order = [orig[i - 1] for i in range(1, 10)] + new + [orig[i - 1] for i in range(10, 19)]
@@ -272,6 +303,8 @@ NOTES = {
  18: "Bar chart of all frozen models with 95% CIs; SH in red. Point out: base LLaMA zero-shot is weak (34%) but its hidden states (P3) reach 61 / 74.",
  19: "Robustness. After Holm correction 5 of 8 comparisons stay significant, including SH vs the old headline on both splits. Most errors are one star off. Calibration is good (ECE .05-.06). The probe costs 0.67 s per review, the rest is under 0.1 ms: that is why the next step adds a Router.",
  20: "Next: Phase 2 v3. Say: the specialists decide the star because an LLM choosing the star failed twice (Gate 0). The agents now do what LLMs are good at: routing, explaining, and checking explanations. Every explanation is checked by the Critic and measured on all 3,000 test reviews. A1 is running; DeBERTa runs on Colab Nov 1. Final demo is a local notebook.",
+ 22: "Code workspace. v2_reflective started as the Oct 10 'reflective v2' design (historical slide 32); the name stayed and it now holds every Phase 2 experiment. Top level = Kaggle close-out; e23 = Electronics 2023, all current results. Walk the table top to bottom: data, agents, gates, robustness, freeze. Full guide: V2_Reflective_Guide.md.",
+ 23: "Workflow. Six steps for every experiment: declare in LOG.md, run resumably, gate on dev only, read the tests once, freeze, record and back up. Say: 16 failures are reported and none touched the test sets, which is why the one pass can be trusted.",
  21: "Roadmap. Freeze stage 1 Nov 1 (local work), stage 2 Nov 5 (Colab result in or out). Author writes the prose from Nov 2; draft 1 to supervisor Nov 8; submit by Nov 20.",
 }
 for i, sl in enumerate(prs.slides, 1):

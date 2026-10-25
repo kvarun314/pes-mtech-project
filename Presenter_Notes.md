@@ -2,10 +2,10 @@
 
 ## Part 0 — Oct 25 presentation. READ THIS FIRST
 
-Deck: `../Agentic_LLaMA3_Presentation.pptx`, the only current deck (30 slides; built by `v2_reflective/build_deck_e23.py`). Short speaker notes are also in the PowerPoint notes pane of every slide. Full project history (what failed, what worked, why this direction): `Project_Journey.md`, next to this file.
+Deck: `../Agentic_LLaMA3_Presentation.pptx`, the only current deck (32 slides; built by `v2_reflective/build_deck_e23.py`). Short speaker notes are also in the PowerPoint notes pane of every slide. Full project history (what failed, what worked, why this direction): `Project_Journey.md`, next to this file.
 Older decks were moved to `../old_decks/` (unchanged, not used). Parts 1–6 below were written for the older v3 deck (22 slides). Their slide numbers no longer match. Use the glossary and metric explanations, but take numbers and slide order from this part.
 
-Suggested timing (about 22 minutes): slides 1–9 background (6 min), slide 10 update (2 min), slides 11–15 protocol and audits (4 min), slides 16–18 experiments and main result (5 min), slide 19 robustness (2 min), slide 20 next steps (2 min), slide 21 roadmap (1 min). Slides 22–30 are historical backups; show them only if asked.
+Suggested timing (about 22 minutes): slides 1–9 background (6 min), slide 10 update (2 min), slides 11–15 protocol and audits (4 min), slides 16–18 experiments and main result (5 min), slide 19 robustness (2 min), slide 20 next steps (2 min), slide 21 roadmap (1 min), slides 22–23 the code workspace `v2_reflective/` (2 min). Slides 24–32 are historical backups; show them only if asked.
 
 ### Slide map
 | Slide | Content | Status |
@@ -24,7 +24,9 @@ Suggested timing (about 22 minutes): slides 1–9 background (6 min), slide 10 u
 | 19 | Robustness: Holm, errors, calibration, cost | NEW (Oct 25) |
 | 20 | Next: Phase 2 v3 (Router, Explainer, Critic loop, A1, A2) | NEW (Oct 25) |
 | 21 | Roadmap | updated (two-stage freeze) |
-| 22–30 | Historical Run 1 slides | unchanged, backup only |
+| 22 | Code workspace: `v2_reflective/` map | NEW (Oct 25) |
+| 23 | How one experiment flows (declare → run → gate → readout → freeze → record) | NEW (Oct 25) |
+| 24–32 | Historical Run 1 slides | unchanged, backup only |
 
 ### Slide 10 — What changed since the last review
 **Say:** "Since the last review I finished every planned experiment. Each one had a pass/fail rule written down before it ran, checked only on development data. Five ideas failed. One passed, and it is now the main system."
@@ -70,6 +72,9 @@ Go row by row, about 10 seconds each.
 
 ### Slide 21 — Roadmap
 Freeze stage 1 on Nov 1 (local work), stage 2 on Nov 5 (Colab result in or out). I write the prose from Nov 2; draft 1 to the supervisor Nov 8; submit by Nov 20.
+
+### Slides 22–23 — The `v2_reflective/` workspace
+Full script, folder map, file-name key and expected questions: **`V2_Reflective_Guide.md`** (next to this file). Short version: "Every Phase 2 number comes from a script in `v2_reflective/`, a saved `.out` file, and a `LOG.md` entry whose rule was written before the run. `freeze_tables.py` recomputes every table in 3 seconds."
 
 ### New questions to expect
 - **"Why did the gain over the old system shrink in the fair comparison?"** The old Reflector was fit on only 500 rows. Given 2,000 rows it improves too. SH is still ahead in 4 of 5 seeds on eval and 5 of 5 on natural, but the margin is small (+0.7 ± 1.2 and +1.0 ± 0.6).

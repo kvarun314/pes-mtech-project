@@ -496,3 +496,9 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - Section numbers now run 01–20 on every non-title slide.
 - Updated `Presenter_Notes.md` Part 0: new slide map, scripts for slides 19–21, timing and cheat-sheet rows.
 - Rounding note: `analysis_C.out` prints SH vs E6b on natural_test as +5.4 and SH vs S0 dev2 as +1.4. The exact values are 109/2000 = 5.45 and 29/2000 = 1.45. The deck and paper use the `readout_H.out` values, +5.5 and +1.5. It is the same number with different rounding.
+
+### 2026-10-25 — Deck: v2_reflective slides and guide
+- Added deck slides 22 and 23: the `v2_reflective/` workspace map and the 6-step experiment workflow. Historical slides are now 24–32, and the deck has 32 slides.
+- New `V2_Reflective_Guide.md`, next to `Presenter_Notes.md`. It covers the folder map, why the folder has this name, the `e23/` pipeline groups, the key to probability file prefixes (evid … evid8), the talking script and expected questions.
+- `Presenter_Notes.md` Part 0 updated: slide map, timing, and a link to the guide.
+- The old decks stay in `../old_decks/` (kept on purpose, at the user's request).
