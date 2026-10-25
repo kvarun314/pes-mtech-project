@@ -1,0 +1,27 @@
+{
+ "margin": 0.2,
+ "dev2": {
+  "uncertain": 644,
+  "abstained": 159,
+  "changed": 202,
+  "fixed": 76,
+  "broken": 89,
+  "net": -13,
+  "p": 0.35023436538307345,
+  "stack_exact": 0.642,
+  "sc_exact": 0.6355,
+  "seconds": 8062
+ },
+ "natural_dev": {
+  "uncertain": 100,
+  "abstained": 40,
+  "changed": 21,
+  "fixed": 4,
+  "broken": 10,
+  "net": -6,
+  "p": 0.1795654296875,
+  "stack_exact": 0.784,
+  "sc_exact": 0.772,
+  "seconds": 690
+ }
+}

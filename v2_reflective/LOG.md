@@ -914,3 +914,12 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - **PASS** → SC2 joins the system; one readout on eval + natural_test.
 - **FAIL** → reported as a negative result: the third test of an LLM revising the rating, after the two Gate 0 runs.
 - **Script:** `v2_reflective/e23/gate_SC2.py`. `tests/v3/test_sc.py` (3 tests) is green. Must finish before the 22:30 A1 run.
+
+### 2026-10-25 — SC2 reflective re-rating RESULT: FAIL; no test read
+- **dev2** (5-fold CV stack predictions): 644 uncertain, 159 abstained (inconsistent across the order swap), 202 changed.
+  - **Fixed 76, broken 89, net −13, p = 0.35.** Exact 0.6355 vs stack 0.642.
+- **natural_dev:** 100 uncertain, 40 abstained, 21 changed; fixed 4, broken 10, net −6; exact 0.772 vs 0.784.
+- **Gate: FAIL.** Per the declaration, no readout on eval or natural_test.
+- **Reading:** this is the third test of an LLM revising the rating, after the Kaggle and Electronics Gate 0 runs, and the first with an instruction-tuned model. It also had evidence phrases for both candidates and an order-swap consistency control. It still hurts slightly.
+  - Conclusion stands and is now stronger: LLMs are used to explain and check, not to decide the star.
+- **Runtime:** 2 h 25 min, much slower than the estimate (about 12 s per uncertain review: two generations plus phrase extraction). Noted for planning.
