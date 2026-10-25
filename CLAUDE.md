@@ -52,5 +52,6 @@ Do not add new top-level files to the repo or to `PES_Project_Phase1/`. If somet
 - Commit review text, data `.jsonl`, `.pptx`, `.tar.gz`, or any file over 100 MB. `kaggle_json.py` is a secret and is gitignored.
 - Write paper prose. The user writes it (plagiarism and AI-content each under 5%). Claude supplies facts, tables, figures and `% FACT` comments.
 - Do anything in Google Drive except copy (`cp -n`) into `My Drive/PES_backups/`. No sync tools, moves or deletes.
+  - One exception, approved by the user on 2026-10-25: `build_deck_e23.py` overwrites `My Drive/PES_backups/current_deck/Agentic_LLaMA3_Presentation.pptx` on every build, so the copy opened in Google Slides is always current.
 - Delete old material. Archive it instead.
 - Rewrite git history or force-push. The user decided against it on 2026-10-25; see `docs/maintenance/git_history_dev2_purge.md`.

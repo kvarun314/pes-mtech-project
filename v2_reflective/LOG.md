@@ -660,3 +660,16 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - The deck now has 34 slides; historical slides are 26–34.
 - References updated in the builder (slide 4 and slide 8 notes, guide note), in `Presenter_Notes.md` Part 0 (map, timing, new slide 22 script) and in `V2_Reflective_Guide.md`.
 - Rendered and checked.
+
+### 2026-10-25 — Deck: full experiment ledger (3 slides); auto-sync to Google Drive for Slides
+- User request: a table of every experiment tried, showing what we did, the result and why it was dropped.
+- New slides:
+  - 17 and 18, "Everything We Tried and Dropped": 19 experiments. These are F1–F16 from `EXPERIMENTS_SUMMARY.md`, plus TextBlob/VGST, the RAG Prover and the dissonance Critic from the audits.
+  - 19, "What We Kept, and the Evidence for It": W1–W10.
+  - Neutral names throughout.
+- The deck now has 37 slides. Later slides shift by 3; historical slides are 29–37.
+- Renumbered: builder references and speaker notes, `Presenter_Notes.md` Part 0 (map, timing, new script for slides 17–19, headings) and `V2_Reflective_Guide.md`. Rendered and checked.
+- User request: "upload it to slides so the always updated one is there". `build_deck_e23.py` now copies the deck on every build to `My Drive/PES_backups/current_deck/Agentic_LLaMA3_Presentation.pptx`.
+  - It overwrites that one file only, so the Drive link stays the same and Drive keeps revisions.
+  - This is the single user-approved exception to the `cp -n` rule, recorded in `CLAUDE.md`.
+  - First sync done at 13:49.
