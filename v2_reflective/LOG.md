@@ -573,3 +573,16 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - All numbers are copied from `e23/analysis_C.out`.
 - Layout fix: section 10 has no author prose yet, so LaTeX pushed its heading below all of its floats. Added an invisible `\mbox{}\par` anchor (marked for removal once the prose is written). The heading now sits on page 10 with Table 4.
 - Builds: `main.pdf` 21 pages (was 20), `ConferencePaper.pdf` 11 pages, 0 errors. The overfull boxes are all pre-existing, in the older Run 1 sections.
+
+### 2026-10-25 — Paper integrity audit (plagiarism and AI content, target each under 5%)
+- New `paper/integrity/audit.py`. It attributes every prose word with git blame: lines last changed in a commit with a `Co-Authored-By: Claude` trailer count as AI-drafted. It also finds 8-word verbatim overlaps with the reference PDFs. Output: `INTEGRITY_REPORT.md`.
+- Result now:
+  - **AI-drafted share 100.0%** (4,729 prose words). The paper text was created in AI-co-authored commits (`main.tex` 2026-03-31; `ConferencePaper.tex` 2026-10-02).
+  - Verbatim overlaps are mostly with the user's own earlier proposal: the Abstract has 21 8-word overlaps and the Problem Statement 16.
+  - Table/figure words (data): 2,766.
+- New `paper/integrity/README.md` with the workflow:
+  - the author rewrites the prose from the facts and commits it without the trailer
+  - Claude provides tables, figures and facts only, never prose or "humanizing"
+  - quote or rewrite reused text; disclose AI use
+  - a checklist before each draft, and a suggested rewrite order
+- `README.md` and `CLAUDE.md` now list `paper/integrity/`.

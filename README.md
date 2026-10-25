@@ -24,6 +24,7 @@
 | Older plans (paper plan, roadmap, contingency) | `v2_reflective/plans/` |
 | Papers | `paper/main.tex` (thesis), `paper/conference/ConferencePaper.tex`; shared results section `paper/e23_results.tex` |
 | Baseline paper and original proposal (PDF) | `docs/reference/` |
+| Plagiarism / AI-content audit (run before every draft) | `paper/integrity/` (`README.md`, `audit.py` → `INTEGRITY_REPORT.md`) |
 | Deferred maintenance notes (e.g. the git-history decision) | `docs/maintenance/` |
 | Backups | `v2_reflective/backup_artifacts.sh` and `verify_backup.sh`; off-disk copy in Google Drive `My Drive/PES_backups/` |
 

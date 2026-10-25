@@ -22,6 +22,7 @@ The map of every file is in `README.md`. Read it first. The previous long versio
 | Paper tables/figures | `paper/e23_results.tex`, `paper/figures/e23/` |
 | Temporary files | the session scratchpad, never the repo |
 | Superseded docs | `docs/archive/` (move, never delete) |
+| Paper integrity audit (AI share, overlap) | `paper/integrity/`; rerun `audit.py` after any paper change |
 | Deferred decisions / maintenance notes | `docs/maintenance/` |
 
 Do not add new top-level files to the repo or to `PES_Project_Phase1/`. If something does not fit the table, ask the user.
