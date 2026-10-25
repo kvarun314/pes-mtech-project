@@ -846,3 +846,18 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - **Everything else is identical to B1:** draft and revised definitions, SC1 counts, the natural_dev check (routed ≥ full − 0.005), SC1 on dev2 (fixed > broken, p < .05), and on PASS a single readout on eval + natural_test.
 - **Multiplicity:** two Router candidates were tried. Both are reported in the paper, and the readout p-values join the Holm family at freeze.
 - **Script:** `gate_B1.py` called with `TOL=0 OUT=gate_B1b`. The code is otherwise unchanged; outputs are `gate_B1b.out` and `gate_B1b.json`.
+
+### 2026-10-25 — B1-b Router + SC1 RESULT: PASS; single readout done
+- **tau = 0.70** (smallest with dev2 routed ≥ full stack). On dev2 the probe is skipped on 37% of reviews with no accuracy loss.
+- **SC1 on dev2 (CV):** 1,258 escalated, 371 changed; **fixed 194, broken 101, net +93, p = 6.7e-8**.
+- **natural_dev:** routed 0.784 = full 0.784; 52% skipped.
+- **Gate: PASS.**
+- **Readout (read once):**
+
+| Split | Full stack | Routed | LLaMA probe skipped | McNemar routed vs full | SC1 escalated | Fixed | Broken | Net | p |
+|---|---|---|---|---|---|---|---|---|---|
+| eval | 0.675 | 0.674 | 39% | p = 1.0 | 607 | 92 | 50 | +42 | 5.3e-4 |
+| natural_test | 0.757 | 0.755 | 48% | p = 0.68 | 1,035 | 152 | 78 | +74 | 1.2e-6 |
+
+- **Reading:** the Router skips the slow LLaMA call on 39–48% of test reviews with no significant accuracy change. On escalated reviews, revising the draft star fixes about 2 stars for each one it breaks, significant on both test sets. This is measured self-correction of the rating (SC1).
+- **Disclosure:** this was the second Router attempt; B1 at tau 0.60 failed natural_dev.
