@@ -877,3 +877,15 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - Status goes to `stage_A1.txt` and `night_A1.log`. The lid must stay open, because caffeinate does not prevent lid-close sleep.
 - No other GPU job may run from 22:30 until it finishes. Tasks 6–7 run before then.
 - If the gate passes, the readout on eval and natural_test happens in the next working session, after the result is logged.
+
+### 2026-10-25 — Task 6: evidence pack and Critic
+- `src/agentic_sentiment/v3/pack.py`: `build_pack(star, probs, shares, agreed, pos, neg)` returns the star, its confidence, each agent's share, whether the agents agreed, the top 5 phrases for the star and the top 3 against.
+- `src/agentic_sentiment/v3/critic.py`:
+  - Rule checks:
+    1. The stated star equals the final star.
+    2. Quoted phrases occur in the review and in the pack.
+    3. At least 2 of the top 3 phrases are covered.
+    4. Disagreement is mentioned when the agents disagreed.
+  - Each failure produces specific feedback text.
+  - `critique()` calls the LLM judge (check 5) only when the rules pass. An unparsable judge answer counts as a pass and is reported.
+- `tests/v3/test_pack_critic.py`: 5 tests, red before the code and green after.
