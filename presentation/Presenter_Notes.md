@@ -2,8 +2,8 @@
 
 ## Part 0 — Oct 25 presentation. READ THIS FIRST
 
-Deck: `../Agentic_LLaMA3_Presentation.pptx`, the only current deck (32 slides; built by `v2_reflective/build_deck_e23.py`). Short speaker notes are also in the PowerPoint notes pane of every slide. Full project history (what failed, what worked, why this direction): `Project_Journey.md`, next to this file.
-Older decks were moved to `../old_decks/` (unchanged, not used). Parts 1–6 below were written for the older v3 deck (22 slides). Their slide numbers no longer match. Use the glossary and metric explanations, but take numbers and slide order from this part.
+Deck: `PES_Project_Phase1/Agentic_LLaMA3_Presentation.pptx`, the only current deck (32 slides; built by `v2_reflective/build_deck_e23.py`). Short speaker notes are also in the PowerPoint notes pane of every slide. Full project history (what failed, what worked, why this direction): `Project_Journey.md`, next to this file.
+Older decks were moved to `PES_Project_Phase1/old_decks/` (unchanged, not used). Parts 1–6 below were written for the older v3 deck (22 slides). Their slide numbers no longer match. Use the glossary and metric explanations, but take numbers and slide order from this part.
 
 Suggested timing (about 22 minutes): slides 1–9 background (6 min), slide 10 update (2 min), slides 11–15 protocol and audits (4 min), slides 16–18 experiments and main result (5 min), slide 19 robustness (2 min), slide 20 next steps (2 min), slide 21 roadmap (1 min), slides 22–23 the code workspace `v2_reflective/` (2 min). Slides 24–32 are historical backups; show them only if asked.
 

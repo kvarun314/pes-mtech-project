@@ -2,7 +2,7 @@
 
 Use this when someone asks "where is the code?", "how did you run the experiments?" or "how do we know the numbers are real?".
 - Deck slides 22–23 show this material. Slides 24–32 are historical backups.
-- Companion files: `Presenter_Notes.md` (slide-by-slide script) and `Project_Journey.md` (full history).
+- Companion files (same folder, `presentation/`): `Presenter_Notes.md` (slide-by-slide script) and `Project_Journey.md` (full history).
 
 ---
 
@@ -29,11 +29,11 @@ Use this when someone asks "where is the code?", "how did you run the experiment
 v2_reflective/
 ├── LOG.md                    lab notebook: every rule declared before a run, every result after (75 KB)
 ├── EXPERIMENTS_SUMMARY.md    one-page table: what worked (W1–W10), what failed (F1–F16), next steps
-├── PAPER_PLAN.md, PAPER_OUTLINE.md, PROJECT_ROADMAP.md, PHASE2_PLAN.md, CONTINGENCY.md, DAILY_PLAN.md
+├── plans/                    PAPER_PLAN, PAPER_OUTLINE, PROJECT_ROADMAP, PHASE2_PLAN, CONTINGENCY, DAILY_PLAN, ...
 ├── progress/                 weekly notes, DAILY_STATUS.md, status updates for the supervisor
 ├── backup_artifacts.sh, verify_backup.sh   backups (checksummed; copied to Google Drive)
-├── build_deck_e23.py         builds the one current deck ../../Agentic_LLaMA3_Presentation.pptx
-├── build_demo_notebook.py    builds Presentation_Demo.ipynb (to be rebuilt for Phase 2 v3)
+├── build_deck_e23.py         builds the one deck PES_Project_Phase1/Agentic_LLaMA3_Presentation.pptx
+├── build_demo_notebook.py    builds presentation/Presentation_Demo.ipynb (to be rebuilt for Phase 2 v3)
 │
 ├── (Kaggle close-out, Oct 9–12; historical but kept)
 │   ├── phase1_final.py, phase1_final_score.py   leak audit: prompts A/B/C/D on 300 rows

@@ -10,11 +10,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUTER = os.path.dirname(ROOT)
 SRC = os.path.join(OUTER, "old_decks", "Agentic_LLaMA3_Presentation_FINAL_v3_aligned.pptx")  # template only, never modified
 DST = os.path.join(OUTER, "Agentic_LLaMA3_Presentation.pptx")  # the one current deck
-code = open(os.path.join(ROOT, "build_presentation_v4.py")).read()
+code = open(os.path.join(ROOT, "v2_reflective", "build_presentation_v4.py")).read()
 code = code[code.index("FONT = "):code.index("# --------------------------------------------------------------- slide chrome")]
 code = "import os\nfrom pptx.util import Emu, Inches, Pt\nfrom pptx.dml.color import RGBColor\nfrom pptx.enum.shapes import MSO_SHAPE\nfrom pptx.enum.text import MSO_ANCHOR, PP_ALIGN\nfrom pptx.oxml.ns import qn\n" + code
 H = {}; exec(code, H)
-bs = open(os.path.join(ROOT, "build_presentation_v4.py")).read()
+bs = open(os.path.join(ROOT, "v2_reflective", "build_presentation_v4.py")).read()
 exec(bs[bs.index("def band("):bs.index("# ------------------------------------------------------------------- image prep")], H)
 globals().update({k: v for k, v in H.items() if not k.startswith("__")})
 
@@ -244,7 +244,7 @@ make_table(nv1, MARGIN + 0.26, 1.98, CW - 0.5, [2.6, 5.2, CW - 0.5 - 7.8], None,
             [("e23 · robustness", INK, True), ("variance*.py, base_vs_lora.py, halluc_p1.py, analysis_C.py", BODY, False), ("Seeds, baselines, ablations, Holm, errors, calibration", BODY, False)],
             [("e23 · freeze", INK, True), ("freeze_tables.py → results_frozen.md, figures", BODY, False), ("Recomputes every table in ~3 s; deck and paper copy from it", BODY, False)]],
            row_h=0.5, head_h=0.34, aligns=[L, L, L])
-band(nv1, 6.2, "Run control", "queue_*.sh starts long jobs; stage_*.txt markers and chunked hidden states make every run resumable (sleep, battery, planned pause). Guide: V2_Reflective_Guide.md.", h=0.75)
+band(nv1, 6.2, "Run control", "queue_*.sh starts long jobs; stage_*.txt markers and chunked hidden states make every run resumable (sleep, battery, planned pause). Guide: presentation/V2_Reflective_Guide.md.", h=0.75)
 
 # NV2 how one experiment flows
 nv2 = new_slide("CODE · WORKFLOW", "How One Experiment Flows, From Rule to Paper",
@@ -281,7 +281,7 @@ for i, sl in enumerate(prs.slides, 1):
         elif 9 < i < first_hist and s.top < 400000 and txt.isupper() and not re.match(r"\d\d · ", txt):
             set_p(s.text_frame.paragraphs[0], f"{i - 1:02d} · {txt}")
 
-# ---- speaker notes (slide number -> text); full script in ../Presenter_Notes.md, Part 0
+# ---- speaker notes (slide number -> text); full script in presentation/Presenter_Notes.md, Part 0
 NOTES = {
  1: "Title. Say: this is the Oct 25 update. Main results are on Amazon Reviews 2023 Electronics only. The headline system is now a frozen LLaMA probe plus an Evidence model, combined by a Reflector.",
  2: "Problem. Single-pass LLM rating has no evidence check. Keep it short: 1 minute.",
@@ -303,7 +303,7 @@ NOTES = {
  18: "Bar chart of all frozen models with 95% CIs; SH in red. Point out: base LLaMA zero-shot is weak (34%) but its hidden states (P3) reach 61 / 74.",
  19: "Robustness. After Holm correction 5 of 8 comparisons stay significant, including SH vs the old headline on both splits. Most errors are one star off. Calibration is good (ECE .05-.06). The probe costs 0.67 s per review, the rest is under 0.1 ms: that is why the next step adds a Router.",
  20: "Next: Phase 2 v3. Say: the specialists decide the star because an LLM choosing the star failed twice (Gate 0). The agents now do what LLMs are good at: routing, explaining, and checking explanations. Every explanation is checked by the Critic and measured on all 3,000 test reviews. A1 is running; DeBERTa runs on Colab Nov 1. Final demo is a local notebook.",
- 22: "Code workspace. v2_reflective started as the Oct 10 'reflective v2' design (historical slide 32); the name stayed and it now holds every Phase 2 experiment. Top level = Kaggle close-out; e23 = Electronics 2023, all current results. Walk the table top to bottom: data, agents, gates, robustness, freeze. Full guide: V2_Reflective_Guide.md.",
+ 22: "Code workspace. v2_reflective started as the Oct 10 'reflective v2' design (historical slide 32); the name stayed and it now holds every Phase 2 experiment. Top level = Kaggle close-out; e23 = Electronics 2023, all current results. Walk the table top to bottom: data, agents, gates, robustness, freeze. Full guide: presentation/V2_Reflective_Guide.md.",
  23: "Workflow. Six steps for every experiment: declare in LOG.md, run resumably, gate on dev only, read the tests once, freeze, record and back up. Say: 16 failures are reported and none touched the test sets, which is why the one pass can be trusted.",
  21: "Roadmap. Freeze stage 1 Nov 1 (local work), stage 2 Nov 5 (Colab result in or out). Author writes the prose from Nov 2; draft 1 to supervisor Nov 8; submit by Nov 20.",
 }

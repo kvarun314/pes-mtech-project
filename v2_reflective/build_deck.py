@@ -9,12 +9,12 @@ SRC = os.path.join(ROOT, "Agentic_LLaMA3_Presentation_FINAL_FORMATTED_v2.pptx")
 DST = os.path.join(ROOT, "Agentic_LLaMA3_Presentation_FINAL_v3.pptx")
 
 # reuse v4's design system (palette, type scale, card/band/pill/table helpers) without running its build
-code = open(os.path.join(ROOT, "build_presentation_v4.py")).read()
+code = open(os.path.join(ROOT, "v2_reflective", "build_presentation_v4.py")).read()
 code = code[code.index("FONT = "):code.index("# --------------------------------------------------------------- slide chrome")]
 code = "import os\nfrom pptx.util import Emu, Inches, Pt\nfrom pptx.dml.color import RGBColor\nfrom pptx.enum.shapes import MSO_SHAPE\nfrom pptx.enum.text import MSO_ANCHOR, PP_ALIGN\nfrom pptx.oxml.ns import qn\n" + code
 H = {}
 exec(code, H)
-band_src = open(os.path.join(ROOT, "build_presentation_v4.py")).read()
+band_src = open(os.path.join(ROOT, "v2_reflective", "build_presentation_v4.py")).read()
 band_src = band_src[band_src.index("def band("):band_src.index("# ------------------------------------------------------------------- image prep")]
 exec(band_src, H)
 globals().update({k: v for k, v in H.items() if not k.startswith("__")})

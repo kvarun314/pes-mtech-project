@@ -502,3 +502,18 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - New `V2_Reflective_Guide.md`, next to `Presenter_Notes.md`. It covers the folder map, why the folder has this name, the `e23/` pipeline groups, the key to probability file prefixes (evid … evid8), the talking script and expected questions.
 - `Presenter_Notes.md` Part 0 updated: slide map, timing, and a link to the guide.
 - The old decks stay in `../old_decks/` (kept on purpose, at the user's request).
+
+### 2026-10-25 — Folder structure reorganized; rules made persistent
+- User asked for a cleaner structure that persists across sessions. Nothing was deleted. Experiment code paths (`v2_reflective/e23/`) are unchanged, so A1 still resumes.
+- New `README.md`: a START HERE map of every file. New short `CLAUDE.md`: working rules and where new files go. The old long CLAUDE.md is now `docs/archive/CLAUDE_2026-10-09.md`.
+- Outer `PES_Project_Phase1/CLAUDE.md` imports the repo CLAUDE.md, so the rules load in every session.
+- Moves:
+  - Presenter_Notes, Project_Journey, V2_Reflective_Guide and the demo notebooks go to `presentation/`.
+  - The 8 plan documents go to `v2_reflective/plans/`. Older LOG entries still name their old paths.
+  - Reference PDFs go to `docs/reference/`.
+  - CODE_EXPLAINED.md goes to `docs/archive/`.
+  - build_presentation_v4.py goes to `v2_reflective/`; both deck builders were updated.
+  - The v4 PDF goes to `../old_decks/`.
+  - March 2026 outer files go to `../archive_early_2026/`.
+- The wedding QR files in the outer folder are personal and were left untouched.
+- The deck rebuilds fine after the moves (32 slides).

@@ -306,4 +306,4 @@ md("""
 """)
 nb["cells"] = C
 nb["metadata"] = {"kernelspec": {"name": "pes-mtech", "display_name": "PES MTech (.venv)", "language": "python"}}
-nbf.write(nb, "Presentation_Demo.ipynb"); print("wrote", len(C), "cells")
+nbf.write(nb, "presentation/Presentation_Demo.ipynb"); print("wrote", len(C), "cells")
