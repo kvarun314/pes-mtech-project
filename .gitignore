@@ -54,3 +54,9 @@ v2_reflective/e23/fit2.jsonl
 paper/conference/ConferencePaper.aux
 paper/conference/ConferencePaper.log
 paper/conference/ConferencePaper.out
+
+# added 2026-10-25: review text and large rebuildable outputs
+v2_reflective/e23/dev2.jsonl
+v2_reflective/e23/fit3.jsonl
+v2_reflective/e23/hid4/
+presentation/Presentation_Demo*.ipynb

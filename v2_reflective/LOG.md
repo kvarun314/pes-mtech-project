@@ -517,3 +517,12 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - March 2026 outer files go to `../archive_early_2026/`.
 - The wedding QR files in the outer folder are personal and were left untouched.
 - The deck rebuilds fine after the moves (32 slides).
+
+### 2026-10-25 — Tidy-up
+- Wedding QR files (personal) moved out of the project to `~/Documents/Personal_Wedding_QR/`. They are not in git; the outer folder is not a repo.
+- Found `v2_reflective/e23/dev2.jsonl`, which holds 2,000 reviews with their text, tracked in git since commit 1031426 (Phase H). This breaks the "no review text in git" rule.
+  - Removed from tracking with `git rm --cached`. The file stays on disk, so the scripts are unaffected.
+  - Added it to `.gitignore`.
+  - It is still in the git history. Purging that history needs a rewrite and a force-push, and the user decides on that.
+- Also gitignored: `fit3.jsonl`, `hid4/`, and the demo notebooks (which can contain review text).
+- Now tracked: `probe_agent4.out`, `stage_A1.txt`, `variance_H2.out`, and `docs/archive/CODE_EXPLAINED_2026-10-11.md`.
