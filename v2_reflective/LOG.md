@@ -684,3 +684,7 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - Renumbered: builder references (slides 4, 7, 8 and notes 5, 7, 8, 29) and all speaker-note keys, `Presenter_Notes.md` Part 0 (map, timing, new script for slides 10–11, headings) and `V2_Reflective_Guide.md`.
 - Also fixed a stale reference in the slide 8 note, which still pointed to the main result as slide 17; it is now 22.
 - Rendered and checked. Auto-synced to Drive `current_deck/`.
+
+### 2026-10-25 — Deck confirmed in Google Slides
+- Opened `PES_backups/current_deck/Agentic_LLaMA3_Presentation.pptx` from Drive in Google Slides: https://docs.google.com/presentation/d/1V08iho4p7gdllKPxRVroaPhj6oo8Km1_/edit
+- Shows "39 total slides" and the speaker notes. The link is added to `README.md`.

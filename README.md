@@ -11,6 +11,7 @@
 | I want… | Go to |
 |---|---|
 | **The presentation** | `../Agentic_LLaMA3_Presentation.pptx`, the **only** current deck. Build it with `/opt/homebrew/bin/python3 v2_reflective/build_deck_e23.py` |
+| The deck in Google Slides (always current; synced by the builder) | https://docs.google.com/presentation/d/1V08iho4p7gdllKPxRVroaPhj6oo8Km1_/edit (Drive `PES_backups/current_deck/`). View and present there; make changes through the builder, because edits in Slides are overwritten on the next build |
 | Old decks (kept, never deleted) | `../old_decks/` |
 | What to say on each slide | `presentation/Presenter_Notes.md` (Part 0 = current deck) |
 | Full story: Phase 1 to now, failures, why | `presentation/Project_Journey.md` |
