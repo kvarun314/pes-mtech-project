@@ -889,3 +889,17 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - Each failure produces specific feedback text.
   - `critique()` calls the LLM judge (check 5) only when the rules pass. An unparsable judge answer counts as a pass and is reported.
 - `tests/v3/test_pack_critic.py`: 5 tests, red before the code and green after.
+
+### 2026-10-25 — Task 7: Explainer
+- `src/agentic_sentiment/v3/explainer.py`:
+  - `EXPLAIN_SYSTEM`.
+  - `explainer_user(pack, title, text, previous, feedback)`: the pack, the instructions, and a rewrite block when feedback exists.
+  - `make_chat_fn` (greedy, mlx_lm chat template) and `load_instruct`.
+- `tests/v3/test_explainer.py`: 3 tests, red before the code and green after.
+- **Smoke test, 3 dev2 reviews** (dev data; rationales not stored because they quote review text):
+  - The Instruct model loads in 7 s; about 6 s per rationale.
+  - Review 1: the Critic caught a quote not present in the review.
+  - Reviews 2–3: passed all checks.
+- **Issues noted for the Task 9 dev2 prompt tuning:**
+  1. TF-IDF phrases include weak fragments ("not", "but that") and title words ("Three Stars"). Filter stop-word-only phrases and prefer review-text phrases.
+  2. The Explainer called an against-phrase ("my complaint") a positive aspect, and the LLM check did not catch it. Consider a rule that against-phrases must not be described as supporting, and clearer prompt wording ("supporting" vs "positive").
