@@ -799,3 +799,19 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - The deck and speaker notes now say "optional extra specialist (GPU run, kept only if it passes its check)". The schedule row is marked "Optional".
 - The `Presenter_Notes.md` mention was neutralised the same way. A scan of the built deck finds 0 mentions of "DeBERTa".
 - The plan and spec (`docs/superpowers/`) keep the technical name as internal documents. The experiment itself is unchanged: optional, dev-gated, Nov 1.
+
+### 2026-10-25 — Task 4: shared LLaMA (Phase 1 LoRA on / off) and probe agent
+- Pre-flight: AC power, swap 1.0 GB, no other model jobs.
+- `src/agentic_sentiment/v3/llama.py`:
+  - `SharedLlama` loads the LLaMA-3-8B Q4 MLX base once, with adapter R. `.lora(on)` sets the LoRA scale to the adapter value or to 0.
+  - `ProbeAgent.hidden()` / `.probs()` give the L20 last-token state through the saved P3 classifier, always with the LoRA off.
+  - `load_probe()`.
+  - `phase1_probs()` gives the Phase 1 first-digit softmax with the LoRA on, using the same prompt as `eval_p1.py`.
+- `tests/v3/test_llama.py`: 2 tests, red before the code and green after (14 s).
+  - With the adapter loaded and the LoRA off, the live L20 state matches the stored `hid3` dev2 state (< 0.05, fp16).
+  - `hidden()` forces the LoRA off even after `lora(True)`.
+- Sanity check on 5 eval reviews, one model in memory, switching LoRA on and off per review:
+  - Phase 1 probs vs stored `p1/probs_R_eval`: max diff 0.0.
+  - LLaMA probe probs vs stored `evid7_eval`: max diff 6e-7.
+  - The demo can therefore run Phase 1 and Phase 2 from one ~5 GB model load.
+- Full suite passes (see the commit). Task 4 complete.
