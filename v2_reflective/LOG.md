@@ -673,3 +673,14 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - It overwrites that one file only, so the Drive link stays the same and Drive keeps revisions.
   - This is the single user-approved exception to the `cp -n` rule, recorded in `CLAUDE.md`.
   - First sync done at 13:49.
+
+### 2026-10-25 — Deck: key-terms glossary (2 slides)
+- User request: add terminology so the presenter and the audience can follow.
+- New slides 10–11, placed right after the background:
+  - "Key Terms: Models and Agents": 16 terms, from LLaMA-3-8B, LoRA, the hidden state and the LLaMA probe to TF-IDF, the Evidence model, stack, Reflector, main stack, Router, Explainer/Critic and self-correction.
+  - "Key Terms: Data, Evaluation and Method": 16 terms, including balanced vs natural, dev/dev2, exact, within one, macro-F1, polarity, zero/one-shot, label leak, gate, bootstrap CI, McNemar, Holm, ECE, faithfulness and the deletion test.
+  - All in plain language.
+- The deck now has 39 slides. Slides from 10 on shift by 2; historical slides are 31–39.
+- Renumbered: builder references (slides 4, 7, 8 and notes 5, 7, 8, 29) and all speaker-note keys, `Presenter_Notes.md` Part 0 (map, timing, new script for slides 10–11, headings) and `V2_Reflective_Guide.md`.
+- Also fixed a stale reference in the slide 8 note, which still pointed to the main result as slide 17; it is now 22.
+- Rendered and checked. Auto-synced to Drive `current_deck/`.

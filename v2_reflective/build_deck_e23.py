@@ -37,11 +37,11 @@ edit_by_text(S[0], "PROBLEM", "PROBLEM  →  METHOD  →  UPDATE  →  AUDITS  �
 edit_by_text(S[3], "Phase 1 is trained", "Main results now use Amazon Reviews 2023 Electronics only; the Kaggle corpus is the original paper's data (reproduction and appendix).")
 edit_by_text(S[3], "All Beauty (Run 1)", "Electronics only: train ~497K · dev 500 + dev2 2,000 · eval 1,000 · natural_test 2,000")
 edit_by_text(S[3], "text · metadata", "review text and star rating (images tested, excluded)")
-edit_by_text(S[3], "Enables —", "Used — review text only; splits frozen and disjoint (slide 12)")
-edit_by_text(S[3], "Review data:", "All Beauty (Run 1) and image/metadata runs are historical (slides 29–37).")
+edit_by_text(S[3], "Enables —", "Used — review text only; splits frozen and disjoint (slide 14)")
+edit_by_text(S[3], "Review data:", "All Beauty (Run 1) and image/metadata runs are historical (slides 31–39).")
 for p in [p for s_ in S[3].shapes if s_.has_text_frame and s_.text_frame.text.startswith("All Beauty (Run 1) and") for p in s_.text_frame.paragraphs][1:]: p._p.getparent().remove(p._p)
-edit_by_text(S[6], "Class-balanced 1,000-row", "Historical Kaggle run with the leaky one-shot prompt: 60.1% is withdrawn (slide 11). Leak-free zero-shot: 59.2%.")
-edit_by_text(S[7], "Add three independent", "Original design (Sept–Oct). Audits and gated experiments replaced it with probe + Evidence + Reflector (slides 20, 24).")
+edit_by_text(S[6], "Class-balanced 1,000-row", "Historical Kaggle run with the leaky one-shot prompt: 60.1% is withdrawn (slide 13). Leak-free zero-shot: 59.2%.")
+edit_by_text(S[7], "Add three independent", "Original design (Sept–Oct). Audits and gated experiments replaced it with probe + Evidence + Reflector (slides 22, 26).")
 edit_by_text(S[8], "The Critic converts", "Original Critic. In practice its override reached 0.4% of rows, so a learned Reflector replaced it.")
 
 def new_slide(eyebrow, title, subtitle):
@@ -61,6 +61,53 @@ def cards(sl, items, y, h, bar=ACCENT):
         _, tf = textbox(sl, x + 0.22, y + 0.56, w - 0.4, 0.6); para(tf, head, size=T_CARD, color=INK, bold=True, first=True, line=1.1)
         block(sl, x + 0.22, y + 1.22, w - 0.4, h - 1.35, lines, size=T_BODY)
 L, R, C = PP_ALIGN.LEFT, PP_ALIGN.RIGHT, None
+
+# NG glossary (2 slides, shown right after the background): plain-language meaning of every term used later
+def glossary(sl, pairs):
+    half = (len(pairs) + 1) // 2; rows = []
+    for i in range(half):
+        a = pairs[i]; b = pairs[i + half] if i + half < len(pairs) else ("", "")
+        rows.append([(a[0], ACCENT_D, True), (a[1], BODY, False), (b[0], ACCENT_D, True), (b[1], BODY, False)])
+    accent_card(sl, MARGIN, 1.78, CW, 0.32 + 0.5 * half + 0.25)
+    t = make_table(sl, MARGIN + 0.2, 1.9, CW - 0.4, [1.75, 4.1, 1.75, CW - 0.4 - 7.6], None, ["Term", "Meaning", "Term", "Meaning"], rows, row_h=0.5, head_h=0.3, aligns=[L] * 4)
+    for r in list(t.rows)[1:]:
+        for c in r.cells:
+            for p in c.text_frame.paragraphs:
+                for run in p.runs: run.font.size = Pt(9.5)
+g1 = new_slide("KEY TERMS · 1 / 2", "Key Terms: Models and Agents", "Plain-language meaning of every model and agent name used in the rest of the deck.")
+glossary(g1, [("LLaMA-3-8B", "Meta's open large language model (8 billion parameters); the base model in both phases"),
+              ("LoRA", "Small add-on weights trained on top of a frozen model, so fine-tuning is cheap (Phase 1)"),
+              ("Phase 1 LoRA", "LLaMA-3-8B + LoRA trained to output the star: the baseline paper's method"),
+              ("Frozen model", "Used as-is, never retrained"),
+              ("Hidden state (layer 20)", "LLaMA's internal numeric summary of the review, halfway through the network"),
+              ("LLaMA probe", "Small classifier that reads the layer-20 hidden state and outputs 1–5★ probabilities"),
+              ("TF-IDF", "Scores each word / word pair by how distinctive it is in a review"),
+              ("Evidence model", "TF-IDF + logistic regression on ~497K reviews; its top phrases become the explanation evidence"),
+              ("Logistic regression (LR)", "Simple, fast classifier that outputs a probability for each star"),
+              ("Agent", "A component with one job (rate, combine, route, explain, check) that passes results to the next"),
+              ("Stack / stacking", "Several models predict; a small learned model combines their predictions"),
+              ("Reflector", "The learned combiner: weighs the probe and the Evidence model, outputs the final star"),
+              ("Main stack", "LLaMA probe + Evidence model + Reflector: the system behind the headline results"),
+              ("Router", "Decides whether the slow LLaMA probe is needed for a review"),
+              ("Explainer / Critic", "Explainer (instruction-tuned LLM) writes the rationale; Critic checks it and asks for rewrites"),
+              ("Self-correction", "System revises its own output: escalation, LLM re-rating (rating) and the Critic loop (explanation)")])
+g2 = new_slide("KEY TERMS · 2 / 2", "Key Terms: Data, Evaluation and Method", "How the results are measured and why they can be trusted.")
+glossary(g2, [("Balanced eval", "1,000 test reviews, 200 per star: every star counts equally"),
+              ("Natural test", "2,000 test reviews with the real star mix (65% are 5★)"),
+              ("dev / dev2", "Separate development reviews (500 / 2,000) used for every choice; test sets are read once"),
+              ("Exact accuracy", "Share of reviews whose star is predicted exactly"),
+              ("Within one star", "Share predicted exactly or one star off"),
+              ("Macro-F1", "Average quality over the five stars, so rare stars count as much as 5★"),
+              ("Polarity / binary", "Negative vs neutral vs positive / negative vs positive only"),
+              ("Zero-shot / one-shot", "Prompt with no example / with one worked example"),
+              ("Label leak", "Example picked using the true answer, which inflated old scores by ~8 points"),
+              ("Gate", "Pass/fail rule written in the lab log before an experiment runs, checked on dev data only"),
+              ("95% CI (bootstrap)", "Range the true value likely falls in, from resampling the test reviews"),
+              ("McNemar / paired test", "Tests whether two systems differ on the same reviews"),
+              ("Holm correction", "Adjusts p-values when many comparisons are made, to avoid lucky wins"),
+              ("ECE (calibration)", "Gap between the model's confidence and its real accuracy; lower is better"),
+              ("Faithfulness", "Explanation states the right star and only uses evidence that is really in the review"),
+              ("Deletion test", "Remove the cited phrases vs random words: if confidence drops more, the explanation points at what mattered")])
 
 # N0 update since the Oct 17 deck (v5)
 n0 = new_slide("UPDATE · OCT 17 → OCT 25", "What Changed Since the Last Review",
@@ -362,30 +409,32 @@ NOTES = {
  2: "Problem. Single-pass LLM rating has no evidence check. Keep it short: 1 minute.",
  3: "Research question and gap. Wang et al. 2025 is the baseline paper. Our question: does adding a second, independent signal and a combiner beat a single model?",
  4: "Data. Say: main results now use Electronics 2023 only. Kaggle is the original paper's data and appears only as reproduction.",
- 5: "Original paper's pipeline (TextBlob DQC, stratified, VGST, neutral oversampling). Point forward: slide 14 shows TextBlob filtering hurts on Electronics.",
+ 5: "Original paper's pipeline (TextBlob DQC, stratified, VGST, neutral oversampling). Point forward: slide 16 shows TextBlob filtering hurts on Electronics.",
  6: "LoRA explained. LoRA is still trained (Phase 1), but in the final stack it is an ablation row, not the main agent.",
- 7: "Phase 1 baseline on Kaggle (historical numbers). The 60.1% here used the leaky one-shot prompt; leak-free zero-shot is 59.2%. Slide 11 explains.",
- 8: "Original Phase 2 design (Analyst, Visual, RAG, Critic). Say: this was the starting design; the audit (slide 33) and later experiments replaced it with the probe + Evidence + Reflector system (slide 17). Slide 24 shows how the agent idea comes back in Phase 2 v3.",
+ 7: "Phase 1 baseline on Kaggle (historical numbers). The 60.1% here used the leaky one-shot prompt; leak-free zero-shot is 59.2%. Slide 13 explains.",
+ 8: "Original Phase 2 design (Analyst, Visual, RAG, Critic). Say: this was the starting design; the audit (slide 35) and later experiments replaced it with the probe + Evidence + Reflector system (slide 22). Slide 26 shows how the agent idea comes back in Phase 2 v3.",
  9: "Original dissonance Critic. Say: in practice it fired on 0.4% of rows, so it was replaced by a learned Reflector.",
- 10: "UPDATE SLIDE. Read the three cards left to right. Must say the caveat: against the old stack refit on the same 2,000 dev rows the gain is only 2.0 / 1.5 points and not significant.",
- 11: "Leak audit. Picking a one-shot example whose star differs from the truth leaks about 8 points. All later numbers are zero-shot and leak-free.",
- 12: "Protocol. Frozen disjoint splits; all choices on dev; each test split read once per declared config. Since Oct 24 there is also dev2 (2,000 balanced) for the Reflector.",
- 13: "First stack (Oct 13). Phase 1 LoRA + Evidence = 63.9 / 73.4. Superseded by the main Probe + Evidence stack, kept for continuity.",
- 14: "Preprocessing ablation. TextBlob DQC deletes most 1 and 2 star reviews; VGST picks long reviews; both are dropped.",
- 15: "Hallucination study. LoRA explanations are a canned template; digit probabilities are the usable signal. That is why Phase 2 combines probabilities, not explanations.",
- 17: "Full ledger, part 1. Do not read every row. Pick three: the LLM judge (failed twice, which is why the LLM does not decide the star), the Visual Verifier (constant output), and the recalibration (the gain was the leak). Say: every rule was written before the run, on dev data only.",
- 18: "Full ledger, part 2. Message: more views of the same text, more LoRA data and fancier Reflectors did not help; what helped was more data for the probe and a bigger Reflector fit set. Note the honest near-miss: the 10K probe missed by .001 and only the 40K version passed.",
- 19: "What we kept. Walk the ten rows quickly: each change has its evidence on the right. Together they give the main stack, 67.5% balanced eval and 75.7% natural test.",
- 16: "Experiment ledger. Go row by row, about 10 seconds each. Key message: every rule was fixed before running and failures never touched the test sets.",
- 20: "MAIN RESULT. Probe + Evidence stack 67.5 eval / 75.7 natural, macro-F1 .675 / .612. Variance 65.8 +/- 0.6 and 75.4 +/- 0.8. Read the honest-read band aloud.",
- 21: "Phase 1 to Phase 2. Lead with the gain: +13.5 points on balanced eval and +22.3 on natural test, i.e. 29% and 48% fewer errors. Then be fair to Phase 1: it gets the direction right (within one star 94%, positive vs negative 91-93%); the exact star is the hard part. Its 53.4% on natural test is a class-mix effect: trained balanced, while 65% of natural reviews are 5-star. On its home data with the paper's protocol, leak-free, it reaches 69.1% (always-5 already gives 63.8%). Do not quote the old 70.7 / 60.1: they used the leaky prompt.",
- 22: "Bar chart of all frozen models with 95% CIs; main stack in red. Point out: base LLaMA zero-shot is weak (34%) but a probe on its hidden states reaches 61 / 74.",
- 23: "Robustness. After Holm correction 5 of 8 comparisons stay significant, including the main stack vs the earlier LoRA + Evidence stack on both splits. Most errors are one star off. Calibration is good (ECE .05-.06). The probe costs 0.67 s per review, the rest is under 0.1 ms: that is why the next step adds a Router.",
- 24: "Next: Phase 2 v3. Say: the specialists decide the star because an LLM choosing the star failed twice (Gate 0). The agents now do what LLMs are good at: routing, explaining, and checking explanations. Every explanation is checked by the Critic and measured on all 3,000 test reviews. A1 is running; DeBERTa runs on Colab Nov 1. Final demo is a local notebook.",
- 27: "Code workspace. v2_reflective started as the Oct 10 'reflective v2' design (historical slide 37); the name stayed and it now holds every Phase 2 experiment. Top level = Kaggle close-out; e23 = Electronics 2023, all current results. Walk the table top to bottom: data, agents, gates, robustness, freeze. Full guide: presentation/V2_Reflective_Guide.md.",
- 28: "Workflow. Six steps for every experiment: declare in LOG.md, run resumably, gate on dev only, read the tests once, freeze, record and back up. Say: 16 failures are reported and none touched the test sets, which is why the one pass can be trusted.",
- 25: "Build schedule, Oct 25 to Nov 5. Say: every row has its rule written first and is logged. Today the saved agents were rebuilt and match the frozen results exactly. The heavy runs (bigger probe, explanations on all 3,000 reviews, deletion test) run overnight on the charger. Freeze stage 1 on Nov 1, stage 2 on Nov 5.",
- 26: "Roadmap. Freeze stage 1 Nov 1 (local work), stage 2 Nov 5 (Colab result in or out). Author writes the prose from Nov 2; draft 1 to supervisor Nov 8; submit by Nov 20. December: final presentation with the live demo notebook (Phase 1 and Phase 2).",
+ 10: "Key terms 1. Do not read the table. Say: these are the names you will hear; the three to remember are the LLaMA probe, the Evidence model and the Reflector, which together make the main stack. Come back to this slide when a question uses a term.",
+ 11: "Key terms 2. Point at four: balanced eval vs natural test (why two numbers), gate (rule written before running), label leak (why old numbers were withdrawn), and the deletion test (how explanations are checked).",
+ 12: "UPDATE SLIDE. Read the three cards left to right. Must say the caveat: against the old stack refit on the same 2,000 dev rows the gain is only 2.0 / 1.5 points and not significant.",
+ 13: "Leak audit. Picking a one-shot example whose star differs from the truth leaks about 8 points. All later numbers are zero-shot and leak-free.",
+ 14: "Protocol. Frozen disjoint splits; all choices on dev; each test split read once per declared config. Since Oct 24 there is also dev2 (2,000 balanced) for the Reflector.",
+ 15: "First stack (Oct 13). Phase 1 LoRA + Evidence = 63.9 / 73.4. Superseded by the main Probe + Evidence stack, kept for continuity.",
+ 16: "Preprocessing ablation. TextBlob DQC deletes most 1 and 2 star reviews; VGST picks long reviews; both are dropped.",
+ 17: "Hallucination study. LoRA explanations are a canned template; digit probabilities are the usable signal. That is why Phase 2 combines probabilities, not explanations.",
+ 19: "Full ledger, part 1. Do not read every row. Pick three: the LLM judge (failed twice, which is why the LLM does not decide the star), the Visual Verifier (constant output), and the recalibration (the gain was the leak). Say: every rule was written before the run, on dev data only.",
+ 20: "Full ledger, part 2. Message: more views of the same text, more LoRA data and fancier Reflectors did not help; what helped was more data for the probe and a bigger Reflector fit set. Note the honest near-miss: the 10K probe missed by .001 and only the 40K version passed.",
+ 21: "What we kept. Walk the ten rows quickly: each change has its evidence on the right. Together they give the main stack, 67.5% balanced eval and 75.7% natural test.",
+ 18: "Experiment ledger. Go row by row, about 10 seconds each. Key message: every rule was fixed before running and failures never touched the test sets.",
+ 22: "MAIN RESULT. Probe + Evidence stack 67.5 eval / 75.7 natural, macro-F1 .675 / .612. Variance 65.8 +/- 0.6 and 75.4 +/- 0.8. Read the honest-read band aloud.",
+ 23: "Phase 1 to Phase 2. Lead with the gain: +13.5 points on balanced eval and +22.3 on natural test, i.e. 29% and 48% fewer errors. Then be fair to Phase 1: it gets the direction right (within one star 94%, positive vs negative 91-93%); the exact star is the hard part. Its 53.4% on natural test is a class-mix effect: trained balanced, while 65% of natural reviews are 5-star. On its home data with the paper's protocol, leak-free, it reaches 69.1% (always-5 already gives 63.8%). Do not quote the old 70.7 / 60.1: they used the leaky prompt.",
+ 24: "Bar chart of all frozen models with 95% CIs; main stack in red. Point out: base LLaMA zero-shot is weak (34%) but a probe on its hidden states reaches 61 / 74.",
+ 25: "Robustness. After Holm correction 5 of 8 comparisons stay significant, including the main stack vs the earlier LoRA + Evidence stack on both splits. Most errors are one star off. Calibration is good (ECE .05-.06). The probe costs 0.67 s per review, the rest is under 0.1 ms: that is why the next step adds a Router.",
+ 26: "Next: Phase 2 v3. Say: the specialists decide the star because an LLM choosing the star failed twice (Gate 0). The agents now do what LLMs are good at: routing, explaining, and checking explanations. Every explanation is checked by the Critic and measured on all 3,000 test reviews. A1 is running; DeBERTa runs on Colab Nov 1. Final demo is a local notebook.",
+ 29: "Code workspace. v2_reflective started as the Oct 10 'reflective v2' design (historical slide 39); the name stayed and it now holds every Phase 2 experiment. Top level = Kaggle close-out; e23 = Electronics 2023, all current results. Walk the table top to bottom: data, agents, gates, robustness, freeze. Full guide: presentation/V2_Reflective_Guide.md.",
+ 30: "Workflow. Six steps for every experiment: declare in LOG.md, run resumably, gate on dev only, read the tests once, freeze, record and back up. Say: 16 failures are reported and none touched the test sets, which is why the one pass can be trusted.",
+ 27: "Build schedule, Oct 25 to Nov 5. Say: every row has its rule written first and is logged. Today the saved agents were rebuilt and match the frozen results exactly. The heavy runs (bigger probe, explanations on all 3,000 reviews, deletion test) run overnight on the charger. Freeze stage 1 on Nov 1, stage 2 on Nov 5.",
+ 28: "Roadmap. Freeze stage 1 Nov 1 (local work), stage 2 Nov 5 (Colab result in or out). Author writes the prose from Nov 2; draft 1 to supervisor Nov 8; submit by Nov 20. December: final presentation with the live demo notebook (Phase 1 and Phase 2).",
 }
 for i, sl in enumerate(prs.slides, 1):
     sl.notes_slide.notes_text_frame.text = NOTES.get(i, "Historical slide (Run 1, All Beauty, Kaggle-trained adapter, leaky prompt). Superseded; show only if asked.")
