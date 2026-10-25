@@ -22,6 +22,7 @@ The map of every file is in `README.md`. Read it first. The previous long versio
 | Paper tables/figures | `paper/e23_results.tex`, `paper/figures/e23/` |
 | Temporary files | the session scratchpad, never the repo |
 | Superseded docs | `docs/archive/` (move, never delete) |
+| Deferred decisions / maintenance notes | `docs/maintenance/` |
 
 Do not add new top-level files to the repo or to `PES_Project_Phase1/`. If something does not fit the table, ask the user.
 
@@ -51,3 +52,4 @@ Do not add new top-level files to the repo or to `PES_Project_Phase1/`. If somet
 - Write paper prose. The user writes it (plagiarism and AI-content each under 5%). Claude supplies facts, tables, figures and `% FACT` comments.
 - Do anything in Google Drive except copy (`cp -n`) into `My Drive/PES_backups/`. No sync tools, moves or deletes.
 - Delete old material. Archive it instead.
+- Rewrite git history or force-push. The user decided against it on 2026-10-25; see `docs/maintenance/git_history_dev2_purge.md`.

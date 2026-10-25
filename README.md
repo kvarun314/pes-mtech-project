@@ -24,6 +24,7 @@
 | Older plans (paper plan, roadmap, contingency) | `v2_reflective/plans/` |
 | Papers | `paper/main.tex` (thesis), `paper/conference/ConferencePaper.tex`; shared results section `paper/e23_results.tex` |
 | Baseline paper and original proposal (PDF) | `docs/reference/` |
+| Deferred maintenance notes (e.g. the git-history decision) | `docs/maintenance/` |
 | Backups | `v2_reflective/backup_artifacts.sh` and `verify_backup.sh`; off-disk copy in Google Drive `My Drive/PES_backups/` |
 
 ## Folder layout
@@ -45,6 +46,7 @@ pes-mtech-project/
 │   ├── superpowers/     design specs and plans
 │   ├── reference/       baseline paper, original proposal
 │   ├── archive/         superseded docs (old CLAUDE.md, CODE_EXPLAINED)
+│   ├── maintenance/     deferred decisions with exact steps (git_history_dev2_purge.md)
 │   └── PROGRESS.md, RESULTS.md, CHECKPOINT_HISTORY.md   (Phase 1 / Run 1–2 era)
 ├── src/agentic_sentiment/, tests/   LangGraph package (Phase 1 / Run 1–2; Phase 2 v3 agents plug into agents/graph.py)
 ├── colab/               Colab notebooks (Phase 1 training, Run 1–2)

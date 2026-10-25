@@ -542,3 +542,8 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - A2 on Colab
 - Downloaded Llama-3-8B-Instruct 4-bit MLX (`mlx-community/Meta-Llama-3-8B-Instruct-4bit`, 4.9 GB) to `.scratch/mlx-llama3-8b-instruct-q4`. The user approved this.
 - Repo visibility: the GitHub repo is public. `dev2.jsonl` (review text) is still in its history. The history purge was blocked by the permission system and is waiting on the user (see the session reply).
+
+### 2026-10-25 — History purge deferred
+- User decision: do not purge `dev2.jsonl` from the git history. Keep the details for future reference.
+- Saved in `docs/maintenance/git_history_dev2_purge.md`: the issue, when to revisit, the exact commands, and the consequences.
+- `README.md` now lists `docs/maintenance/`. `CLAUDE.md` now forbids history rewrites and force-pushes.
