@@ -115,6 +115,16 @@ dev2 (2\,000) + probe on 40K (SH) & +3.9 pts, paired CI [+2.4, +5.8] & Pass \\
 % FACT: base LLaMA zero-shot is weak alone (34.3 eval) but its hidden states carry signal (P3 61.2 eval, 74.3 natural_test).
 % FACT: disclosures: 5 candidates compared on dev2; E6b-alone accuracy on eval/natural_test was printed before the gate (not used
 %       for any choice); E6b not retrained across variance seeds (rerun C1 pending); Holm correction applied over the 8 SH comparisons (Table 2).
+% FACT (framing the Phase 1 baseline honestly; agreed with the author 2026-10-25):
+%   - Lead with the gain: SH vs Phase 1 LoRA = +13.5 pts eval (54.0 -> 67.5) and +22.3 pts natural_test (53.4 -> 75.7),
+%     i.e. 29.3% and 47.9% fewer errors (relative error reduction = gain / (100 - baseline)).
+%   - What Phase 1 does well on Electronics (e23/metrics_extra.out): within-one-star 93.7 / 94.4; binary (3-star excluded) 91.2 / 92.9;
+%     so it gets the direction right, the exact star is the hard part.
+%   - Phase 1 natural_test 53.4 is low because the adapter was trained on balanced data and under-predicts 5-star (65% of natural_test): a class-mix effect.
+%   - Reproduction of Wang et al. on its home data (Kaggle, paper protocol, leak-free zero-shot, 4,000 natural rows; LOG.md 2026-10-11):
+%     69.1 exact (always-5 baseline 63.8), polarity 85.9, binary 90.3, within-one 93.5, macro-F1 .549. Label it as a different dataset.
+%   - DO NOT use: 70.7 / 60.1 Kaggle (leaky one-shot, withdrawn); 74.8 natural (LoRA seed 2, unstable, prior artifact);
+%     79.9 prior-corrected (class-mix correction, not capability).
 % AUTHOR: write the interpretation paragraph(s) here.
 
 % ---- Robustness analyses (2026-10-25; source v2_reflective/e23/analysis_C.out; no new test reads, no refits)

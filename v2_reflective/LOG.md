@@ -586,3 +586,12 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - quote or rewrite reused text; disclose AI use
   - a checklist before each draft, and a suggested rewrite order
 - `README.md` and `CLAUDE.md` now list `paper/integrity/`.
+
+### 2026-10-25 — Phase 1 baseline framing (FACT notes for the author)
+- The author felt "54.0 / 53.4 for Phase 1" reads badly. We agreed on honest framing instead of swapping in a higher old number.
+- Added `% FACT` notes to `paper/e23_results.tex` covering:
+  - Lead with the gain: +13.5 / +22.3 points, which is 29.3% / 47.9% fewer errors.
+  - Phase 1 strengths on Electronics: within-one-star 93.7 / 94.4, binary 91.2 / 92.9.
+  - Why natural_test is 53.4: a class-mix effect.
+  - Reproduction on Kaggle with the paper protocol, leak-free: 69.1% exact.
+- Numbers not to use, each for a stated reason: 70.7 / 60.1 (leaky), 74.8 (seed 2, unstable), 79.9 (prior-corrected).
