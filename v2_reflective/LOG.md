@@ -562,3 +562,14 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - Slide 20 now describes the final demo for the December presentation: Phase 1 and Phase 2 live, 3 minutes or less.
 - Slide 21 roadmap: retitled to "Plan to Submission and the December Final Presentation", with a new row 6 (December final presentation and demo).
 - Speaker notes and `presentation/Presenter_Notes.md` (slides 20–21) updated to match. Rebuilt and rendered; checked visually. The deck still has 32 slides.
+
+### 2026-10-25 — Papers updated with the robustness analyses (C2–C5)
+- `paper/e23_results.tex`, shared by both papers:
+  - The paired table now shows Holm-adjusted p next to each raw p (the caption no longer says "uncorrected").
+  - New Table `tab:e23errors`: errors off by one, per-class recall, agree/disagree accuracy, shortest and longest quartiles, ECE.
+  - New Figure `fig:e23reliability`: the two reliability diagrams.
+  - New `% FACT` lines, including agent complementarity (E6b strong on short reviews, the probe on long ones) and cost.
+  - The disclosure FACT line now reflects that Holm was applied and C1 is pending.
+- All numbers are copied from `e23/analysis_C.out`.
+- Layout fix: section 10 has no author prose yet, so LaTeX pushed its heading below all of its floats. Added an invisible `\mbox{}\par` anchor (marked for removal once the prose is written). The heading now sits on page 10 with Table 4.
+- Builds: `main.pdf` 20 pages, `ConferencePaper.pdf` 11 pages, 0 errors. The overfull boxes are all pre-existing, in the older Run 1 sections.

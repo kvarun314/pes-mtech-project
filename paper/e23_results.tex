@@ -5,6 +5,7 @@
 
 \section{Results --- Amazon Reviews 2023 Electronics (Leak-Free, Frozen)}
 \label{sec:e23}
+\mbox{}\par % layout anchor: keeps this heading above its floats while the section has no prose yet (remove once the author's text is in)
 
 % FACT: splits = evidence-train 100K balanced, dev 500 balanced, dev2 2,000 balanced, eval 1,000 balanced (read once),
 %       natural_test 2,000 with natural skew (5-star 1,301). Disjoint by review id and exact text. Zero-shot prompt (one-shot leak removed).
@@ -48,7 +49,7 @@ Stack Analyst+E (dev2)           & 74.2 [72.4, 76.1] & 0.587 & 96.6 & 0.307 \\
 
 \begin{table}[htbp]
 \centering
-\caption{Paired comparisons for SH (exact-accuracy difference in points, 95\% paired bootstrap CI, exact McNemar $p$; uncorrected).}
+\caption{Paired comparisons for SH (exact-accuracy difference in points, 95\% paired bootstrap CI, exact McNemar $p$, and Holm-adjusted $p$ over these 8 comparisons).}
 \label{tab:e23paired}
 \small
 \resizebox{\linewidth}{!}{%
@@ -56,10 +57,10 @@ Stack Analyst+E (dev2)           & 74.2 [72.4, 76.1] & 0.587 & 96.6 & 0.307 \\
 \toprule
 \textbf{SH vs} & \textbf{eval} & \textbf{natural\_test} \\
 \midrule
-Stack Analyst+E (dev), old headline & +3.6 [+0.9, +6.3], $p$=.011 & +2.3 [+0.6, +4.0], $p$=.0086 \\
-Stack Analyst+E (dev2), same fit set & +2.0 [$-$0.6, +4.7], $p$=.14 & +1.5 [$-$0.1, +3.0], $p$=.081 \\
-Evidence E6b alone & +5.0 [+2.4, +7.4], $p$=1.7e-4 & +5.5 [+3.8, +7.1], $p$=1.3e-10 \\
-P3 probe alone & +6.3 [+3.8, +8.8], $p$=6.4e-7 & +1.4 [$-$0.1, +2.9], $p$=.074 \\
+Stack Analyst+E (dev), old headline & +3.6 [+0.9, +6.3], $p$=.011 (Holm .045) & +2.3 [+0.6, +4.0], $p$=.0086 (Holm .043) \\
+Stack Analyst+E (dev2), same fit set & +2.0 [$-$0.6, +4.7], $p$=.14 (Holm .22) & +1.5 [$-$0.1, +3.0], $p$=.081 (Holm .22) \\
+Evidence E6b alone & +5.0 [+2.4, +7.4], $p$=1.7e-4 (Holm .001) & +5.5 [+3.8, +7.1], $p$=1.3e-10 (Holm 1e-9) \\
+P3 probe alone & +6.3 [+3.8, +8.8], $p$=6.4e-7 (Holm 4.4e-6) & +1.4 [$-$0.1, +2.9], $p$=.074 (Holm .22) \\
 \bottomrule
 \end{tabular}}
 \end{table}
@@ -113,5 +114,47 @@ dev2 (2\,000) + probe on 40K (SH) & +3.9 pts, paired CI [+2.4, +5.8] & Pass \\
 % FACT: frozen base LLaMA probe (no fine-tuning) replaces the LoRA Analyst; adding LoRA back to P3+E6b does not help (dev2 .633 < .639).
 % FACT: base LLaMA zero-shot is weak alone (34.3 eval) but its hidden states carry signal (P3 61.2 eval, 74.3 natural_test).
 % FACT: disclosures: 5 candidates compared on dev2; E6b-alone accuracy on eval/natural_test was printed before the gate (not used
-%       for any choice); E6b not retrained across variance seeds; p-values uncorrected.
+%       for any choice); E6b not retrained across variance seeds (rerun C1 pending); Holm correction applied over the 8 SH comparisons (Table 2).
 % AUTHOR: write the interpretation paragraph(s) here.
+
+% ---- Robustness analyses (2026-10-25; source v2_reflective/e23/analysis_C.out; no new test reads, no refits)
+\begin{table}[htbp]
+\centering
+\caption{Error analysis for SH on the frozen test splits.}
+\label{tab:e23errors}
+\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcc}
+\toprule
+ & \textbf{eval} & \textbf{natural\_test} \\
+\midrule
+Errors (of 1\,000 / 2\,000) & 325 & 486 \\
+Errors one star off & 89.8\% & 86.4\% \\
+Errors two or more stars off & 33 & 66 \\
+Per-class recall 1$\star$ / 2$\star$ / 3$\star$ / 4$\star$ / 5$\star$ & .725 / .595 / .535 / .665 / .855 & .741 / .458 / .540 / .639 / .829 \\
+Agents agree (share of rows): SH exact & 64.2\%: 74.1 & 72.0\%: 83.5 \\
+Agents disagree: SH / E6b / P3 exact & 55.6 / 42.7 / 39.1 & 55.8 / 35.7 / 50.1 \\
+Shortest quartile: SH / E6b / P3 exact & 71.5 / 70.0 / 54.6 & 82.4 / 79.4 / 77.3 \\
+Longest quartile: SH / E6b / P3 exact & 64.7 / 55.8 / 64.3 & 68.4 / 60.6 / 70.0 \\
+Calibration: ECE; mean confidence vs accuracy & .047; .650 vs .675 & .062; .704 vs .757 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.48\linewidth]{\efigdir reliability_SH_eval.png}\hfill
+\includegraphics[width=0.48\linewidth]{\efigdir reliability_SH_natural_test.png}
+\caption{Reliability diagrams for SH (left: eval, right: natural\_test).}
+\label{fig:e23reliability}
+\end{figure}
+
+% FACT: after Holm over 8 comparisons, 5 remain significant: SH > E6b (both splits), SH > P3 (eval), SH > old headline (both splits).
+%       Not significant: SH vs P3 on natural_test; SH vs the old stack refit on the same dev2 (both splits).
+% FACT: 86-90% of SH errors are adjacent-star confusions; 2-star and 3-star are hardest (recall .46-.60).
+% FACT: the agents are complementary: TF-IDF E6b is strong on short reviews (eval shortest quartile 70.0 vs P3 54.6),
+%       the LLaMA probe on long ones (eval longest quartile 64.3 vs E6b 55.8); SH is best or near-best in every quartile.
+% FACT: when the agents disagree, the Reflector picks right 55.6% / 55.8% vs 42.7 / 35.7 (E6b) and 39.1 / 50.1 (P3).
+% FACT: SH is slightly under-confident (ECE .047 / .062), so its probabilities can be used as confidence.
+% FACT: cost per review on an M1 16 GB: LLaMA probe forward to layer 20 ~0.67 s; TF-IDF transform ~0.06 ms; Reflector ~0.06 ms.
+% AUTHOR: write the robustness paragraph(s) here.
