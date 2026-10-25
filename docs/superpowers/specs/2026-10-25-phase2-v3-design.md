@@ -63,6 +63,16 @@ review -> Evidence agent (TF-IDF+LR, ~497K) --------------------+
 
 **Router rule:** call the Analyst unless Evidence's top probability is at least τ. τ is chosen on dev2 as the smallest threshold whose routed accuracy is within 0.5 points of full SH (5-fold CV). When the Analyst is skipped, the Reflector uses the Evidence-only fallback, an LR on Evidence log-probabilities fit on dev2.
 
+**Self-correction (three levels, each measured; added 2026-10-25 at the user's request: "self correction needs to be properly done"):**
+
+| Level | What is corrected | Mechanism | Measured as |
+|---|---|---|---|
+| SC1 Escalation | the rating | The Evidence model gives a draft star; if it is unsure (top probability < τ), the system escalates to the LLaMA probe and the Reflector revises the star | Among escalated reviews: fixed (draft wrong, revision right) vs broken (draft right, revision wrong), net, exact binomial test |
+| SC2 Reflective re-rating | the rating | On reviews where the main stack itself is unsure (top-2 margin < 0.20), Llama-3-8B-Instruct sees the review, the evidence phrases for both candidate stars, and picks one. It is asked twice with the candidate order swapped; if the two answers differ, the stack's star is kept | Fixed vs broken against the stack's star on those reviews, net, exact binomial test |
+| SC3 Explanation loop | the explanation | The Critic checks the rationale (4 rules + 1 LLM check), gives specific feedback, and the Explainer rewrites (max 2 rounds) | Faithfulness of the first draft vs the final version (McNemar), rewrite rate, failures per check |
+
+SC2 is the original proposal's claim (an LLM agent revising the rating), tested properly: a stronger instruction-tuned model, evidence for both candidates, a position-bias control, and only on reviews where the stack is unsure. Gate 0 failed with weaker set-ups; if SC2 fails too, the paper reports a third, cleaner negative result.
+
 **Evidence pack:**
 - top 5 phrases toward the predicted star and top 3 against it, each with its weight
 - each agent's share of the decision: the Reflector's coefficient contribution, normalised
@@ -85,7 +95,9 @@ Failing any check produces specific feedback, e.g. "You said 4 stars; final is 3
 | A1 | Probe fit 40K → 120K (P3b) | local, **running** (declared 2026-10-24) | P3b+E6b vs SH: dev2 +1.0, CI > 0, macro-F1 ≥ on both, natural_dev exact ≥ |
 | A2 | DeBERTa-v3-base, ~200K balanced Electronics reviews disjoint from all splits, 2 epochs; probabilities for all splits | Colab, Nov 1 | Best of {SH+D, SH-with-E6b-replaced-by-D} vs SH, same rule; 2 candidates disclosed |
 | B1 | Router | local | Routed accuracy within 0.5 of SH on dev2 CV; report the share of Analyst calls saved |
-| B2 | Explainer + Critic loop | local | Declared metrics only (below); no accuracy effect, since the star is fixed before explanation |
+| B2 | Explainer + Critic loop (= SC3) | local | Declared metrics only (below); no accuracy effect, since the star is fixed before explanation |
+| SC1 | Escalation self-correction (part of B1) | local | dev2 5-fold CV: escalated reviews fixed > broken, exact binomial p < .05; reported on eval + natural_test if B1 passes |
+| SC2 | Reflective re-rating by Llama-3-8B-Instruct on uncertain reviews | local, ~15 min on dev2 | dev2 with 5-fold CV stack predictions: fixed > broken, binomial p < .05, and natural_dev net ≥ 0. PASS → part of the system, read out once on eval + natural_test; FAIL → reported as a negative result |
 | C1 | SH variance with E6b retrained per seed | local, when GPU idle and plugged in | robustness only |
 | C2–C5 | Holm, error analysis, calibration, cost | done 2026-10-25 | n/a |
 | C6 | Agent-audit table (original agent → finding → new role) | writing | n/a |
@@ -158,7 +170,7 @@ Prose (the user writes it) starts Nov 2. Draft 1 goes to the supervisor on Nov 8
 
 ## 7. Out of scope
 
-- An LLM choosing the star (failed Gate 0 twice).
+- An LLM choosing the star for every review (failed Gate 0 twice). SC2 retests the narrower claim (LLM revision on uncertain reviews only), gated.
 - Any vision agent.
 - More LoRA data.
 - Extra classical text views.

@@ -638,3 +638,15 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - P3 max |diff| vs `evid7_eval_probs` = 0.0.
   - Reflector eval exact = 0.675, matching the frozen main stack.
 - The saved agents reproduce the frozen results exactly. Files: `agents/e6b.joblib` (30.8 MB), `p3.joblib` (177 KB), `reflector.joblib` (2 KB). Task 3 complete.
+
+### 2026-10-25 — Self-correction made a measured, three-level part of v3 (spec and plan updated)
+- User requirement: "Self correction needs to be properly done."
+- Spec (`docs/superpowers/specs/2026-10-25-phase2-v3-design.md`, Architecture section and experiments table) now defines three levels:
+  - **SC1 escalation (rating).** The Evidence model gives a draft star. If it is unsure, the system escalates to the LLaMA probe and the Reflector revises the star. Measured as fixed / broken / net with a binomial test. It is part of the B1 gate (dev2 CV: fixed > broken, p < .05).
+  - **SC2 reflective re-rating (rating).** Llama-3-8B-Instruct picks between the stack's top-2 stars on uncertain reviews (margin < 0.20), using the evidence phrases for both candidates. The order is swapped and inconsistent answers abstain. Gated on dev2 with CV stack predictions, plus a natural_dev net ≥ 0 check. This tests the original proposal's claim properly; a FAIL is reported as a negative result.
+  - **SC3 explanation loop.** Critic feedback with up to 2 rewrites. Measured as faithfulness before vs after (McNemar).
+- Plan (`docs/superpowers/plans/2026-10-25-phase2-v3-plan.md`):
+  - Task 5 `gate_B1.py` now computes SC1 (dev2 CV and readout).
+  - New Task 7b: `sc.py`, `test_sc.py` and `gate_SC2.py`, with full code.
+  - Task 11 `freeze_tables.py` now writes one "Self-correction (three levels)" table.
+- Out-of-scope wording narrowed: "LLM choosing the star for every review". SC2 retests only the narrower claim (revision on uncertain reviews).
