@@ -923,3 +923,11 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - **Reading:** this is the third test of an LLM revising the rating, after the Kaggle and Electronics Gate 0 runs, and the first with an instruction-tuned model. It also had evidence phrases for both candidates and an order-swap consistency control. It still hurts slightly.
   - Conclusion stands and is now stronger: LLMs are used to explain and check, not to decide the star.
 - **Runtime:** 2 h 25 min, much slower than the estimate (about 12 s per uncertain review: two generations plus phrase extraction). Noted for planning.
+- **Deck and notes updated for the SC2 failure:**
+  - The system slide's Reflector box: "LLM re-rating tested: no gain".
+  - The "How Phase 2 Answers" row shows the measured failure.
+  - New last row in "Tried and Dropped 2/2" (row height reduced to fit).
+  - The Conclusions agentic card mentions LLM re-rating tested, no gain.
+  - The schedule row is Done.
+  - `Presenter_Notes.md`: self-correction is now described as two points (escalation measured; Critic loop pending), plus a new Q&A "Did you try letting the LLM fix the star?".
+- Rendered and checked. Synced to Google Slides.

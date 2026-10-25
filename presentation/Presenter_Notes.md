@@ -83,7 +83,7 @@ Use these when explaining or when someone asks what a word means.
 - **System slide:** walk the five boxes. Evidence model → Router → LLaMA probe → Reflector → Explainer + Critic.
   - The decision core (main stack) is built and frozen.
   - The agentic layer is being built, and each part is measured.
-  - Self-correction happens at three points: escalation, LLM re-rating, and the explanation loop.
+  - Self-correction happens at two points: escalation of unsure stars (measured, works) and the explanation loop (being measured). A third idea, an Instruct LLM re-rating unsure reviews, was tested and failed: 76 fixed vs 89 broken on dev2.
 - **"How Phase 2 answers each shortcoming"** (the table): read it as problem → fix → the number that checks it. Spend time on three rows:
   - Two agents instead of one pass.
   - LLMs explain and check instead of judging, because the judge failed twice.
@@ -143,7 +143,7 @@ Start with the data line in the subtitle. It answers any leakage question:
 **Conclusions:** four cards.
 - Phase 1 was reproduced honestly, and two problems were found in the original protocol.
 - Phase 2's two-agent stack beats the single fine-tuned model, significantly.
-- The agentic layer's first part is measured: escalation fixes about two stars per one broken, and LLaMA is skipped on 39–48%. Explanations come next.
+- The agentic layer's first part is measured: escalation fixes about two stars per one broken, and LLaMA is skipped on 39–48%. LLM re-rating was tested and dropped (third LLM-judge failure). Explanations come next.
 - **Limits, said plainly:** one dataset; part of the gain comes from the larger Reflector fit set; agentic-layer numbers are still pending.
 
 End with the dates: freeze Nov 1 / 5, draft Nov 8, submit Nov 20, final presentation in December with a live demo.
@@ -164,6 +164,7 @@ End with the dates: freeze Nov 1 / 5, draft Nov 8, submit Nov 20, final presenta
   - A **Reflector** (a learned referee) combines them into the final star.
   - The two readers make different mistakes: alone 61–62%, together 67.5%.
   - It changes only if the bigger probe (A1) or the optional extra specialist (A2) passes its dev check.
+- **"Did you try letting the LLM fix the star?"** Three times. Gate 0 on Kaggle and on Electronics, then on Oct 25 with Llama-3-8B-Instruct, evidence for both candidate stars and an order-swap consistency check. It fixed 76 and broke 89 on dev2, so it was dropped before any test read. LLMs are better at explaining and checking than at deciding.
 - **"Is the tried-and-dropped table final?"** For everything run so far, yes. A pending experiment that fails adds a row; one that passes moves to "What We Kept". This is updated at the Nov 1 / Nov 5 freezes.
 
 **Block diagram (draw it if asked):**
@@ -177,7 +178,7 @@ LLM re-rating of uncertain reviews (gated) · Explainer ⇄ Critic loop (max 2 r
 - **"You tried many things; isn't the winner luck?"** Every rule was written before running, and failures never touched the test sets. Five candidates were compared on dev2, and I disclose that. The test sets were read once.
 - **"Then what is the role of LoRA?"** Phase 1 is still the paper's baseline reproduction. Inside Phase 2 it is an ablation row: adding it to the main stack did not help (dev2 .633 versus .639).
 - **"Why is natural-test accuracy higher than balanced?"** About 65% of natural reviews are 5-star, which are easier. That is why macro-F1 (.612) is reported next to it.
-- **"Is this agentic?"** Today: two independent agents plus a learned Reflector that arbitrates between them. The LLM-as-judge version (Gate 0) was tested and failed, and that is reported. Phase 2 v3 (the "How it solves the problem" slide) adds LLM agents for routing, explanation and self-correction at three levels (escalation, LLM re-rating, Critic loop), each measured.
+- **"Is this agentic?"** Today: two independent agents plus a learned Reflector that arbitrates between them. The LLM-as-judge version (Gate 0) was tested and failed, and that is reported. Phase 2 v3 (the "How it solves the problem" slide) adds LLM agents for routing, explanation and self-correction: escalation (measured, works) and the Critic loop on explanations; LLM re-rating of the star was tested a third time and failed, so LLMs explain and check rather than decide.
 - **"One slip?"** Yes, disclosed: Evidence-alone test accuracy was printed once before the gate ran. It was not used for any choice.
 
 ### Names to say out loud

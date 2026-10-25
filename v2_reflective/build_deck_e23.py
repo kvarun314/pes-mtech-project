@@ -271,12 +271,13 @@ X2 = [("Extra Reflector features", "Add TextBlob, margin, entropy, length to the
       ("LLaMA probe, several layers", "Combine states from several layers", "dev +0.5 pts", "Below the gate"),
       ("Pooled-dev Reflector + ordinal decoding", "Fit the Reflector on dev + natural_dev", "Passed its gate, but the gain = more 5★ predictions", "Class-mix shift; not adopted"),
       ("Evidence model on 500K in the old stack", "Bigger Evidence model with the LoRA stack", "Stack .632 vs .640", "Overlaps LoRA (kept later in the main stack)"),
-      ("LoRA added back to the main stack", "LoRA + Evidence model + LLaMA probe", "dev2 .633 vs .639", "No gain over probe + Evidence")]
+      ("LoRA added back to the main stack", "LoRA + Evidence model + LLaMA probe", "dev2 .633 vs .639", "No gain over probe + Evidence"),
+      ("LLM re-rating of unsure reviews (Instruct)", "Llama-3-8B-Instruct picks between the top-2 stars, order-swap check", "dev2: 76 fixed vs 89 broken (net −13)", "Third LLM-judge failure; LLMs explain, not decide")]
 xs = []
 for i, (rows, part) in enumerate(((X1, "1 / 2"), (X2, "2 / 2"))):
     sl = new_slide("EXPERIMENT LEDGER · " + part, "Everything We Tried and Dropped (" + part + ")",
                    "Each idea had a pass/fail rule written before it ran and was checked on dev data only. None touched the test sets.")
-    small_table(sl, [[(a, INK, True), (b, BODY, False), (c, BODY, False), (d, NEG, True)] for a, b, c, d in rows], XW, XH, row_h=0.46 if i == 0 else 0.42); xs.append(sl)
+    small_table(sl, [[(a, INK, True), (b, BODY, False), (c, BODY, False), (d, NEG, True)] for a, b, c, d in rows], XW, XH, row_h=0.46 if i == 0 else 0.39); xs.append(sl)
 nk = new_slide("EXPERIMENT LEDGER · KEPT", "What We Kept, and the Evidence for It",
                "Ten changes survived their checks; together they give the main stack (67.5% balanced eval, 75.7% natural test).")
 K = [("Leak-free zero-shot prompt", "Old one-shot example was chosen with rating ≠ truth", "Leak of ~8 pts found (−7.7 [−13.3, −2.0]); all results since are leak-free"),
@@ -354,7 +355,7 @@ accent_card(ns, MARGIN, 1.82, CW, 4.55)
 make_table(ns, MARGIN + 0.26, 1.95, CW - 0.5, [1.7, 6.6, 1.9, CW - 0.5 - 10.2], None, ["When", "Work", "Compute", "Status"],
            [[("Oct 25", INK, True), ("Shared agents rebuilt and verified (exact match to the frozen results)", BODY, False), ("10 min CPU", BODY, False), ("Done", POS, True)],
             [("Oct 25", INK, True), ("Shared LLaMA (Phase 1 LoRA on / off); Router + escalation (self-correction 1): passed, measured", BODY, False), ("minutes", BODY, False), ("Done", POS, True)],
-            [("Oct 26–27", INK, True), ("Evidence pack, Critic, Explainer; LLM re-rating check (self-correction 2); LangGraph wiring", BODY, False), ("~15 min model", BODY, False), ("Planned", BODY, False)],
+            [("Oct 25", INK, True), ("Evidence pack, Critic, Explainer built; LLM re-rating check (self-correction 2): failed, dropped", BODY, False), ("2.4 h model", BODY, False), ("Done", POS, True)],
             [("One night", INK, True), ("LLaMA probe on 120K reviews (35K left) + gate; variance rerun", BODY, False), ("~6 h + 1.5 h", BODY, False), ("Waiting for go", BODY, False)],
             [("Oct 28", INK, True), ("Explanation prompts tuned on 500 dev reviews, then frozen and declared", BODY, False), ("~1.5 h", BODY, False), ("Planned", BODY, False)],
             [("Oct 29 night", INK, True), ("Explanations + Critic loop on all 3,000 test reviews (self-correction 3)", BODY, False), ("~8–9 h", BODY, False), ("Planned", BODY, False)],
@@ -463,7 +464,7 @@ n_ = 5; w_ = (CW - (n_ - 1) * 0.2) / n_
 for i, (tag, head, body) in enumerate([("1", "Evidence model", "TF-IDF + LR on ~497K reviews; gives a quick draft star and the key phrases"),
                                        ("2", "Router", "Confident draft? keep it. Unsure? escalate to the LLaMA probe (self-correction 1)"),
                                        ("3", "LLaMA probe", "Frozen LLaMA-3-8B, layer-20 state, small classifier; reads meaning"),
-                                       ("4", "Reflector", "Learned combiner of both agents gives the final star; an Instruct LLM may re-rate unsure cases (self-correction 2, gated)"),
+                                       ("4", "Reflector", "Learned combiner of both agents gives the final star (an Instruct LLM re-rating unsure cases was tested: no gain)"),
                                        ("5", "Explainer + Critic", "Instruct LLM writes the rationale from the evidence; Critic checks it and forces rewrites (self-correction 3)")]):
     x = MARGIN + i * (w_ + 0.2)
     accent_card(arc, x, 1.9, w_, 2.75, bar=ACCENT if i in (0, 2, 3) else ACCENT_D); auto_pill(arc, x + 0.2, 2.08, 0.24, tag)
@@ -476,7 +477,7 @@ con = new_slide("CONCLUSIONS", "Conclusions",
                 "What the project shows so far, and what is still being measured before the Nov 1 / Nov 5 freezes.")
 cards(con, [("PHASE 1", "Baseline reproduced, honestly", ["— Paper's LLaMA + LoRA on Electronics: 54.0 / 53.4 exact, ~94% within one star", "— Found a one-shot label leak (~8 pts) and that TextBlob filtering hurts"]),
             ("PHASE 2", "Two agents beat one model", ["— Main stack: 67.5% / 75.7% exact (+13.5 / +22.3 over Phase 1)", "— Significant after Holm; stable over 5 seeds", "— An LLM works better as a feature source than as a judge"]),
-            ("AGENTIC LAYER", "First part measured", ["— Router + escalation: fixes ~2 stars per 1 broken (p < .001); LLaMA skipped on 39–48%", "— Next: LLM re-rating; Explainer + Critic loop and deletion test on all 3,000"]),
+            ("AGENTIC LAYER", "First part measured", ["— Router + escalation: fixes ~2 stars per 1 broken (p < .001); LLaMA skipped on 39–48%", "— LLM re-rating tested: no gain (dropped)", "— Next: Explainer + Critic loop and deletion test on all 3,000"]),
             ("LIMITS", "Stated plainly", ["— One dataset (Electronics 2023)", "— Part of the gain is the larger Reflector fit set", "— Explanation results still pending"])],
       1.82, 3.4)
 band(con, 5.45, "Next", "Freeze Nov 1 and Nov 5 → paper draft to supervisor Nov 8 → submission by Nov 20 → final presentation in December with a live demo of Phase 1 and Phase 2.", h=0.9)
@@ -486,7 +487,7 @@ sv = new_slide("PHASE 2 · HOW IT SOLVES THE PROBLEM", "How Phase 2 Answers Each
                "Every problem found in Phase 1 and in the original design has a specific fix, and every fix has a number that checks it.")
 small_table(sv, [[(a, INK, True), (b, BODY, False), (c, POS, True)] for a, b, c in [
     ("One pass, no second opinion", "Two independent agents (LLaMA probe + Evidence model) and a learned Reflector", "Stack vs each agent: +5.0 to +6.3 eval, 5/5 seeds"),
-    ("LLM as judge failed (Gate 0, twice)", "Specialists decide the star; LLMs explain and check instead", "LLM re-rating kept only if its dev check passes"),
+    ("LLM as judge failed (Gate 0, twice)", "Specialists decide the star; LLMs explain and check instead", "Re-tested with an Instruct LLM: 76 fixed vs 89 broken (dropped)"),
     ("Wrong stars go uncorrected", "Unsure draft stars escalated and revised (self-correction 1)", "Measured: fixed 92 vs broken 50 (eval), 152 vs 78 (natural)"),
     ("Template justifications", "Explainer writes only from the evidence pack; Critic forces rewrites (self-correction 3)", "Faithfulness before vs after; deletion test, all 3,000"),
     ("Fragile, leaky evaluation", "Leak-free prompt, frozen disjoint splits, rules written before runs, tests read once", "Leak audit −7.7 [−13.3, −2.0]"),
@@ -580,7 +581,7 @@ NOTES = {
  "preproc": "Preprocessing ablation. TextBlob DQC deletes most 1 and 2 star reviews; VGST picks long reviews; both are dropped.",
  "halluc": "Hallucination study. LoRA explanations are a canned template; digit probabilities are the usable signal. That is why Phase 2 combines probabilities, not explanations.",
  "x1": "Full ledger, part 1. Do not read every row. Pick three: the LLM judge (failed twice, which is why the LLM does not decide the star), the Visual Verifier (constant output), and the recalibration (the gain was the leak). Say: every rule was written before the run, on dev data only.",
- "x2": "Full ledger, part 2. Message: more views of the same text, more LoRA data and fancier Reflectors did not help; what helped was more data for the probe and a bigger Reflector fit set. Note the honest near-miss: the 10K probe missed by .001 and only the 40K version passed.",
+ "x2": "Full ledger, part 2. New last row: the Instruct-LLM re-rating failed too (76 fixed vs 89 broken), the third LLM-judge failure. Message: more views of the same text, more LoRA data and fancier Reflectors did not help; what helped was more data for the probe and a bigger Reflector fit set. Note the honest near-miss: the 10K probe missed by .001 and only the 40K version passed.",
  "kept": "What we kept. Walk the ten rows quickly: each change has its evidence on the right. Together they give the main stack, 67.5% balanced eval and 75.7% natural test.",
  "ledger9": "Experiment ledger. Go row by row, about 10 seconds each. Key message: every rule was fixed before running and failures never touched the test sets.",
  "main": "MAIN RESULT. The main stack (= Probe + Evidence stack: LLaMA probe reads meaning, Evidence model reads key words, Reflector combines them) gets 67.5% on balanced eval and 75.7% on natural test, macro-F1 .675 / .612; 5 seeds 65.8 +/- 0.6 and 75.4 +/- 0.8. If asked whether that is good: exact five-star rating is hard because neighbouring stars are ambiguous; random is 20%, base LLaMA 34%, SVM ~48%, DistilBERT 53%, Phase 1 54%; we are within one star 97% of the time. Read the honest-read band aloud.",
