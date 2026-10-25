@@ -1,134 +1,88 @@
 # Presenter Notes — Agentic Self-Correction in LLaMA-3
 
-## Part 0 — Current deck. READ THIS FIRST
+## Part 0 — Current deck (24 slides). READ THIS FIRST
 
 Deck: `PES_Project_Phase1/Agentic_LLaMA3_Presentation.pptx`, the only current deck, built by `v2_reflective/build_deck_e23.py`. Google Slides (always current): https://docs.google.com/presentation/d/1V08iho4p7gdllKPxRVroaPhj6oo8Km1_/edit
-**Structure:** a 22-slide main talk, then an Appendix divider and 18 backup slides (background, superseded results, historical Run 1). Show the appendix only if asked.
-**Slide numbers and short scripts:** `deck_slide_map.md`, next to this file. It is regenerated on every build from the same text as the speaker notes, so it always matches the deck. This part gives the longer scripts, in deck order, without slide numbers.
-Older decks are in `PES_Project_Phase1/old_decks/` (unchanged). Parts 1–6 below were written for the older v3 deck; use them for the glossary and metric explanations only. Full history: `Project_Journey.md`. Code: `V2_Reflective_Guide.md`.
+**Flow (as agreed 2026-10-25):** Intro → Phase 1, the baseline paper (what it does) → its shortcomings → Phase 2 intro → in depth → how it solves the problem → results of Phase 1 → results of Phase 2 → in depth → conclusions. At most 25 slides.
+**Slide numbers and short scripts:** `deck_slide_map.md`, next to this file. It is regenerated on every build from the speaker notes, so it always matches the deck. This part gives the longer scripts in the same order.
+Slides no longer in the deck (Run 1 historical, Kaggle baseline, dissonance Critic, first stack, nine-lines summary, code map, workflow) are still in `PES_Project_Phase1/old_decks/` and stay defined in the builder. Parts 1–6 below are for the older v3 deck; use them only for the glossary and metric explanations. Full history: `Project_Journey.md`. Code: `V2_Reflective_Guide.md`.
 
-**Suggested timing (about 22 minutes, main talk only):**
-- Title, problem, gap: 3 min
-- Key terms: 2 min (point at a few; come back when asked)
-- At a glance: 2 min
-- Protocol and how experiments run: 2 min
-- Phase 1 method, leak audit: 2 min
-- Original Phase 2 design, hallucination study: 2 min
-- Tried / dropped / kept: 3 min (pick highlights)
-- Main result, Phase 1 → Phase 2, bar chart: 3 min
-- Robustness: 1 min
-- Next, schedule, roadmap: 2 min
+**Timing (about 22 minutes):**
+- Intro: 3 min
+- Phase 1 paper: 3 min
+- Shortcomings: 3 min
+- Phase 2 intro, in depth and how it solves: 4 min
+- Phase 1 results: 1 min
+- Phase 2 results: 5 min
+- In depth (robustness): 1 min
+- Schedule and conclusions: 2 min
 
-### Main talk, in order
-1. Title
-2. Problem
-3. Research question and gap
-4–5. Key terms (two slides)
-6. The project at a glance
-7. Electronics protocol
-8. How one experiment flows
-9. Phase 1 method (LLaMA + LoRA)
-10. Leak audit
-11. Where Phase 2 started (original four-agent design)
-12. Hallucination study
-13–15. Everything we tried and dropped (two slides), what we kept
-16. Main result
-17. Phase 1 → Phase 2
-18. All models (bar chart)
-19. Robustness
-20. Next: Phase 2 v3
-21. Build schedule
-22. Roadmap
-
-(If the deck is reordered, `deck_slide_map.md` has the current numbers.)
-
-### Title, problem, research question
-Use the short scripts in `deck_slide_map.md`. One minute each. The research question: does a second, independent signal plus a learned combiner beat a single fine-tuned model, and can agents make the decision explainable and self-correcting?
-
-### Key terms
+### 1. Intro: title, problem, key terms (slides 1–4)
+Problem: a single LLM pass rates a review with no evidence check, and its explanations can't be trusted.
 **Don't read the tables.** Say: "These are the names you'll hear. Three to remember: the LLaMA probe, the Evidence model and the Reflector. Together they make the main stack." On the second key-terms slide, point at four terms: balanced eval vs natural test (why there are two numbers), gate (rule written before running), label leak (why old numbers were withdrawn), deletion test (how explanations are checked). Come back to these slides whenever a question uses a term.
 
-### The project at a glance
-**Say:** "Since the last review I finished every planned experiment. Each one had a pass/fail rule written down before it ran, checked only on development data. Five ideas failed. One passed, and it is now the main system."
-**Explain the main system (main stack) in one breath:** "Two agents. The first reads the hidden state of the base LLaMA-3-8B model at layer 20 and puts a small logistic classifier on top. LLaMA is frozen, with no fine-tuning. The second is a TF-IDF keyword model trained on about half a million reviews. A Reflector, which is a logistic regression, combines the two agents' probabilities. It is fit on 2,000 balanced development reviews."
-**Numbers:** balanced eval 67.5% exact (was 63.9%); natural test 75.7% (was 73.4%).
-**Caveat (say it, don't wait to be asked):** "Part of the gain comes from fitting the Reflector on 2,000 rows instead of 500. The old system given those same 2,000 rows is only 2.0 and 1.5 points behind, and that gap is not significant."
+### 2. Phase 1, the baseline paper: what it does (slides 5–7)
+- **Baseline paper:** Wang et al. (2025) fine-tune LLaMA-3-8B with LoRA, clean the data with TextBlob (DQC), pick diverse reviews (VGST) and prompt one-shot with chain-of-thought. They report 92.6%.
+- **Where it stops:** one pass, no evidence, text only, no self-check.
+- **Pipeline slide:** the five data steps. **LoRA slide:** what LoRA is, plus the paper's Table 1 settings, which we used exactly.
 
-### Electronics protocol
-**Protocol:** frozen, disjoint splits; every choice made on dev; each test set read once.
+### 3. Its shortcomings, found by our audits (slides 8–10)
+- **Leak:** the one-shot example was chosen using the true star, worth about 8 points. Every later number is leak-free.
+- **Hallucination study:** the LoRA's explanations are one canned sentence per star, wrong 53% of the time. The probabilities are usable; the explanations are not.
+- **Preprocessing:** TextBlob filtering deletes most negative reviews and costs 2.5–3.5 points. VGST adds nothing.
 
-### How one experiment flows
-Full script and expected questions: `V2_Reflective_Guide.md`, section 5. Short version: "The rule is written in the log before the run, the run is resumable, the gate uses dev data only, a pass is read once on the test sets, and a freeze script regenerates every table. That's why 19 failures can be reported and the one pass can still be trusted."
+### 4. Phase 2 intro, in depth, and how it solves the problem (slides 11–14)
+- **Where Phase 2 started:** the original four-agent design (Analyst, Visual Verifier, RAG Prover, dissonance Critic). The audits showed the Visual Verifier gave constant output, RAG was weak, and the Critic barely acted.
+- **System slide:** walk the five boxes. Evidence model → Router → LLaMA probe → Reflector → Explainer + Critic.
+  - The decision core (main stack) is built and frozen.
+  - The agentic layer is being built, and each part is measured.
+- **How it solves the problem:**
+**Say:** "An LLM choosing the star failed twice, so the specialists keep deciding the star. The agents now do three things: a Router skips the slow LLaMA call when the Evidence agent is confident; an Explainer writes a short rationale from the evidence; and a Critic checks it and sends it back with specific feedback until it is faithful, at most twice."
+**Measured:** on all 3,000 test reviews: faithfulness before and after the Critic loop, rewrite rate, a deletion test (remove the cited phrases versus random words), and latency with and without the Router.
+**Accuracy candidates:** A1, the probe on 120K rows instead of 40K, is running (45K of 80K new rows extracted). A2, a DeBERTa-v3 specialist, runs on Colab on Nov 1. Each needs to pass a dev-only gate first.
+**Demo (December final presentation):** one local notebook, Phase 1 and Phase 2 running live on five reviews plus the paper's frozen results, 3 minutes or less, no network. A cached result backs every live cell.
+- **Protocol slide:** frozen, disjoint splits; every choice made on dev; test sets read once.
 
-### Phase 1 method, leak audit, original design, hallucination study
-Use the short scripts in `deck_slide_map.md`. Key lines:
-- **Phase 1:** the baseline paper's LLaMA + LoRA, retrained on Electronics.
-- **Leak audit:** the old one-shot example was picked using the true star, which inflated scores by about 8 points; all later numbers are leak-free.
-- **Original design:** where Phase 2 started; the audits and experiments replaced it.
-- **Hallucination study:** the LoRA's "explanations" were a canned template, which is why v3 builds explanations from evidence and checks them.
+### 5. Results of Phase 1 (slide 15)
+"This is the baseline paper's method on our data, leak-free."
+- Exact star 54.0 / 53.4, but within one star about 94% and positive vs negative 91–93%. It gets the direction right.
+- On the paper's own Kaggle data with its protocol and no leak: 69.1% (always guessing 5★ gives 63.8%).
+- The paper's 92.6% used K=5 cross-validation and a 40K test set.
 
-### Everything we tried and dropped / What we kept
-**Don't read every row.** On the first "tried and dropped" slide, pick three: the LLM judge (failed twice, which is why the LLM doesn't decide the star), the Visual Verifier (constant output) and the recalibration (the gain was the leak). On the second one, say: more views of the same text, more LoRA data and fancier Reflectors didn't help; more probe data and a bigger Reflector fit set did. Mention the honest near-miss (the 10K probe missed by .001). On "What we kept", walk the ten kept changes quickly; each has its evidence on the right.
+### 6. Results of Phase 2 (slides 16–21)
+**Tried / dropped / kept:** **Don't read every row.** On the first "tried and dropped" slide, pick three: the LLM judge (failed twice, which is why the LLM doesn't decide the star), the Visual Verifier (constant output) and the recalibration (the gain was the leak). On the second one, say: more views of the same text, more LoRA data and fancier Reflectors didn't help; more probe data and a bigger Reflector fit set did. Mention the honest near-miss (the 10K probe missed by .001). On "What we kept", walk the ten kept changes quickly; each has its evidence on the right.
 
-### Main result
-**Read the table top to bottom:** old headline 63.9 / 73.4; old stack refit on dev2 65.5 / 74.2; probe alone 61.2 / 74.3; Evidence alone 62.5 / 70.2; **main stack 67.5 / 75.7**; 5-seed mean 65.8 ± 0.6 / 75.4 ± 0.8.
+**Main result:** **Read the table top to bottom:** old headline 63.9 / 73.4; old stack refit on dev2 65.5 / 74.2; probe alone 61.2 / 74.3; Evidence alone 62.5 / 70.2; **main stack 67.5 / 75.7**; 5-seed mean 65.8 ± 0.6 / 75.4 ± 0.8.
 **Paired comparisons:** versus the old headline +3.6 [+0.9, +6.3] eval and +2.3 [+0.6, +4.0] natural, both significant. Versus Evidence alone +5.0 and +5.5. Versus the probe alone +6.3 eval; +1.4 natural (not significant).
 **Key message:** "Combining two different kinds of signal beats either one alone, every seed. The frozen LLaMA model already contains the useful information; fine-tuning it was not needed for the stack."
 
-### Phase 1 → Phase 2
-**Lead with the gain:** "On the same test rows, Phase 2 adds 13.5 points on balanced eval and 22.3 on the natural test. That is 29% and 48% fewer errors."
-**Then be fair to Phase 1:** "Phase 1 already gets the direction right: within one star about 94% of the time, positive versus negative 91–93%. The exact star between neighbours is what is hard."
-**If asked why 53.4% on natural:** "It was trained on balanced data and under-predicts 5-star, and 65% of natural-test reviews are 5-star. That is a class-mix effect, which is why I report macro-F1 too."
-**Reproduction:** "On the baseline paper's own Kaggle data, with its protocol and the leak removed, Phase 1 gets 69.1%. Always guessing 5-star already gets 63.8% there."
-**Never quote** 70.7 / 60.1 (leaky prompt, withdrawn by my own audit), 74.8 (one unstable seed) or 79.9 (a class-mix correction, not skill).
+**Phase 1 → Phase 2:** lead with the gain, +13.5 / +22.3 points (29% / 48% fewer errors), significant after Holm. Then why: the agents complement each other; the Evidence model is strong on short reviews, the probe on long ones. Say the caveat yourself: the earlier stack refit on the same dev reviews is only 2.0 / 1.5 behind. Never quote 70.7 / 60.1 (leaky), 74.8 (one seed) or 79.9 (class-mix correction).
 
-### All models (bar chart)
-**Say:** "Every model, with 95% confidence intervals. main stack is in red. Notice base LLaMA: as a zero-shot rater it gets 34%, but a probe on its hidden state gets 61 and 74."
+**All models:** **Say:** "Every model, with 95% confidence intervals. main stack is in red. Notice base LLaMA: as a zero-shot rater it gets 34%, but a probe on its hidden state gets 61 and 74."
 
-### Robustness
+### 7. In depth: robustness (slide 22)
 **Say:** "I checked whether the result survives four questions."
 - **Multiple comparisons:** after Holm correction over 8 comparisons, 5 stay significant. main stack beats Evidence alone on both splits, the probe on eval, and the old headline on both splits (adjusted p .045 and .043). The probe on natural test and the old stack refit on dev2 are not significant.
 - **Errors:** 90% (eval) and 86% (natural) of errors are one star off. 2★ and 3★ are hardest. When the two agents agree (64–72% of rows) main stack is right 74–84% of the time; when they disagree, 56%.
 - **Calibration:** ECE .047 and .062, slightly under-confident. The confidence can be trusted, which is what the Router needs.
 - **Cost:** the LLaMA probe takes about 0.67 s per review; TF-IDF and the Reflector take under 0.1 ms each.
 
-### Next: Phase 2 v3 (self-correction at three levels)
-**Say:** "An LLM choosing the star failed twice, so the specialists keep deciding the star. The agents now do three things: a Router skips the slow LLaMA call when the Evidence agent is confident; an Explainer writes a short rationale from the evidence; and a Critic checks it and sends it back with specific feedback until it is faithful, at most twice."
-**Measured:** on all 3,000 test reviews: faithfulness before and after the Critic loop, rewrite rate, a deletion test (remove the cited phrases versus random words), and latency with and without the Router.
-**Accuracy candidates:** A1, the probe on 120K rows instead of 40K, is running (45K of 80K new rows extracted). A2, a DeBERTa-v3 specialist, runs on Colab on Nov 1. Each needs to pass a dev-only gate first.
-**Demo (December final presentation):** one local notebook, Phase 1 and Phase 2 running live on five reviews plus the paper's frozen results, 3 minutes or less, no network. A cached result backs every live cell.
-
-### Build schedule (Oct 25 → Nov 5)
+### 8. Build schedule and conclusions (slides 23–24)
 **Say:** "This is the build plan for the next ten days. Today the saved agents were rebuilt and match the frozen results exactly. Next come the shared LLaMA model and the Router with the first level of self-correction, then the Critic, the Explainer and the LLM re-rating check. The heavy runs (the bigger probe, explanations on all 3,000 test reviews, the deletion test) run overnight on the charger. Numbers freeze in two stages: Nov 1 for local work, Nov 5 once the Colab result is in or out."
 
-### Roadmap
-Freeze stage 1 on Nov 1 (local work), stage 2 on Nov 5 (Colab result in or out). I write the prose from Nov 2; draft 1 to the supervisor Nov 8; submit by Nov 20. December: final presentation with the live demo.
+**Conclusions:** three cards.
+- Phase 1 was reproduced honestly, and two problems were found in the original protocol.
+- Phase 2's two-agent stack beats the single fine-tuned model, significantly.
+- The agentic layer is being built and measured.
 
-### Appendix (only if asked)
-#### First stack (superseded)
-**Say:** "This was the system three weeks ago: the LoRA Analyst plus the Evidence model. It got 63.9 and 73.4. I keep it in the deck because it is the baseline the new system is compared against."
-
-#### Experiment ledger summary (nine lines of work)
-Go row by row, about 10 seconds each.
-- **Gate 0, LLM adjudicator:** when the two agents disagree, ask LLaMA to choose. It was right 54.2% of the time versus 73.3% for the stack. Dropped.
-- **Base LLaMA without LoRA:** weak alone (34.3%), yet stacked with Evidence it gives 63.7, almost the same as LoRA plus Evidence (63.9). So the fine-tune adds little inside the stack.
-- **DistilBERT on the same 2K rows:** 52.8% versus LoRA 54.0%, not significant. A model 100 times smaller matches it.
-- **Variance and LoRA seed 2:** the stack gain over Evidence was positive in 5 of 5 seeds.
-- **LoRA on 10K rows:** dev 56.4% against a 58% gate. More LoRA data does not help much.
-- **Hidden-state probe on 10K rows (F, F2):** missed the gate by a hair.
-- **Pooled-dev Reflector (D):** passed its gate, but the gain only came from predicting more 5-star reviews (a class-prior shift), so not adopted.
-- **Evidence on 500K rows (G2):** better on its own, but the stack did not improve.
-- **Phase H:** 2,000-row dev set plus the probe fit on 40K rows. Passed: +3.9 points on dev2, CI [+2.4, +5.8].
-
-#### The v2_reflective workspace
-Full script, folder map, file-name key and expected questions: **`V2_Reflective_Guide.md`** (next to this file). Short version: "Every Phase 2 number comes from a script in `v2_reflective/`, a saved `.out` file, and a `LOG.md` entry whose rule was written before the run. `freeze_tables.py` recomputes every table in 3 seconds."
+End with the dates: freeze Nov 1 / 5, draft Nov 8, submit Nov 20, final presentation in December with a live demo.
 
 ### New questions to expect
 - **"Why did the gain over the old system shrink in the fair comparison?"** The old Reflector was fit on only 500 rows. Given 2,000 rows it improves too. main stack is still ahead in 4 of 5 seeds on eval and 5 of 5 on natural, but the margin is small (+0.7 ± 1.2 and +1.0 ± 0.6).
 - **"You tried many things; isn't the winner luck?"** Every rule was written before running, and failures never touched the test sets. Five candidates were compared on dev2, and I disclose that. The test sets were read once.
 - **"Then what is the role of LoRA?"** Phase 1 is still the paper's baseline reproduction. Inside Phase 2 it is an ablation row: adding it to main stack did not help (dev2 .633 versus .639).
 - **"Why is natural-test accuracy higher than balanced?"** About 65% of natural reviews are 5-star, which are easier. That is why macro-F1 (.612) is reported next to it.
-- **"Is this agentic?"** Today: two independent agents plus a learned Reflector that arbitrates between them. The LLM-as-judge version (Gate 0) was tested and failed, and that is reported. Phase 2 v3 (the "Next" slide) adds LLM agents for routing, explanation and self-correction at three levels (escalation, LLM re-rating, Critic loop), each measured.
+- **"Is this agentic?"** Today: two independent agents plus a learned Reflector that arbitrates between them. The LLM-as-judge version (Gate 0) was tested and failed, and that is reported. Phase 2 v3 (the "How it solves the problem" slide) adds LLM agents for routing, explanation and self-correction at three levels (escalation, LLM re-rating, Critic loop), each measured.
 - **"One slip?"** Yes, disclosed: Evidence-alone test accuracy was printed once before the gate ran. It was not used for any choice.
 
 ### Names to say out loud

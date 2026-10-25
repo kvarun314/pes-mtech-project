@@ -1,7 +1,7 @@
 # Presenter guide: the `v2_reflective/` folder
 
 Use this when someone asks "where is the code?", "how did you run the experiments?" or "how do we know the numbers are real?".
-- Deck: the main talk has "How One Experiment Flows"; the appendix has "Where the Work Lives". Slide numbers: `deck_slide_map.md` (auto-generated).
+- These two slides ("How One Experiment Flows", "Where the Work Lives") are no longer in the 24-slide deck; they stay in the builder and in `old_decks/`. Use this guide to answer questions about the code.
 - Companion files (same folder, `presentation/`): `Presenter_Notes.md` (slide-by-slide script) and `Project_Journey.md` (full history).
 
 ---

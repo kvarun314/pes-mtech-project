@@ -709,3 +709,20 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - Every build writes `presentation/deck_slide_map.md`: slide number, section, title and the speaker note.
 - **Presenter notes:** `Presenter_Notes.md` Part 0 rewritten in deck order, without slide numbers (numbers live in the auto-generated map). It covers the structure, timing for the 22-minute main talk, the main-talk list, longer scripts per slide, and an appendix section. `V2_Reflective_Guide.md` references are now by slide name.
 - Deck: 40 slides in total (22 main). Rendered and checked. Synced to Drive `current_deck/` (Google Slides link unchanged).
+
+### 2026-10-25 — Deck restructured to the user's flow: 24 slides
+- User specification: intro → Phase 1, the baseline paper (what it does) → its novelty and shortcomings → Phase 2 intro → in depth → how it aims to solve the problem → results of Phase 1 → results of Phase 2 → in depth → conclusions. No more than 25 slides.
+- New order (24 slides):
+  - **Intro:** title, problem, key terms ×2.
+  - **Phase 1 paper:** "Baseline Paper (Wang et al., 2025): What It Does, Where It Stops" (retitled), data pipeline, LoRA.
+  - **Shortcomings:** leak audit, hallucination study, preprocessing ablation.
+  - **Phase 2:** original four-agent design; NEW "Phase 2 System: How a Review Is Rated and Explained" (five-box flow, decision core vs agentic layer); "How it solves the problem" (renamed from "Next"); protocol.
+  - **Phase 1 results:** NEW "Phase 1 Results: The Baseline Paper's Method" (Electronics exact / within-one / binary / macro-F1 / MAE, plus the Kaggle paper-protocol reproduction).
+  - **Phase 2 results:** dropped ×2, kept, main result, Phase 1 → Phase 2 (rewritten as gain / why it works / honest caveat, so it no longer repeats the Phase 1 slide), all-models chart.
+  - **In depth:** robustness.
+  - **Close:** build schedule, NEW "Conclusions".
+- Removed from this deck but not deleted: they remain in `old_decks/`, and their code stays in the builder.
+  - Run 1 historical ×9, Kaggle data slide, Kaggle baseline, dissonance Critic, first stack, nine-lines summary, code map, workflow, at-a-glance, roadmap, appendix divider.
+  - The roadmap dates moved into the Conclusions band.
+- `Presenter_Notes.md` Part 0 rewritten in the same eight-section order, with timing. `V2_Reflective_Guide.md` notes that its two slides are no longer in the deck. `CLAUDE.md` and memory record the flow and the 25-slide limit.
+- Rendered all 24 slides (contact sheet) and checked. Synced to Drive / Google Slides.

@@ -31,6 +31,7 @@ Do not add new top-level files to the repo or to `PES_Project_Phase1/`. If somet
 
 - One deck only: `../Agentic_LLaMA3_Presentation.pptx`. Rebuild it in place with `/opt/homebrew/bin/python3 v2_reflective/build_deck_e23.py`. Never create v7/v8 copies.
 - Old decks stay in `../old_decks/` and are never deleted.
+- **Deck structure (user, 2026-10-25): at most 25 slides.** Flow: intro → Phase 1, the baseline paper (what it does) → its shortcomings → Phase 2 intro → in depth → how it solves the problem → results of Phase 1 → results of Phase 2 → in depth → conclusions. Order is the `MAIN` list in `build_deck_e23.py`; references use `§key§` tokens; every build writes `presentation/deck_slide_map.md`. Keep `Presenter_Notes.md` Part 0 in the same order.
 - After a deck change, update `presentation/Presenter_Notes.md` Part 0 (slide map and scripts), then render the changed slides with `soffice` and check them visually.
 
 ## Experiment discipline
