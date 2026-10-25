@@ -387,6 +387,24 @@ for i, (tag, head, body) in enumerate([("1", "Declare", "Candidate, data and exa
     block(nv2, x + 0.2, 3.0, w_ - 0.35, 1.7, [body], size=T_SMALL)
 band(nv2, 4.4, "Why it matters", "16 ideas failed and are reported; none of them ever touched eval or natural_test. That is what makes the one pass (the main stack) trustworthy. Example: Phase H rule 'dev2 +1.0 pt, CI > 0' → +3.9 [+2.4, +5.8] → PASS → readout_H.out.", h=1.1)
 
+# NPW / NPF the baseline paper in simple points, then why it falls short (replace the combined gap slide)
+pw = new_slide("PHASE 1 · THE PAPER WE CHOSE", "The Paper We Chose: What It Does",
+               "Wang et al. (2025), “Sentiment Analysis of Product Reviews Using Fine-Tuned LLaMA-3”, ITM Web of Conferences 70, 04021.")
+cards(pw, [("TASK", "Rate a review 1–5★", ["— Input: an Amazon product review", "— Output: a star rating plus a short justification", "— One model, one pass"]),
+           ("DATA", "Clean, balance, diversify", ["— Kaggle Amazon reviews (~500K)", "— TextBlob drops reviews whose tone disagrees with the stars", "— Equal reviews per star; VGST picks varied wording", "— Neutral (3★) reviews doubled"]),
+           ("MODEL", "LLaMA-3-8B + LoRA", ["— Small LoRA add-on, last 3 layers", "— r = 4, α = 64, 3 epochs, lr 5e-5", "— 4-bit, fits one 16 GB GPU"]),
+           ("PROMPT", "Rubric + one example", ["— 1–5★ rubric in the prompt", "— One worked example (one-shot)", "— “Let's take it one step at a time”"])],
+      1.82, 3.55)
+band(pw, 5.6, "Reported", "92.6% accuracy, 93.3% F1 (5-fold cross-validation, 40K test reviews); beats SVM, Naive Bayes, Decision Tree and XLNet; LLaMA-3 chosen over LLaVA-1.5 and Qwen2 for its accuracy / speed trade-off.", h=0.95)
+pf = new_slide("PHASE 1 · WHY IT FALLS SHORT", "Why It Falls Short",
+               "What we found when we rebuilt it on Amazon Reviews 2023 Electronics with a leak-free, balanced test.")
+cards(pf, [("NO CHECKING", "One pass, no second opinion", ["— Reads the review once", "— No evidence, no other model to disagree", "— A wrong star goes uncorrected"]),
+           ("FRAGILE TEST", "The score depends on the set-up", ["— One-shot example choice leaked the answer in our first run (~8 pts)", "— Skewed test: always guessing 5★ already scores 63.8%", "— Leak-free, balanced: 54.0% exact"]),
+           ("DATA CLEANING", "Filtering backfires", ["— TextBlob deletes 52% of 1★ and 67% of 2★ reviews", "— Costs 2.5–3.5 points", "— VGST adds nothing (+0.2)"]),
+           ("EXPLANATIONS", "Justifications are not real", ["— Same template sentence per star", "— Wrong star in 53% of 150 checked", "— Probabilities useful, text not"])],
+      1.82, 3.55)
+band(pf, 5.6, "What Phase 2 needs", "A second, independent signal; a learned combiner instead of one pass; and agents whose explanations come from real evidence and are checked, each measured on the same frozen test sets.", h=0.95)
+
 # NP1 Phase 1 results (Electronics + reproduction on the paper's own data)
 p1r = new_slide("PHASE 1 · RESULTS", "Phase 1 Results: The Baseline Paper's Method",
                 "LLaMA-3-8B + LoRA (paper Table 1 settings), retrained on Electronics, leak-free zero-shot prompt. Same frozen test sets as Phase 2.")
@@ -437,10 +455,11 @@ cards(apx, [("BACKGROUND", "Original setup", ["— Datasets (Kaggle vs Amazon 20
 SL = {"title": S[0], "problem": S[1], "gap": S[2], "data_kaggle": S[3], "p1_pipeline": S[4], "lora": S[5], "kaggle_baseline": S[6], "orig_design": S[7],
       "dissonance": S[8], **{f"hist{k}": S[8 + k] for k in range(1, 10)}, "g1": g1, "g2": g2, "glance": n0, "leak": n1, "protocol": n2, "first_stack": n3,
       "preproc": n4, "halluc": n5, "ledger9": n6, "x1": xs[0], "x2": xs[1], "kept": nk, "main": nh, "p1p2": np_, "bars": nf, "robust": nr, "next": nn,
-      "schedule": ns, "roadmap": n7, "code": nv1, "workflow": nv2, "appendix": apx, "p1results": p1r, "arch": arc, "conclusions": con}
-MAIN = ["title", "problem", "g1", "g2",                                   # intro
-        "gap", "p1_pipeline", "lora",                                      # Phase 1: the baseline paper, what it does
-        "leak", "halluc", "preproc",                                       # its shortcomings
+      "schedule": ns, "roadmap": n7, "code": nv1, "workflow": nv2, "appendix": apx, "p1results": p1r, "arch": arc, "conclusions": con, "paper_what": pw, "paper_fails": pf}
+MAIN = ["title", "problem",                                               # intro (key terms live in Presenter_Notes.md, not on slides; user 2026-10-25)
+        "paper_what", "paper_fails",                                       # Phase 1: the baseline paper, what it does, why it falls short
+        "p1_pipeline", "lora",                                             # how it works in detail
+        "leak", "halluc", "preproc",                                       # evidence for the shortcomings
         "orig_design", "arch", "next", "protocol",                         # Phase 2: intro, in depth, how it solves, how we test
         "p1results",                                                       # results: Phase 1
         "x1", "x2", "kept", "main", "p1p2", "bars",                        # results: Phase 2
@@ -484,7 +503,7 @@ NOTES = {
  "kaggle_baseline": "Phase 1 baseline on Kaggle (historical numbers). The 60.1% here used the leaky one-shot prompt; leak-free zero-shot is 59.2%. Slide §leak§ explains.",
  "orig_design": "Original Phase 2 design (Analyst, Visual, RAG, Critic). Say: this was the starting design; the Oct 9 audit (Run 2) and later experiments replaced it with the probe + Evidence + Reflector system (slide §main§). Slide §next§ shows how the agent idea comes back in Phase 2 v3.",
  "dissonance": "Original dissonance Critic. Say: in practice it fired on 0.4% of rows, so it was replaced by a learned Reflector.",
- "g1": "Key terms 1. Do not read the table. Say: these are the names you will hear; the three to remember are the LLaMA probe, the Evidence model and the Reflector, which together make the main stack. Come back to this slide when a question uses a term.",
+ "g1": "Key terms 1 (not in the deck). Do not read the table. Say: these are the names you will hear; the three to remember are the LLaMA probe, the Evidence model and the Reflector, which together make the main stack. Come back to this slide when a question uses a term.",
  "g2": "Key terms 2. Point at four: balanced eval vs natural test (why two numbers), gate (rule written before running), label leak (why old numbers were withdrawn), and the deletion test (how explanations are checked).",
  "glance": "AT A GLANCE. Read the three cards left to right. Must say the caveat: against the old stack refit on the same 2,000 dev rows the gain is only 2.0 / 1.5 points and not significant.",
  "leak": "Leak audit. Picking a one-shot example whose star differs from the truth leaks about 8 points. All later numbers are zero-shot and leak-free.",
@@ -497,6 +516,8 @@ NOTES = {
  "kept": "What we kept. Walk the ten rows quickly: each change has its evidence on the right. Together they give the main stack, 67.5% balanced eval and 75.7% natural test.",
  "ledger9": "Experiment ledger. Go row by row, about 10 seconds each. Key message: every rule was fixed before running and failures never touched the test sets.",
  "main": "MAIN RESULT. Probe + Evidence stack 67.5 eval / 75.7 natural, macro-F1 .675 / .612. Variance 65.8 +/- 0.6 and 75.4 +/- 0.8. Read the honest-read band aloud.",
+ "paper_what": "The paper we chose. Four cards, left to right: the task (one model rates a review 1-5 and justifies it), the data steps (TextBlob cleaning, equal per star, varied wording, extra neutral), the model (LLaMA-3-8B with a small LoRA add-on, exact Table 1 settings), and the prompt (rubric, one example, step-by-step). Then the reported 92.6%. Say: we rebuilt exactly this as Phase 1.",
+ "paper_fails": "Why it falls short. Four reasons in plain words: one pass with nothing to catch mistakes; the score depends heavily on the set-up (a leaked example, a skewed test, leak-free it is 54%); the data cleaning removes most negative reviews; and the justifications are a template. Be fair: the leak was in our first reproduction's example choice, not a claim about the authors. Next: two slides on how the method works, then three slides of evidence.",
  "p1results": "Phase 1 results. Say: this is the baseline paper's method retrained on Electronics, leak-free. Exact star 54.0 / 53.4, but within one star about 94% and positive vs negative 91-93%: it gets the direction right. On the paper's own Kaggle data with its protocol and no leak it reaches 69.1% (always-5 gives 63.8%). The paper's 92.6% used a different protocol; our old 70.7 / 60.1 were leaky and withdrawn.",
  "arch": "Phase 2 system. Walk the five boxes left to right. Decision core: Evidence model, LLaMA probe, Reflector (the main stack, built and frozen). Agentic layer: Router with escalation, optional LLM re-rating, Explainer and Critic loop, being built in LangGraph and each one measured. Self-correction happens at three points: escalation, re-rating, and the explanation loop.",
  "conclusions": "Conclusions. Three cards: Phase 1 reproduced honestly (and two problems found in the original protocol); Phase 2's two-agent stack beats the single fine-tuned model, significantly; the agentic layer is being built and measured. End with the dates: freeze Nov 1 / 5, draft Nov 8, submit Nov 20, final presentation in December.",

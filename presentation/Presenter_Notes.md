@@ -1,6 +1,6 @@
 # Presenter Notes — Agentic Self-Correction in LLaMA-3
 
-## Part 0 — Current deck (24 slides). READ THIS FIRST
+## Part 0 — Current deck (23 slides). READ THIS FIRST
 
 Deck: `PES_Project_Phase1/Agentic_LLaMA3_Presentation.pptx`, the only current deck, built by `v2_reflective/build_deck_e23.py`. Google Slides (always current): https://docs.google.com/presentation/d/1V08iho4p7gdllKPxRVroaPhj6oo8Km1_/edit
 **Flow (as agreed 2026-10-25):** Intro → Phase 1, the baseline paper (what it does) → its shortcomings → Phase 2 intro → in depth → how it solves the problem → results of Phase 1 → results of Phase 2 → in depth → conclusions. At most 25 slides.
@@ -8,30 +8,77 @@ Deck: `PES_Project_Phase1/Agentic_LLaMA3_Presentation.pptx`, the only current de
 Slides no longer in the deck (Run 1 historical, Kaggle baseline, dissonance Critic, first stack, nine-lines summary, code map, workflow) are still in `PES_Project_Phase1/old_decks/` and stay defined in the builder. Parts 1–6 below are for the older v3 deck; use them only for the glossary and metric explanations. Full history: `Project_Journey.md`. Code: `V2_Reflective_Guide.md`.
 
 **Timing (about 22 minutes):**
-- Intro: 3 min
-- Phase 1 paper: 3 min
-- Shortcomings: 3 min
+- Intro: 2 min
+- Phase 1 paper and why it falls short: 4 min
+- Evidence for the shortcomings: 3 min
 - Phase 2 intro, in depth and how it solves: 4 min
 - Phase 1 results: 1 min
 - Phase 2 results: 5 min
 - In depth (robustness): 1 min
 - Schedule and conclusions: 2 min
 
-### 1. Intro: title, problem, key terms (slides 1–4)
+### 1. Intro: title and problem (slides 1–2)
 Problem: a single LLM pass rates a review with no evidence check, and its explanations can't be trusted.
-**Don't read the tables.** Say: "These are the names you'll hear. Three to remember: the LLaMA probe, the Evidence model and the Reflector. Together they make the main stack." On the second key-terms slide, point at four terms: balanced eval vs natural test (why there are two numbers), gate (rule written before running), label leak (why old numbers were withdrawn), deletion test (how explanations are checked). Come back to these slides whenever a question uses a term.
 
-### 2. Phase 1, the baseline paper: what it does (slides 5–7)
-- **Baseline paper:** Wang et al. (2025) fine-tune LLaMA-3-8B with LoRA, clean the data with TextBlob (DQC), pick diverse reviews (VGST) and prompt one-shot with chain-of-thought. They report 92.6%.
-- **Where it stops:** one pass, no evidence, text only, no self-check.
-- **Pipeline slide:** the five data steps. **LoRA slide:** what LoRA is, plus the paper's Table 1 settings, which we used exactly.
+### Key terms (for you; not on the slides)
+Use these when explaining or when someone asks what a word means.
 
-### 3. Its shortcomings, found by our audits (slides 8–10)
+| Term | Meaning |
+|---|---|
+| LLaMA-3-8B | Meta's open large language model (8 billion parameters); the base model in both phases |
+| LoRA | Small add-on weights trained on top of a frozen model, so fine-tuning is cheap (Phase 1) |
+| Phase 1 LoRA | LLaMA-3-8B + LoRA trained to output the star: the baseline paper's method |
+| Frozen model | Used as-is, never retrained |
+| Hidden state (layer 20) | LLaMA's internal numeric summary of the review, halfway through the network |
+| LLaMA probe | Small classifier that reads the layer-20 hidden state and outputs 1–5★ probabilities |
+| TF-IDF | Scores each word / word pair by how distinctive it is in a review |
+| Evidence model | TF-IDF + logistic regression on ~497K reviews; its top phrases become the explanation evidence |
+| Logistic regression (LR) | Simple, fast classifier that outputs a probability for each star |
+| Agent | A component with one job (rate, combine, route, explain, check) that passes results to the next |
+| Stack / stacking | Several models predict; a small learned model combines their predictions |
+| Reflector | The learned combiner: weighs the probe and the Evidence model, outputs the final star |
+| Main stack | LLaMA probe + Evidence model + Reflector: the system behind the headline results |
+| Router | Decides whether the slow LLaMA probe is needed for a review |
+| Explainer / Critic | Explainer (instruction-tuned LLM) writes the rationale; Critic checks it and asks for rewrites |
+| Self-correction | System revises its own output: escalation, LLM re-rating (rating) and the Critic loop (explanation) |
+| Balanced eval | 1,000 test reviews, 200 per star: every star counts equally |
+| Natural test | 2,000 test reviews with the real star mix (65% are 5★) |
+| dev / dev2 | Separate development reviews (500 / 2,000) used for every choice; test sets are read once |
+| Exact accuracy | Share of reviews whose star is predicted exactly |
+| Within one star | Share predicted exactly or one star off |
+| Macro-F1 | Average quality over the five stars, so rare stars count as much as 5★ |
+| Polarity / binary | Negative vs neutral vs positive / negative vs positive only |
+| Zero-shot / one-shot | Prompt with no example / with one worked example |
+| Label leak | Example picked using the true answer, which inflated old scores by ~8 points |
+| Gate | Pass/fail rule written in the lab log before an experiment runs, checked on dev data only |
+| 95% CI (bootstrap) | Range the true value likely falls in, from resampling the test reviews |
+| McNemar / paired test | Tests whether two systems differ on the same reviews |
+| Holm correction | Adjusts p-values when many comparisons are made, to avoid lucky wins |
+| ECE (calibration) | Gap between the model's confidence and its real accuracy; lower is better |
+| Faithfulness | Explanation states the right star and only uses evidence that is really in the review |
+| Deletion test | Remove the cited phrases vs random words: if confidence drops more, the explanation points at what mattered |
+
+### 2. Phase 1, the baseline paper: what it does and why it falls short (slides 3–6)
+- **The paper we chose:** Wang et al. (2025). Walk the four cards:
+  - **Task:** one model rates a review 1–5★ and justifies it.
+  - **Data:** TextBlob cleaning, equal reviews per star, varied wording (VGST), extra neutral reviews.
+  - **Model:** LLaMA-3-8B with a small LoRA add-on, using the exact Table 1 settings.
+  - **Prompt:** a rubric, one worked example, and "step by step".
+  - Then the reported 92.6%. Say: "We rebuilt exactly this as Phase 1."
+- **Why it falls short**, four plain reasons:
+  - One pass, with nothing to catch a mistake.
+  - The score depends heavily on the set-up: a leaked example in our first run, and a skewed test where always guessing 5★ gets 63.8%. Leak-free and balanced, it's 54%.
+  - The data cleaning removes most negative reviews.
+  - The justifications are a template.
+  - Be fair: the leak came from our first reproduction's example choice; it isn't a claim about the authors.
+- **Pipeline and LoRA slides:** how the method works in detail. Keep each to a minute.
+
+### 3. Evidence for the shortcomings (slides 7–9)
 - **Leak:** the one-shot example was chosen using the true star, worth about 8 points. Every later number is leak-free.
 - **Hallucination study:** the LoRA's explanations are one canned sentence per star, wrong 53% of the time. The probabilities are usable; the explanations are not.
 - **Preprocessing:** TextBlob filtering deletes most negative reviews and costs 2.5–3.5 points. VGST adds nothing.
 
-### 4. Phase 2 intro, in depth, and how it solves the problem (slides 11–14)
+### 4. Phase 2 intro, in depth, and how it solves the problem (slides 10–13)
 - **Where Phase 2 started:** the original four-agent design (Analyst, Visual Verifier, RAG Prover, dissonance Critic). The audits showed the Visual Verifier gave constant output, RAG was weak, and the Critic barely acted.
 - **System slide:** walk the five boxes. Evidence model → Router → LLaMA probe → Reflector → Explainer + Critic.
   - The decision core (main stack) is built and frozen.
@@ -43,13 +90,13 @@ Problem: a single LLM pass rates a review with no evidence check, and its explan
 **Demo (December final presentation):** one local notebook, Phase 1 and Phase 2 running live on five reviews plus the paper's frozen results, 3 minutes or less, no network. A cached result backs every live cell.
 - **Protocol slide:** frozen, disjoint splits; every choice made on dev; test sets read once.
 
-### 5. Results of Phase 1 (slide 15)
+### 5. Results of Phase 1 (slide 14)
 "This is the baseline paper's method on our data, leak-free."
 - Exact star 54.0 / 53.4, but within one star about 94% and positive vs negative 91–93%. It gets the direction right.
 - On the paper's own Kaggle data with its protocol and no leak: 69.1% (always guessing 5★ gives 63.8%).
 - The paper's 92.6% used K=5 cross-validation and a 40K test set.
 
-### 6. Results of Phase 2 (slides 16–21)
+### 6. Results of Phase 2 (slides 15–20)
 **Tried / dropped / kept:** **Don't read every row.** On the first "tried and dropped" slide, pick three: the LLM judge (failed twice, which is why the LLM doesn't decide the star), the Visual Verifier (constant output) and the recalibration (the gain was the leak). On the second one, say: more views of the same text, more LoRA data and fancier Reflectors didn't help; more probe data and a bigger Reflector fit set did. Mention the honest near-miss (the 10K probe missed by .001). On "What we kept", walk the ten kept changes quickly; each has its evidence on the right.
 
 **Main result:** **Read the table top to bottom:** old headline 63.9 / 73.4; old stack refit on dev2 65.5 / 74.2; probe alone 61.2 / 74.3; Evidence alone 62.5 / 70.2; **main stack 67.5 / 75.7**; 5-seed mean 65.8 ± 0.6 / 75.4 ± 0.8.
@@ -60,14 +107,14 @@ Problem: a single LLM pass rates a review with no evidence check, and its explan
 
 **All models:** **Say:** "Every model, with 95% confidence intervals. main stack is in red. Notice base LLaMA: as a zero-shot rater it gets 34%, but a probe on its hidden state gets 61 and 74."
 
-### 7. In depth: robustness (slide 22)
+### 7. In depth: robustness (slide 21)
 **Say:** "I checked whether the result survives four questions."
 - **Multiple comparisons:** after Holm correction over 8 comparisons, 5 stay significant. main stack beats Evidence alone on both splits, the probe on eval, and the old headline on both splits (adjusted p .045 and .043). The probe on natural test and the old stack refit on dev2 are not significant.
 - **Errors:** 90% (eval) and 86% (natural) of errors are one star off. 2★ and 3★ are hardest. When the two agents agree (64–72% of rows) main stack is right 74–84% of the time; when they disagree, 56%.
 - **Calibration:** ECE .047 and .062, slightly under-confident. The confidence can be trusted, which is what the Router needs.
 - **Cost:** the LLaMA probe takes about 0.67 s per review; TF-IDF and the Reflector take under 0.1 ms each.
 
-### 8. Build schedule and conclusions (slides 23–24)
+### 8. Build schedule and conclusions (slides 22–23)
 **Say:** "This is the build plan for the next ten days. Today the saved agents were rebuilt and match the frozen results exactly. Next come the shared LLaMA model and the Router with the first level of self-correction, then the Critic, the Explainer and the LLM re-rating check. The heavy runs (the bigger probe, explanations on all 3,000 test reviews, the deletion test) run overnight on the charger. Numbers freeze in two stages: Nov 1 for local work, Nov 5 once the Colab result is in or out."
 
 **Conclusions:** three cards.

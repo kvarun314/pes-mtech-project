@@ -726,3 +726,17 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - The roadmap dates moved into the Conclusions band.
 - `Presenter_Notes.md` Part 0 rewritten in the same eight-section order, with timing. `V2_Reflective_Guide.md` notes that its two slides are no longer in the deck. `CLAUDE.md` and memory record the flow and the 25-slide limit.
 - Rendered all 24 slides (contact sheet) and checked. Synced to Drive / Google Slides.
+
+### 2026-10-25 — Deck: baseline paper in simple points + why it falls short; key terms moved off the slides (23 slides)
+- User: add a slide at the start with more on the chosen paper and what it does in simple points, then a slide on why it fails. Also: "key terms don't need to be a slide".
+- New slide 3, "The Paper We Chose: What It Does":
+  - Wang et al. (2025), ITM Web of Conferences 70, 04021.
+  - Four cards: task, data (TextBlob, equal per star, VGST, neutral ×2), model (LLaMA-3-8B + LoRA, r=4 / α=64 / 3 epochs / lr 5e-5, 4-bit) and prompt (rubric, one-shot, step-by-step).
+  - "Reported" band: 92.6% accuracy, 93.3% F1, 5-fold CV and a 40K test set, beats the classical baselines and XLNet.
+- New slide 4, "Why It Falls Short":
+  - Four cards: one pass with no checking; a fragile test (our first run's one-shot leak of ~8 pts, always-5 baseline at 63.8%, leak-free balanced 54.0%); TextBlob filtering backfires (−52% of 1★, −67% of 2★, −2.5 to −3.5 pts); template justifications (wrong in 53% of 150).
+  - Band: what Phase 2 needs.
+  - The speaker note says the leak came from our reproduction's example choice, not from the authors.
+- The new pair replaces the combined "Baseline Paper: What It Does, Where It Stops" slide. It stays in the builder and in `old_decks/`.
+- The key-terms slides were removed from the deck. Their 32 terms now sit in a table in `Presenter_Notes.md` Part 0, "Key terms (for you; not on the slides)".
+- The deck now has 23 slides. Part 0 sections and timing were renumbered. Rendered and checked; synced to Google Slides.
