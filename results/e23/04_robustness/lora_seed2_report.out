@@ -1,0 +1,29 @@
+===== dev n=500
+R : exact 55.2% macroF1 0.554
+R2: exact 55.4% macroF1 0.532
+agreement R vs R2: 74.6%
+[R+E] : exact 67.8% macroF1 0.677
+[R2+E]: exact 66.6% macroF1 0.666
+Evidence: exact 58.6% macroF1 0.586
+===== eval n=1000
+R : exact 54.0% macroF1 0.543
+R2: exact 53.7% macroF1 0.516
+agreement R vs R2: 74.1%
+[R+E] : exact 63.9% macroF1 0.638
+[R2+E]: exact 64.6% macroF1 0.645
+Evidence: exact 62.4% macroF1 0.622
+   R2 vs R: -0.3 [-3.3,+2.6] fixed 110/regressed 113 p=0.89
+   [R+E] vs Evidence: +1.5 [-1.2,+4.1] fixed 97/regressed 82 p=0.3
+   [R2+E] vs Evidence: +2.2 [-0.3,+4.8] fixed 95/regressed 73 p=0.1
+   [R2+E] vs [R+E]: +0.7 [-0.5,+1.9] fixed 22/regressed 15 p=0.32
+===== natural_test n=2000
+R : exact 53.4% macroF1 0.488
+R2: exact 74.8% macroF1 0.545
+agreement R vs R2: 62.8%
+[R+E] : exact 73.4% macroF1 0.577
+[R2+E]: exact 72.7% macroF1 0.576
+Evidence: exact 69.3% macroF1 0.541
+   R2 vs R: +21.3 [+19.1,+23.8] fixed 555/regressed 128 p=3.2e-64
+   [R+E] vs Evidence: +4.0 [+2.4,+5.8] fixed 197/regressed 116 p=5.5e-06
+   [R2+E] vs Evidence: +3.4 [+1.6,+5.0] fixed 187/regressed 120 p=0.00016
+   [R2+E] vs [R+E]: -0.7 [-1.4,+0.0] fixed 18/regressed 32 p=0.065

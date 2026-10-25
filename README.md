@@ -19,6 +19,7 @@
 | Demo notebook | `presentation/Presentation_Demo.ipynb` (being rebuilt for Phase 2 v3) |
 | **Lab notebook**: every experiment, rule declared first | `v2_reflective/LOG.md` |
 | One-page summary of what worked and what failed | `v2_reflective/EXPERIMENTS_SUMMARY.md` |
+| **All saved results, labelled** (9 categories, with index) | `results/e23/INDEX.md`, refreshed by `python v2_reflective/e23/collect_results.py` |
 | Frozen result tables | `v2_reflective/e23/results_frozen.md` (regenerate: `python v2_reflective/e23/freeze_tables.py`) |
 | Status updates, weekly notes | `v2_reflective/progress/` (`DAILY_STATUS.md`, `week_NN.md`, `UPDATE_<date>.md`) |
 | Current Phase 2 design (v3) | `docs/superpowers/specs/2026-10-25-phase2-v3-design.md` |

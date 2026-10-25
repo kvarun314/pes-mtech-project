@@ -1,0 +1,41 @@
+=== DEV 5-fold CV (fit sets only; no eval/natural_test touched)
+natural_dev A+E          exact 79.2% macroF1 0.517 within1 96.0% MAE 0.254 recall [0.79, 0.0, 0.49, 0.41, 0.95]
+natural_dev A+E+feats    exact 78.8% macroF1 0.529 within1 96.0% MAE 0.260 recall [0.76, 0.05, 0.49, 0.41, 0.94]
+natural_dev Analyst : exact 53.8% macroF1 0.485 within1 96.2% MAE 0.510 recall [0.74, 0.42, 0.43, 0.64, 0.51]
+natural_dev Evidence: exact 71.4% macroF1 0.562 within1 93.8% MAE 0.362 recall [0.67, 0.42, 0.6, 0.59, 0.78]
+
+===== eval n=1000
+Analyst : exact 54.0% macroF1 0.543 within1 93.7% MAE 0.529 recall [0.64, 0.39, 0.48, 0.64, 0.56]
+Evidence: exact 62.4% macroF1 0.622 within1 93.1% MAE 0.457 recall [0.73, 0.49, 0.52, 0.59, 0.78]
+C0 A+E bal-dev              exact 63.9% macroF1 0.638 within1 95.5% MAE 0.411 recall [0.69, 0.56, 0.51, 0.63, 0.81]
+                           vs Evidence +1.5 [-1.0,+4.1] fixed 97/regressed 82 p=0.3
+C1 A+E natural-dev          exact 60.3% macroF1 0.575 within1 91.0% MAE 0.503 recall [0.83, 0.26, 0.53, 0.43, 0.95]
+                           vs Evidence -2.1 [-5.2,+1.0] fixed 114/regressed 135 p=0.2
+                           vs C0       -3.6 [-6.7,-0.7] fixed 101/regressed 137 p=0.023
+C2 A+E bal-dev reweighted   exact 59.0% macroF1 0.554 within1 90.7% MAE 0.531 recall [0.86, 0.19, 0.47, 0.48, 0.94]
+                           vs Evidence -3.4 [-6.3,-0.4] fixed 97/regressed 131 p=0.029
+                           vs C0       -4.9 [-7.8,-2.0] fixed 86/regressed 135 p=0.0012
+C3 A+E+feats natural-dev    exact 59.4% macroF1 0.564 within1 90.8% MAE 0.512 recall [0.8, 0.24, 0.56, 0.41, 0.96]
+                           vs Evidence -3.0 [-6.1,+0.2] fixed 118/regressed 148 p=0.075
+                           vs C0       -4.5 [-7.7,-1.3] fixed 111/regressed 156 p=0.007
+C4 routing                  exact 61.3% macroF1 0.606 within1 93.0% MAE 0.469 recall [0.7, 0.41, 0.56, 0.57, 0.82]
+                           vs Evidence -1.1 [-3.6,+1.2] fixed 74/regressed 85 p=0.43
+                           vs C0       -2.6 [-5.2,-0.1] fixed 76/regressed 102 p=0.061
+
+===== natural_test n=2000
+Analyst : exact 53.4% macroF1 0.488 within1 94.3% MAE 0.539 recall [0.66, 0.42, 0.5, 0.71, 0.49]
+Evidence: exact 69.3% macroF1 0.541 within1 93.7% MAE 0.400 recall [0.67, 0.43, 0.44, 0.56, 0.77]
+C0 A+E bal-dev              exact 73.5% macroF1 0.578 within1 96.2% MAE 0.319 recall [0.67, 0.41, 0.49, 0.64, 0.81]
+                           vs Evidence +4.1 [+2.3,+5.9] fixed 197/regressed 115 p=4e-06
+C1 A+E natural-dev          exact 78.4% macroF1 0.541 within1 95.3% MAE 0.279 recall [0.8, 0.12, 0.46, 0.36, 0.95]
+                           vs Evidence +9.0 [+7.0,+11.1] fixed 313/regressed 132 p=4.9e-18
+                           vs C0       +5.0 [+3.0,+6.9] fixed 248/regressed 149 p=7.7e-07
+C2 A+E bal-dev reweighted   exact 79.0% macroF1 0.560 within1 95.2% MAE 0.275 recall [0.85, 0.13, 0.44, 0.42, 0.94]
+                           vs Evidence +9.7 [+7.6,+11.7] fixed 311/regressed 118 p=3.9e-21
+                           vs C0       +5.5 [+3.8,+7.3] fixed 233/regressed 122 p=4e-09
+C3 A+E+feats natural-dev    exact 78.3% macroF1 0.547 within1 95.1% MAE 0.282 recall [0.8, 0.16, 0.47, 0.34, 0.95]
+                           vs Evidence +8.9 [+7.0,+11.0] fixed 310/regressed 131 p=8.2e-18
+                           vs C0       +4.9 [+2.9,+6.9] fixed 255/regressed 158 p=2.1e-06
+C4 routing                  exact 74.2% macroF1 0.569 within1 95.9% MAE 0.315 recall [0.67, 0.34, 0.49, 0.57, 0.84]
+                           vs Evidence +4.9 [+3.5,+6.2] fixed 153/regressed 56 p=1.3e-11
+                           vs C0       +0.8 [-0.9,+2.4] fixed 139/regressed 124 p=0.39

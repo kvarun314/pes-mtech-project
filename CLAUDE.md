@@ -14,6 +14,7 @@ The map of every file is in `README.md`. Read it first. The previous long versio
 | New thing | Location |
 |---|---|
 | Experiment script, its `.out` / `.log`, probabilities | `v2_reflective/e23/` (paths in scripts are repo-root relative: `v2_reflective/e23/...`) |
+| Labelled copy of every result (index) | `results/e23/` via `v2_reflective/e23/collect_results.py` (add new outputs to its list) |
 | Experiment declaration and result | a dated entry in `v2_reflective/LOG.md`, written **before** the run (gate) and after it (result) |
 | Change in what worked / failed | `v2_reflective/EXPERIMENTS_SUMMARY.md` |
 | Status update, weekly note | `v2_reflective/progress/` |
@@ -45,8 +46,9 @@ Do not add new top-level files to the repo or to `PES_Project_Phase1/`. If somet
 ## After each logged step
 
 1. Write the `LOG.md` entry.
-2. Back up: `backup_artifacts.sh`, then `verify_backup.sh` with an absolute path. The script then copies the backup to Drive.
-3. Commit and push to branch `e23-leakfree-oct2026`. End the message with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
+2. Refresh the labelled results: `.venv/bin/python v2_reflective/e23/collect_results.py`.
+3. Back up: `backup_artifacts.sh`, then `verify_backup.sh` with an absolute path. The script then copies the backup to Drive.
+4. Commit and push to branch `e23-leakfree-oct2026`. End the message with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 
 ## Never
 

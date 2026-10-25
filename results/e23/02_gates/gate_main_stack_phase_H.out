@@ -1,0 +1,31 @@
+fit rows 40000
+P3 L20 C=0.001: dev2 exact 0.622
+P3 L20 C=0.003: dev2 exact 0.608
+P3 L20 C=0.01: dev2 exact 0.590
+P3 mean20 C=0.001: dev2 exact 0.576
+P3 mean20 C=0.003: dev2 exact 0.566
+P3 mean20 C=0.01: dev2 exact 0.547
+P3 L20+mean20 C=0.001: dev2 exact 0.606
+P3 L20+mean20 C=0.003: dev2 exact 0.588
+P3 L20+mean20 C=0.01: dev2 exact 0.554
+chosen on dev2: L20 0.001
+=== dev2 5-fold CV (3 repeats)
+S0 A+E     exact 0.600 macroF1 0.597
+A+E6b      exact 0.612 macroF1 0.609
+A+E+P3     exact 0.627 macroF1 0.625
+A+E6b+P3   exact 0.633 macroF1 0.631
+P3+E       exact 0.639 macroF1 0.637
+P3+E6b     exact 0.639 macroF1 0.637
+P3 alone   exact 0.616 macroF1 0.613
+E6b alone  exact 0.596 macroF1 0.592
+=== natural_dev 5-fold CV (3 repeats)
+S0 A+E     exact 0.804 macroF1 0.558
+A+E6b      exact 0.795 macroF1 0.559
+A+E+P3     exact 0.808 macroF1 0.574
+A+E6b+P3   exact 0.818 macroF1 0.597
+P3+E       exact 0.809 macroF1 0.576
+P3+E6b     exact 0.818 macroF1 0.603
+P3 alone   exact 0.826 macroF1 0.607
+E6b alone  exact 0.787 macroF1 0.535
+best candidate on dev2: P3+E6b; gain +0.039; paired CI (rep 0) [+0.024, +0.058]
+=== GATE: P3+E6b PASS

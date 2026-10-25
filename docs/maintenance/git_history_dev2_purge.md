@@ -9,6 +9,8 @@ Status: **deferred by user decision, 2026-10-25** ("don't purge history"). Nothi
 - `main` never contained it.
 - Other history checked on 2026-10-25: no other committed file contains a `review_text` field. The Run 1 checkpoint `results/run1/phase2_checkpoint.jsonl` (on `main`) has a short `snippet` field. That is Run 1 record data and is left as is.
 
+- Also found 2026-10-25: `v2_reflective/e23/halluc_p1.out` (tracked) contains short review excerpts (~20 quotes from the hallucination study). If purging, add `--path v2_reflective/e23/halluc_p1.out` (or replace the file with its summary lines first). The labelled copy in `results/e23/` is summary-only.
+
 ## When to revisit
 - Before the paper or thesis links to the repo (code availability statement), or before sharing it with examiners.
 - Alternative with no history rewrite: make the repo private (GitHub settings), or publish a fresh clean repo for the paper.

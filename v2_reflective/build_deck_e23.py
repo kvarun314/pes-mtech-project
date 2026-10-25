@@ -405,6 +405,18 @@ cards(pf, [("NO CHECKING", "One pass, no second opinion", ["— Reads the review
       1.82, 3.55)
 band(pf, 5.6, "What Phase 2 needs", "A second, independent signal; a learned combiner instead of one pass; and agents whose explanations come from real evidence and are checked, each measured on the same frozen test sets.", h=0.95)
 
+# NE / NC2 results visuals (e23/figures_deck.py; numbers identical to e23/analysis_C.out)
+FIGD = os.path.join(ROOT, "paper/figures/e23/")
+ner = new_slide("PHASE 2 · RESULTS IN DETAIL", "Where the Main Stack Is Right, and Where It Errs",
+                "Left: confusion matrix on balanced eval (rows = true star). Right: share of each star found, Phase 1 vs Phase 2, on both test sets.")
+ner.shapes.add_picture(FIGD + "cm_main_eval.png", Inches(MARGIN), Inches(1.75), height=Inches(4.0))
+ner.shapes.add_picture(FIGD + "recall_phase1_vs_main.png", Inches(MARGIN + 4.6), Inches(1.95), width=Inches(7.5))
+band(ner, 5.95, "Read", "Mistakes sit next to the diagonal: 90% (eval) / 86% (natural) of errors are one star off. Phase 2 finds more of every star on balanced eval; on natural test Phase 1 finds more 4★ (.715 vs .639) because it over-predicts 4★, the main stack is far better on 5★ (.829 vs .490).", h=1.0)
+ncm = new_slide("PHASE 2 · WHY IT WORKS", "Why Two Agents Beat One",
+                "The Evidence model and the LLaMA probe are strong on different reviews; the Reflector learns when to trust which.")
+ncm.shapes.add_picture(FIGD + "agents_complement.png", Inches(MARGIN + 0.4), Inches(1.72), width=Inches(CW - 0.8))
+band(ncm, 6.05, "Read", "Short reviews: the Evidence model leads (70.0 vs 54.6). Long reviews: the probe leads (64.3 vs 55.8). The stack is best or near-best everywhere; when the agents disagree it is right 56% of the time vs 36–50% for either alone.", h=0.9)
+
 # NP1 Phase 1 results (Electronics + reproduction on the paper's own data)
 p1r = new_slide("PHASE 1 · RESULTS", "Phase 1 Results: The Baseline Paper's Method",
                 "LLaMA-3-8B + LoRA (paper Table 1 settings), retrained on Electronics, leak-free zero-shot prompt. Same frozen test sets as Phase 2.")
@@ -455,14 +467,14 @@ cards(apx, [("BACKGROUND", "Original setup", ["— Datasets (Kaggle vs Amazon 20
 SL = {"title": S[0], "problem": S[1], "gap": S[2], "data_kaggle": S[3], "p1_pipeline": S[4], "lora": S[5], "kaggle_baseline": S[6], "orig_design": S[7],
       "dissonance": S[8], **{f"hist{k}": S[8 + k] for k in range(1, 10)}, "g1": g1, "g2": g2, "glance": n0, "leak": n1, "protocol": n2, "first_stack": n3,
       "preproc": n4, "halluc": n5, "ledger9": n6, "x1": xs[0], "x2": xs[1], "kept": nk, "main": nh, "p1p2": np_, "bars": nf, "robust": nr, "next": nn,
-      "schedule": ns, "roadmap": n7, "code": nv1, "workflow": nv2, "appendix": apx, "p1results": p1r, "arch": arc, "conclusions": con, "paper_what": pw, "paper_fails": pf}
+      "schedule": ns, "roadmap": n7, "code": nv1, "workflow": nv2, "appendix": apx, "p1results": p1r, "arch": arc, "conclusions": con, "paper_what": pw, "paper_fails": pf, "errors": ner, "complement": ncm}
 MAIN = ["title", "problem",                                               # intro (key terms live in Presenter_Notes.md, not on slides; user 2026-10-25)
         "paper_what", "paper_fails",                                       # Phase 1: the baseline paper, what it does, why it falls short
         "p1_pipeline", "lora",                                             # how it works in detail
         "leak", "halluc", "preproc",                                       # evidence for the shortcomings
         "orig_design", "arch", "next", "protocol",                         # Phase 2: intro, in depth, how it solves, how we test
         "p1results",                                                       # results: Phase 1
-        "x1", "x2", "kept", "main", "p1p2", "bars",                        # results: Phase 2
+        "x1", "x2", "kept", "main", "p1p2", "bars", "errors", "complement",  # results: Phase 2
         "robust", "schedule", "conclusions"]                               # in depth, plan, conclusions
 APPX = []   # max 25 slides (user, 2026-10-25); the rest lives in old_decks/ and stays defined above
 ORDER = MAIN + APPX
@@ -520,6 +532,8 @@ NOTES = {
  "paper_fails": "Why it falls short. Four reasons in plain words: one pass with nothing to catch mistakes; the score depends heavily on the set-up (a leaked example, a skewed test, leak-free it is 54%); the data cleaning removes most negative reviews; and the justifications are a template. Be fair: the leak was in our first reproduction's example choice, not a claim about the authors. Next: two slides on how the method works, then three slides of evidence.",
  "p1results": "Phase 1 results. Say: this is the baseline paper's method retrained on Electronics, leak-free. Exact star 54.0 / 53.4, but within one star about 94% and positive vs negative 91-93%: it gets the direction right. On the paper's own Kaggle data with its protocol and no leak it reaches 69.1% (always-5 gives 63.8%). The paper's 92.6% used a different protocol; our old 70.7 / 60.1 were leaky and withdrawn.",
  "arch": "Phase 2 system. Walk the five boxes left to right. Decision core: Evidence model, LLaMA probe, Reflector (the main stack, built and frozen). Agentic layer: Router with escalation, optional LLM re-rating, Explainer and Critic loop, being built in LangGraph and each one measured. Self-correction happens at three points: escalation, re-rating, and the explanation loop.",
+ "errors": "Results in detail. Left: confusion matrix, mistakes hug the diagonal, 90% of errors are one star off. Right: per-star recall, Phase 1 vs Phase 2. Be honest about the one exception: on natural test Phase 1 finds more 4-star reviews, because it over-predicts 4-star; Phase 2 is far better on 5-star, the most common class.",
+ "complement": "Why it works. Left: the Evidence model wins on short reviews, the LLaMA probe on long reviews, the stack is best or near-best in every length band. Right: when the two agents disagree, the stack still gets 56% right, versus 36-50% for either alone. That is the case for stacking two different kinds of signal.",
  "conclusions": "Conclusions. Three cards: Phase 1 reproduced honestly (and two problems found in the original protocol); Phase 2's two-agent stack beats the single fine-tuned model, significantly; the agentic layer is being built and measured. End with the dates: freeze Nov 1 / 5, draft Nov 8, submit Nov 20, final presentation in December.",
  "p1p2": "Phase 1 to Phase 2. Lead with the gain: +13.5 points on balanced eval and +22.3 on natural test, 29% and 48% fewer errors, significant after Holm. Then why: the agents complement (Evidence model on short reviews, probe on long ones). Say the caveat yourself: the earlier stack refit on the same dev reviews is only 2.0 / 1.5 behind. Never quote 70.7 / 60.1 (leaky), 74.8 (one seed) or 79.9 (class-mix correction).",
  "bars": "Bar chart of all frozen models with 95% CIs; main stack in red. Point out: base LLaMA zero-shot is weak (34%) but a probe on its hidden states reaches 61 / 74.",

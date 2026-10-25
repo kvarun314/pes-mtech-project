@@ -1,6 +1,6 @@
 # Presenter Notes — Agentic Self-Correction in LLaMA-3
 
-## Part 0 — Current deck (23 slides). READ THIS FIRST
+## Part 0 — Current deck (25 slides). READ THIS FIRST
 
 Deck: `PES_Project_Phase1/Agentic_LLaMA3_Presentation.pptx`, the only current deck, built by `v2_reflective/build_deck_e23.py`. Google Slides (always current): https://docs.google.com/presentation/d/1V08iho4p7gdllKPxRVroaPhj6oo8Km1_/edit
 **Flow (as agreed 2026-10-25):** Intro → Phase 1, the baseline paper (what it does) → its shortcomings → Phase 2 intro → in depth → how it solves the problem → results of Phase 1 → results of Phase 2 → in depth → conclusions. At most 25 slides.
@@ -13,7 +13,7 @@ Slides no longer in the deck (Run 1 historical, Kaggle baseline, dissonance Crit
 - Evidence for the shortcomings: 3 min
 - Phase 2 intro, in depth and how it solves: 4 min
 - Phase 1 results: 1 min
-- Phase 2 results: 5 min
+- Phase 2 results (including the two detail charts): 6 min
 - In depth (robustness): 1 min
 - Schedule and conclusions: 2 min
 
@@ -96,7 +96,7 @@ Use these when explaining or when someone asks what a word means.
 - On the paper's own Kaggle data with its protocol and no leak: 69.1% (always guessing 5★ gives 63.8%).
 - The paper's 92.6% used K=5 cross-validation and a 40K test set.
 
-### 6. Results of Phase 2 (slides 15–20)
+### 6. Results of Phase 2 (slides 15–22)
 **Tried / dropped / kept:** **Don't read every row.** On the first "tried and dropped" slide, pick three: the LLM judge (failed twice, which is why the LLM doesn't decide the star), the Visual Verifier (constant output) and the recalibration (the gain was the leak). On the second one, say: more views of the same text, more LoRA data and fancier Reflectors didn't help; more probe data and a bigger Reflector fit set did. Mention the honest near-miss (the 10K probe missed by .001). On "What we kept", walk the ten kept changes quickly; each has its evidence on the right.
 
 **Main result:** **Read the table top to bottom:** old headline 63.9 / 73.4; old stack refit on dev2 65.5 / 74.2; probe alone 61.2 / 74.3; Evidence alone 62.5 / 70.2; **main stack 67.5 / 75.7**; 5-seed mean 65.8 ± 0.6 / 75.4 ± 0.8.
@@ -107,14 +107,23 @@ Use these when explaining or when someone asks what a word means.
 
 **All models:** **Say:** "Every model, with 95% confidence intervals. main stack is in red. Notice base LLaMA: as a zero-shot rater it gets 34%, but a probe on its hidden state gets 61 and 74."
 
-### 7. In depth: robustness (slide 21)
+**Where the main stack is right and where it errs:**
+- Left, the confusion matrix: mistakes hug the diagonal, and 90% of errors are one star off.
+- Right, the share of each star found, Phase 1 vs Phase 2.
+- Say the one exception yourself: on natural test, Phase 1 finds more 4★ reviews (.715 vs .639) because it over-predicts 4★. Phase 2 is far better on 5★ (.829 vs .490), the most common star.
+
+**Why two agents beat one:**
+- Left: the Evidence model wins on short reviews (70.0 vs 54.6), the LLaMA probe on long ones (64.3 vs 55.8), and the stack is best or near-best in every length band.
+- Right: when the agents disagree, the stack is still right 56% of the time, against 36–50% for either alone. That's the case for combining two different kinds of signal.
+
+### 7. In depth: robustness (slide 23)
 **Say:** "I checked whether the result survives four questions."
 - **Multiple comparisons:** after Holm correction over 8 comparisons, 5 stay significant. main stack beats Evidence alone on both splits, the probe on eval, and the old headline on both splits (adjusted p .045 and .043). The probe on natural test and the old stack refit on dev2 are not significant.
 - **Errors:** 90% (eval) and 86% (natural) of errors are one star off. 2★ and 3★ are hardest. When the two agents agree (64–72% of rows) main stack is right 74–84% of the time; when they disagree, 56%.
 - **Calibration:** ECE .047 and .062, slightly under-confident. The confidence can be trusted, which is what the Router needs.
 - **Cost:** the LLaMA probe takes about 0.67 s per review; TF-IDF and the Reflector take under 0.1 ms each.
 
-### 8. Build schedule and conclusions (slides 22–23)
+### 8. Build schedule and conclusions (slides 24–25)
 **Say:** "This is the build plan for the next ten days. Today the saved agents were rebuilt and match the frozen results exactly. Next come the shared LLaMA model and the Router with the first level of self-correction, then the Critic, the Explainer and the LLM re-rating check. The heavy runs (the bigger probe, explanations on all 3,000 test reviews, the deletion test) run overnight on the charger. Numbers freeze in two stages: Nov 1 for local work, Nov 5 once the Colab result is in or out."
 
 **Conclusions:** three cards.

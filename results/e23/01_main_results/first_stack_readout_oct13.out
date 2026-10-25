@@ -1,0 +1,22 @@
+
+===== eval n=1000
+Analyst (LLaMA arm R) : exact 54.0% within1 93.7% MAE 0.529 pol 76.7% bin 91.2% macroF1 0.543 recall [0.64, 0.39, 0.48, 0.64, 0.56]
+Evidence alone        : exact 62.4% within1 93.1% MAE 0.457 pol 78.1% bin 91.5% macroF1 0.622 recall [0.73, 0.49, 0.52, 0.59, 0.78]
+stack A+E             : exact 63.9% within1 95.5% MAE 0.411 pol 82.4% bin 94.9% macroF1 0.638 recall [0.69, 0.56, 0.51, 0.63, 0.81]
+     vs Analyst   +9.9 pts CI [+6.7,+13.0] fixed 183 regressed 84 McNemar p=1.3e-09
+     vs Evidence  +1.5 pts CI [-1.2,+4.1] fixed 97 regressed 82 McNemar p=0.3
+     agents disagree on 44% rows: analyst right 32%, evidence right 51%, stack right 55%;  agree rows: stack right 71%
+stack A+E+len         : exact 63.5% within1 95.0% MAE 0.419 pol 82.2% bin 94.8% macroF1 0.634 recall [0.69, 0.55, 0.51, 0.64, 0.8]
+     vs Analyst   +9.5 pts CI [+6.4,+12.7] fixed 179 regressed 84 McNemar p=4.7e-09
+     vs Evidence  +1.1 pts CI [-1.4,+3.6] fixed 95 regressed 84 McNemar p=0.45
+
+===== natural_test n=2000
+Analyst (LLaMA arm R) : exact 53.4% within1 94.3% MAE 0.539 pol 88.4% bin 92.9% macroF1 0.488 recall [0.66, 0.42, 0.5, 0.71, 0.49]
+Evidence alone        : exact 69.3% within1 93.7% MAE 0.400 pol 87.8% bin 92.6% macroF1 0.541 recall [0.67, 0.43, 0.44, 0.56, 0.77]
+stack A+E             : exact 73.4% within1 96.2% MAE 0.320 pol 90.7% bin 95.3% macroF1 0.577 recall [0.67, 0.41, 0.49, 0.64, 0.81]
+     vs Analyst   +20.0 pts CI [+17.8,+22.2] fixed 490 regressed 91 McNemar p=4.6e-67
+     vs Evidence  +4.0 pts CI [+2.4,+5.8] fixed 197 regressed 116 McNemar p=5.5e-06
+     agents disagree on 44% rows: analyst right 25%, evidence right 61%, stack right 67%;  agree rows: stack right 78%
+stack A+E+len         : exact 73.2% within1 96.0% MAE 0.325 pol 90.5% bin 95.2% macroF1 0.578 recall [0.66, 0.43, 0.5, 0.64, 0.81]
+     vs Analyst   +19.7 pts CI [+17.4,+21.9] fixed 488 regressed 94 McNemar p=4.1e-65
+     vs Evidence  +3.8 pts CI [+2.1,+5.6] fixed 196 regressed 120 McNemar p=2.3e-05

@@ -1,0 +1,4 @@
+S0: dev exact 0.640 f1 0.638 | natural_dev exact 0.741 f1 0.606 | mean exact 0.691 f1 0.622
+D1: dev exact 0.623 f1 0.610 | natural_dev exact 0.815 f1 0.635 | mean exact 0.719 f1 0.623
+D2: dev exact 0.642 f1 0.640 | natural_dev exact 0.802 f1 0.647 | mean exact 0.722 f1 0.643
+=== GATE {'D1': np.True_, 'D2': np.True_} -> PASS

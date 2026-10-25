@@ -1,0 +1,50 @@
+
+===== eval (n=1000)
+SH confusion (rows true 1-5, cols pred 1-5):
+  145    44     9     1     1
+   35   119    44     2     0
+   12    54   107    26     1
+    2     4    23   133    38
+    0     0     1    28   171
+SH errors 325 | off-by-one 0.898 of errors | 2+ stars off 33
+per-class recall [0.725, 0.595, 0.535, 0.665, 0.855] | macro-F1 0.675
+length Q1 shortest  (0-18 words, n=260): SH 71.5 | E6b 70.0 | P3 54.6
+length Q2           (18-37 words, n=240): SH 71.7 | E6b 66.7 | P3 67.1
+length Q3           (37-75 words, n=251): SH 62.2 | E6b 57.4 | P3 59.4
+length Q4 longest   (75-825 words, n=249): SH 64.7 | E6b 55.8 | P3 64.3
+agents agree on 0.642: SH acc 74.1 | disagree: SH 55.6, E6b 42.7, P3 39.1
+examples [SH right, both agents wrong] (n=16): [('e23_2381617', 2, 2), ('e23_1691793', 4, 4)]
+examples [SH wrong, an agent right] (n=106): [('e23_948427', 2, 1), ('e23_1579305', 3, 2)]
+examples [SH 2+ stars off] (n=33): [('e23_41350', 3, 1), ('e23_1678619', 5, 3)]
+SH ECE 0.047 | mean confidence 0.650 vs accuracy 0.675
+
+===== natural_test (n=2000)
+SH confusion (rows true 1-5, cols pred 1-5):
+  140    38     8     1     2
+   26    38    16     2     1
+   13    30    81    23     3
+    3     6    34   177    57
+    5     5    17   196  1078
+SH errors 486 | off-by-one 0.864 of errors | 2+ stars off 66
+per-class recall [0.741, 0.458, 0.54, 0.639, 0.829] | macro-F1 0.612
+length Q1 shortest  (0-13 words, n=510): SH 82.4 | E6b 79.4 | P3 77.3
+length Q2           (13-29 words, n=491): SH 74.9 | E6b 73.9 | P3 73.7
+length Q3           (29-69 words, n=502): SH 76.9 | E6b 66.9 | P3 76.1
+length Q4 longest   (69-1018 words, n=497): SH 68.4 | E6b 60.6 | P3 70.0
+agents agree on 0.720: SH acc 83.5 | disagree: SH 55.8, E6b 35.7, P3 50.1
+examples [SH right, both agents wrong] (n=11): [('e23_1382322', 4, 4), ('e23_454081', 5, 5)]
+examples [SH wrong, an agent right] (n=183): [('e23_1908853', 3, 2), ('e23_962674', 3, 4)]
+examples [SH 2+ stars off] (n=66): [('e23_93336', 5, 3), ('e23_2201053', 1, 3)]
+SH ECE 0.062 | mean confidence 0.704 vs accuracy 0.757
+
+===== Holm correction over 8 SH comparisons (exact McNemar p)
+natural_test: SH vs E6b alone              +5.4 pts  p 1.3e-10  Holm-adj 1e-09  sig
+eval: SH vs P3 alone                       +6.3 pts  p 6.4e-07  Holm-adj 4.4e-06  sig
+eval: SH vs E6b alone                      +5.0 pts  p 0.00017  Holm-adj 0.001  sig
+natural_test: SH vs S0 dev (old headline)  +2.3 pts  p 0.0086  Holm-adj 0.043  sig
+eval: SH vs S0 dev (old headline)          +3.6 pts  p 0.011  Holm-adj 0.045  sig
+natural_test: SH vs P3 alone               +1.4 pts  p 0.074  Holm-adj 0.22  ns
+natural_test: SH vs S0 dev2                +1.4 pts  p 0.081  Holm-adj 0.22  ns
+eval: SH vs S0 dev2                        +2.0 pts  p 0.14  Holm-adj 0.22  ns
+
+===== C5 cost per review (M1, 16 GB): P3 probe = LLaMA-3-8B Q4 forward to layer 20 ~0.67 s (A1 log: 500 rows in 335 s) | TF-IDF transform ~0.04 ms (+ LR dot product) | Reflector ~0.05 ms

@@ -1,0 +1,11 @@
+=== dev 5-fold CV (3 repeats)
+S0 A+E    exact 0.640 macroF1 0.640
+SG A+E6   exact 0.632 macroF1 0.631
+E alone   exact 0.594 macroF1 0.591
+E6 alone  exact 0.613 macroF1 0.610
+=== natural_dev 5-fold CV (3 repeats)
+S0 A+E    exact 0.804 macroF1 0.558
+SG A+E6   exact 0.800 macroF1 0.562
+E alone   exact 0.773 macroF1 0.501
+E6 alone  exact 0.793 macroF1 0.544
+=== GATE (dev exact +.010, natural_dev exact >= S0, macroF1 >= S0 on both): FAIL

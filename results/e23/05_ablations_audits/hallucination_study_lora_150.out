@@ -1,0 +1,6 @@
+n=150 unparseable 0  wrong rating 80 (53%)  description doesn't match own rating 0  runs on into invented 'Review:/Example:' 0
+severe misses (>=2 stars): 20
+
+sample raw outputs:
+
+[review excerpts omitted; full file stays local in v2_reflective/e23/halluc_p1.out]

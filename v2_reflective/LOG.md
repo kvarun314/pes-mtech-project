@@ -740,3 +740,22 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - The new pair replaces the combined "Baseline Paper: What It Does, Where It Stops" slide. It stays in the builder and in `old_decks/`.
 - The key-terms slides were removed from the deck. Their 32 terms now sit in a table in `Presenter_Notes.md` Part 0, "Key terms (for you; not on the slides)".
 - The deck now has 23 slides. Part 0 sections and timing were renumbered. Rendered and checked; synced to Google Slides.
+
+### 2026-10-25 — Results visuals in the deck; labelled results store in the repo
+- User: show more results in the deck, and store all saved results, labelled, in the repo.
+- New `v2_reflective/e23/figures_deck.py` reads stored probabilities only, with the main-stack Reflector fit on dev2 exactly as in readout_H / analysis_C. It writes:
+  - `cm_main_eval.png` and `cm_main_natural_test.png`
+  - `recall_phase1_vs_main.png`
+  - `agents_complement.png`
+- Every printed number (confusion counts, per-star recall, length quartiles, agree/disagree) equals `analysis_C.out`. Output: `figures_deck.out`.
+- New deck slides, the deck now has 25 (the limit):
+  - "Where the Main Stack Is Right, and Where It Errs": confusion matrix, plus per-star recall Phase 1 vs Phase 2. It states honestly that Phase 1 finds more 4★ on natural test (.715 vs .639).
+  - "Why Two Agents Beat One": length quartiles and disagreement accuracy.
+  - Speaker notes and `Presenter_Notes.md` Part 0 updated (section 6 text, slide ranges, timing).
+- New `v2_reflective/e23/collect_results.py` creates labelled copies of every saved result in `results/e23/<category>/` and writes `results/e23/INDEX.md` (file, what it is, result/status, source).
+  - Categories: `01_main_results`, `02_gates`, `03_baselines`, `04_robustness`, `05_ablations_audits`, `06_phase1_kaggle_closeout`, `07_phase2_v3`, `08_extraction_logs`, `09_figures`.
+  - 54 files copied; 4 pending (SC1, SC2, explanations report, A1 gate).
+  - `halluc_p1.out` contains review excerpts, so only its summary lines are copied. A scan confirms no review text in `results/e23/`.
+  - New `results/README.md` covers e23 (current) and run1/run2 (historical).
+- `CLAUDE.md`: `collect_results.py` added to the after-each-step routine, plus a file-placement row. The `README.md` map now points to `results/e23/INDEX.md`.
+- Side note: the original `v2_reflective/e23/halluc_p1.out` with review excerpts is tracked in git, the same class of issue as `dev2.jsonl`. The user decided against history rewrites; this is to be added to the maintenance note.
