@@ -38,7 +38,7 @@ edit_by_text(S[3], "Phase 1 is trained", "Main results now use Amazon Reviews 20
 edit_by_text(S[3], "All Beauty (Run 1)", "Electronics only: train ~497K · dev 500 + dev2 2,000 · eval 1,000 · natural_test 2,000")
 edit_by_text(S[3], "text · metadata", "review text and star rating (images tested, excluded)")
 edit_by_text(S[3], "Enables —", "Used — review text only; splits frozen and disjoint (slide 12)")
-edit_by_text(S[3], "Review data:", "All Beauty (Run 1) and image/metadata runs are historical (slides 25–33).")
+edit_by_text(S[3], "Review data:", "All Beauty (Run 1) and image/metadata runs are historical (slides 26–34).")
 for p in [p for s_ in S[3].shapes if s_.has_text_frame and s_.text_frame.text.startswith("All Beauty (Run 1) and") for p in s_.text_frame.paragraphs][1:]: p._p.getparent().remove(p._p)
 edit_by_text(S[6], "Class-balanced 1,000-row", "Historical Kaggle run with the leaky one-shot prompt: 60.1% is withdrawn (slide 11). Leak-free zero-shot: 59.2%.")
 edit_by_text(S[7], "Add three independent", "Original design (Sept–Oct). Audits and gated experiments replaced it with probe + Evidence + Reflector (slides 17, 21).")
@@ -220,12 +220,29 @@ band(nr, 5.65, "Source", "e23/analysis_C.py, e23/analysis_C.out (LOG.md 2026-10-
 # NN next: Phase 2 v3 plan (docs/superpowers/specs/2026-10-25-phase2-v3-design.md)
 nn = new_slide("NEXT · PHASE 2 v3", "Agents That Route, Explain and Check Themselves",
                "The specialists keep deciding the star. LLM agents route work, explain each decision, and a Critic forces rewrites until the explanation is faithful.")
-cards(nn, [("ROUTE", "Router agent", ["— Evidence confident: skip the slow LLaMA probe", "— Unsure: call the probe, Reflector combines", "— Gate: within 0.5 pt of the full stack on dev2; report probe calls saved"]),
+cards(nn, [("ROUTE", "Router agent", ["— Evidence confident: skip the slow LLaMA probe", "— Unsure: call the probe, Reflector combines", "— Self-correction 1: unsure draft star escalated and revised (fixed vs broken)"]),
            ("EXPLAIN", "Explainer agent", ["— Evidence pack: top phrases for / against, agent shares, agreement", "— LLaMA-3-8B-Instruct writes a 1–2 sentence rationale from the pack only"]),
            ("CHECK", "Critic loop", ["— Star matches; quoted phrases occur in the review", "— Disagreement mentioned; no invented claims", "— Fails: specific feedback, rewrite (max 2 rounds)"]),
-           ("ACCURACY", "Gated candidates", ["— A1: probe fit 40K → 120K rows (running, 45K / 80K new rows done)", "— A2: DeBERTa-v3 specialist on Colab, Nov 1", "— Each must pass a dev-only gate before any test read"])],
+           ("ACCURACY", "Gated candidates", ["— Self-correction 2: Instruct LLM re-rates uncertain reviews (gated)", "— LLaMA probe on 120K reviews (paused at 45K / 80K new)", "— DeBERTa-v3 specialist on Colab, Nov 1; all dev-gated"])],
       1.82, 3.6)
-band(nn, 5.65, "Evaluation", "On all 3,000 test reviews: faithfulness before vs after the Critic loop (McNemar), rewrite rate, deletion test (cited phrases vs random words), latency with and without the Router. Final demo (December): one local notebook, Phase 1 + Phase 2 live, ≤ 3 minutes.", h=1.0)
+band(nn, 5.65, "Self-correction (3 levels)", "Rating: escalation (fixed vs broken) and LLM re-rating of uncertain reviews (gated). Explanation: Critic loop, faithfulness before vs after on all 3,000 test reviews, plus a deletion test. Final demo (December): Phase 1 + Phase 2 live, ≤ 3 minutes.", h=1.0)
+
+# NS build schedule Oct 25 - Nov 5 (docs/superpowers/plans/2026-10-25-phase2-v3-plan.md)
+ns = new_slide("SCHEDULE · OCT 25 → NOV 5", "Phase 2 v3 Build Schedule",
+               "Every step: rule written in LOG.md first, dev-only gate, logged, backed up, pushed. Heavy runs only overnight on charger.")
+accent_card(ns, MARGIN, 1.82, CW, 4.55)
+make_table(ns, MARGIN + 0.26, 1.95, CW - 0.5, [1.7, 6.6, 1.9, CW - 0.5 - 10.2], None, ["When", "Work", "Compute", "Status"],
+           [[("Oct 25", INK, True), ("Shared agents rebuilt and verified (exact match to the frozen results)", BODY, False), ("10 min CPU", BODY, False), ("Done", POS, True)],
+            [("Oct 25–26", INK, True), ("Shared LLaMA (Phase 1 LoRA on / off); Router + escalation self-correction (SC1)", BODY, False), ("minutes", BODY, False), ("Next", BODY, True)],
+            [("Oct 26–27", INK, True), ("Evidence pack, Critic, Explainer; LLM re-rating check (SC2); LangGraph wiring", BODY, False), ("~15 min model", BODY, False), ("Planned", BODY, False)],
+            [("One night", INK, True), ("LLaMA probe on 120K reviews (35K left) + gate; variance rerun", BODY, False), ("~6 h + 1.5 h", BODY, False), ("Waiting for go", BODY, False)],
+            [("Oct 28", INK, True), ("Explanation prompts tuned on 500 dev reviews, then frozen and declared", BODY, False), ("~1.5 h", BODY, False), ("Planned", BODY, False)],
+            [("Oct 29 night", INK, True), ("Explanations + Critic loop on all 3,000 test reviews (SC3)", BODY, False), ("~8–9 h", BODY, False), ("Planned", BODY, False)],
+            [("Oct 30 night", INK, True), ("Deletion test on all 3,000 (cited phrases vs random words)", BODY, False), ("~3.5 h", BODY, False), ("Planned", BODY, False)],
+            [("Oct 31", INK, True), ("Report, paper tables, agent-audit table, demo notebook v1 + automatic check", BODY, False), ("minutes", BODY, False), ("Planned", BODY, False)],
+            [("Nov 1", INK, True), ("Freeze stage 1; DeBERTa-v3 specialist on Colab", BODY, False), ("Colab 2–3 h", BODY, False), ("Planned", BODY, False)],
+            [("Nov 5", INK, True), ("Freeze stage 2: final tables, demo, deck", BODY, False), ("—", BODY, False), ("Planned", BODY, False)]],
+           row_h=0.39, head_h=0.32, aligns=[L, L, L, L])
 
 # N7 roadmap
 n7 = new_slide("ROADMAP", "Plan to Submission and the December Final Presentation",
@@ -301,7 +318,7 @@ NOTES = {
  5: "Original paper's pipeline (TextBlob DQC, stratified, VGST, neutral oversampling). Point forward: slide 14 shows TextBlob filtering hurts on Electronics.",
  6: "LoRA explained. LoRA is still trained (Phase 1), but in the final stack it is an ablation row, not the main agent.",
  7: "Phase 1 baseline on Kaggle (historical numbers). The 60.1% here used the leaky one-shot prompt; leak-free zero-shot is 59.2%. Slide 11 explains.",
- 8: "Original Phase 2 design (Analyst, Visual, RAG, Critic). Say: this was the starting design; the audit (slide 29) and later experiments replaced it with the probe + Evidence + Reflector system (slide 17). Slide 21 shows how the agent idea comes back in Phase 2 v3.",
+ 8: "Original Phase 2 design (Analyst, Visual, RAG, Critic). Say: this was the starting design; the audit (slide 30) and later experiments replaced it with the probe + Evidence + Reflector system (slide 17). Slide 21 shows how the agent idea comes back in Phase 2 v3.",
  9: "Original dissonance Critic. Say: in practice it fired on 0.4% of rows, so it was replaced by a learned Reflector.",
  10: "UPDATE SLIDE. Read the three cards left to right. Must say the caveat: against the old stack refit on the same 2,000 dev rows the gain is only 2.0 / 1.5 points and not significant.",
  11: "Leak audit. Picking a one-shot example whose star differs from the truth leaks about 8 points. All later numbers are zero-shot and leak-free.",
@@ -315,9 +332,10 @@ NOTES = {
  19: "Bar chart of all frozen models with 95% CIs; main stack in red. Point out: base LLaMA zero-shot is weak (34%) but a probe on its hidden states reaches 61 / 74.",
  20: "Robustness. After Holm correction 5 of 8 comparisons stay significant, including the main stack vs the earlier LoRA + Evidence stack on both splits. Most errors are one star off. Calibration is good (ECE .05-.06). The probe costs 0.67 s per review, the rest is under 0.1 ms: that is why the next step adds a Router.",
  21: "Next: Phase 2 v3. Say: the specialists decide the star because an LLM choosing the star failed twice (Gate 0). The agents now do what LLMs are good at: routing, explaining, and checking explanations. Every explanation is checked by the Critic and measured on all 3,000 test reviews. A1 is running; DeBERTa runs on Colab Nov 1. Final demo is a local notebook.",
- 23: "Code workspace. v2_reflective started as the Oct 10 'reflective v2' design (historical slide 33); the name stayed and it now holds every Phase 2 experiment. Top level = Kaggle close-out; e23 = Electronics 2023, all current results. Walk the table top to bottom: data, agents, gates, robustness, freeze. Full guide: presentation/V2_Reflective_Guide.md.",
- 24: "Workflow. Six steps for every experiment: declare in LOG.md, run resumably, gate on dev only, read the tests once, freeze, record and back up. Say: 16 failures are reported and none touched the test sets, which is why the one pass can be trusted.",
- 22: "Roadmap. Freeze stage 1 Nov 1 (local work), stage 2 Nov 5 (Colab result in or out). Author writes the prose from Nov 2; draft 1 to supervisor Nov 8; submit by Nov 20. December: final presentation with the live demo notebook (Phase 1 and Phase 2).",
+ 24: "Code workspace. v2_reflective started as the Oct 10 'reflective v2' design (historical slide 34); the name stayed and it now holds every Phase 2 experiment. Top level = Kaggle close-out; e23 = Electronics 2023, all current results. Walk the table top to bottom: data, agents, gates, robustness, freeze. Full guide: presentation/V2_Reflective_Guide.md.",
+ 25: "Workflow. Six steps for every experiment: declare in LOG.md, run resumably, gate on dev only, read the tests once, freeze, record and back up. Say: 16 failures are reported and none touched the test sets, which is why the one pass can be trusted.",
+ 22: "Build schedule, Oct 25 to Nov 5. Say: every row has its rule written first and is logged. Today the saved agents were rebuilt and match the frozen results exactly. The heavy runs (bigger probe, explanations on all 3,000 reviews, deletion test) run overnight on the charger. Freeze stage 1 on Nov 1, stage 2 on Nov 5.",
+ 23: "Roadmap. Freeze stage 1 Nov 1 (local work), stage 2 Nov 5 (Colab result in or out). Author writes the prose from Nov 2; draft 1 to supervisor Nov 8; submit by Nov 20. December: final presentation with the live demo notebook (Phase 1 and Phase 2).",
 }
 for i, sl in enumerate(prs.slides, 1):
     sl.notes_slide.notes_text_frame.text = NOTES.get(i, "Historical slide (Run 1, All Beauty, Kaggle-trained adapter, leaky prompt). Superseded; show only if asked.")

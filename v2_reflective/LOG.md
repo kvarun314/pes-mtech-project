@@ -650,3 +650,13 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - New Task 7b: `sc.py`, `test_sc.py` and `gate_SC2.py`, with full code.
   - Task 11 `freeze_tables.py` now writes one "Self-correction (three levels)" table.
 - Out-of-scope wording narrowed: "LLM choosing the star for every review". SC2 retests only the narrower claim (revision on uncertain reviews).
+
+### 2026-10-25 — Deck: build schedule slide; Next slide shows three-level self-correction
+- New slide 22 "Phase 2 v3 Build Schedule", Oct 25 → Nov 5, 10 rows (when / work / compute / status), matching the plan.
+- Slide 21 "Next" updated:
+  - The Router card mentions SC1 escalation.
+  - The accuracy card adds SC2 LLM re-rating, and the 120K probe status is corrected to "paused at 45K / 80K new".
+  - The band now reads "Self-correction (3 levels)".
+- The deck now has 34 slides; historical slides are 26–34.
+- References updated in the builder (slide 4 and slide 8 notes, guide note), in `Presenter_Notes.md` Part 0 (map, timing, new slide 22 script) and in `V2_Reflective_Guide.md`.
+- Rendered and checked.
