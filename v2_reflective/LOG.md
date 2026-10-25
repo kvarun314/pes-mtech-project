@@ -815,3 +815,17 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - LLaMA probe probs vs stored `evid7_eval`: max diff 6e-7.
   - The demo can therefore run Phase 1 and Phase 2 from one ~5 GB model load.
 - Full suite passes (see the commit). Task 4 complete.
+
+### 2026-10-25 — B1 Router + SC1 escalation self-correction DECLARED (before running)
+- **Candidate:** skip the LLaMA probe when the max probability of the Evidence model (E6b) is ≥ tau.
+  - Skipped reviews use an Evidence-only LR on log E6b probabilities, fit on dev2 (C=1). This gives the "draft star".
+  - Escalated reviews use the full main stack: LR on [log P3, log E6b], fit on dev2. This gives the "revised star".
+- **tau:** the smallest of 0.30, 0.35, …, 0.95 whose dev2 5-fold CV routed exact accuracy is within 0.5 points of the full stack. Same folds (StratifiedKFold, shuffle, seed 0).
+- **SC1:** on escalated reviews (max E6b < tau), count fixed (draft wrong, revised right) and broken (draft right, revised wrong); exact binomial test. On dev2, draft and revised both come from the same 5-fold CV predictions.
+- **Gate (all three must hold):**
+  1. Such a tau exists.
+  2. natural_dev routed exact (stack fit on dev2) ≥ natural_dev full-stack exact − 0.005.
+  3. SC1 on dev2: fixed > broken with binomial p < .05.
+- **If PASS:** one readout on eval and natural_test. Report routed vs full-stack exact, McNemar p, share of probe calls saved, and SC1 fixed / broken / net / p.
+- **If FAIL:** reported as is; no test read.
+- Script: `v2_reflective/e23/gate_B1.py` (code from the plan, Task 5). Probe probabilities: `evid7` (A1 not passed, so P3 stays).
