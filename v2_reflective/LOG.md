@@ -572,4 +572,4 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - The disclosure FACT line now reflects that Holm was applied and C1 is pending.
 - All numbers are copied from `e23/analysis_C.out`.
 - Layout fix: section 10 has no author prose yet, so LaTeX pushed its heading below all of its floats. Added an invisible `\mbox{}\par` anchor (marked for removal once the prose is written). The heading now sits on page 10 with Table 4.
-- Builds: `main.pdf` 20 pages, `ConferencePaper.pdf` 11 pages, 0 errors. The overfull boxes are all pre-existing, in the older Run 1 sections.
+- Builds: `main.pdf` 21 pages (was 20), `ConferencePaper.pdf` 11 pages, 0 errors. The overfull boxes are all pre-existing, in the older Run 1 sections.
