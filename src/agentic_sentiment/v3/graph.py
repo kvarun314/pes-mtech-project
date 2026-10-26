@@ -1,4 +1,4 @@
-"""Phase 2 v3 LangGraph: evidence -> router -> [probe] -> reflector -> pack -> explainer -> critic -(rewrite, max 2)-> END.
+"""Phase 2 v3 LangGraph: evidence -> router -> [probe] -> reflector (+ hand-off decision) -> pack -> explainer -> critic -(rewrite, max 2)-> END.
 The specialists decide the star; LLM agents only explain it and check the explanation."""
 import time
 from typing import TypedDict
@@ -12,12 +12,12 @@ from agentic_sentiment.v3.pack import build_pack
 class V3State(TypedDict, total=False):
     review_id: str; title: str; review_text: str
     evidence_probs: list; route: str; probe_probs: list | None
-    star: int; probs: list; shares: dict; agreed: bool | None; pack: dict
+    star: int; probs: list; shares: dict; agreed: bool | None; handoff: str; pack: dict
     drafts: list; feedback: list; rounds: int; faithful_first: bool; faithful: bool
     failed_checks: list; judge_unparsed: int; llm_calls: int; timings: dict
 
 
-def build_graph_v3(evidence, reflector, probe_fn, explain_fn=None, judge_fn=None, tau=None, max_rewrites=2):
+def build_graph_v3(evidence, reflector, probe_fn, explain_fn=None, judge_fn=None, tau=None, max_rewrites=2, handoff_tau=None):
     def timed(state, key, t0):
         return {**state.get("timings", {}), key: state.get("timings", {}).get(key, 0.0) + time.time() - t0}
 
@@ -38,7 +38,8 @@ def build_graph_v3(evidence, reflector, probe_fn, explain_fn=None, judge_fn=None
         pp = s.get("probe_probs") if s["route"] == "probe" else None
         star, P, shares = reflector.combine(pp, np.array(s["evidence_probs"]))
         agreed = None if pp is None else int(np.argmax(pp)) == int(np.argmax(s["evidence_probs"]))
-        return {"star": star, "probs": list(map(float, P)), "shares": shares, "agreed": agreed}
+        handoff = "auto" if handoff_tau is None or max(P) >= handoff_tau else "human"   # hand-off agent: unsure reviews go to a person
+        return {"star": star, "probs": list(map(float, P)), "shares": shares, "agreed": agreed, "handoff": handoff}
 
     def pack_node(s):
         pos, neg = evidence.phrases(s["title"], s["review_text"], s["star"])

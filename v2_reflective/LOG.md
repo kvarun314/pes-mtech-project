@@ -996,3 +996,18 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - eval (all 67.5%): coverage .81 → 72.5%; .62 → 76.4%; .53 → 80.8%; .42 → 85.0%.
 - natural_test (all 75.7%): coverage .89 → 79.9%; .75 → 85.4%; .65 → 89.4%; .56 → 93.1%.
 - Reading: SH knows when it is unsure (consistent with ECE .05–.06). An abstain / hand-off agent can answer the confident majority at high accuracy and route the rest. The script and a formal table (with CIs) follow as Task "S1 selective prediction"; these numbers were computed inline and are logged now so nothing is hidden.
+
+### 2026-10-26 — S1 Hand-off agent DECLARED (before the formal table; reporting on the frozen SH, no change to SH)
+- Agent: after the Reflector, a Hand-off node routes a review to "auto" when SH confidence (max Reflector probability) ≥ threshold, else to "human" (human-in-the-loop queue). Added to `graph.py` as `handoff_tau`.
+- Thresholds: dev2 quantiles for target coverages 90 / 80 / 70 / 60 / 50 / 40%, fixed on dev2, applied once to eval and natural_test.
+- Reported per split: coverage, accuracy on auto-answered reviews with 95% bootstrap CI (2,000 resamples, seed 0), macro-F1 on auto, accuracy on handed-off reviews, and the full accuracy-coverage curve (figure `paper/figures/e23/selective_SH.png`), with Phase 1 LoRA's curve for comparison (its own max probability, thresholds from its own dev2 quantiles, `p1/probs_R_dev2.jsonl`).
+- Script `e23/s1_selective.py` → `s1_selective.out`. The inline preview (logged above) used the same thresholds.
+
+### 2026-10-26 — S1 Hand-off agent RESULT (`e23/s1_selective.out` / `.json`, figure `paper/figures/e23/selective_SH.png`)
+- `graph.py`: Hand-off node (`handoff_tau`; state key `handoff` = auto / human). New test; 5 graph tests pass.
+- Thresholds from dev2, applied once. Accuracy on auto-answered reviews [95% CI]:
+  - eval: all 67.5; coverage .71 → 73.5 [70.3, 76.9]; .53 → 80.8 [77.4, 84.0]; .42 → 85.0 [81.4, 88.3].
+  - natural_test: all 75.7; coverage .82 → 82.9 [81.1, 84.7]; .65 → 89.4 [87.8, 91.1]; .56 → 93.1 [91.6, 94.5].
+  - Phase 1 LoRA with the same rule (its own dev2 thresholds): eval coverage .42 → 66.9; natural_test coverage .55 → 67.9.
+- Reading: the main stack's confidence is informative and Phase 1's much less so. At about half coverage the hand-off agent gives 81–93% vs 63–68% for Phase 1. Handed-off reviews are 35–55% accurate, so routing them to a person is where the errors are.
+- The figure's curves use per-split coverage quantiles (descriptive curve); the table uses the declared dev2 thresholds.

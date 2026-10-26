@@ -45,3 +45,10 @@ def test_loop_stops_after_max_rewrites():
     g = build_graph_v3(Ev([0, 0, 0, .1, .9]), Rf(), lambda t: [0, 0, 0, .1, .9], explain_fn=lambda s, u: "Rated 1 stars.", judge_fn=lambda s, u: "NO", max_rewrites=2)
     out = run(g)
     assert out["rounds"] == 2 and out["faithful"] is False and len(out["drafts"]) == 3
+
+
+def test_handoff_agent_routes_unsure_reviews_to_human():
+    g = build_graph_v3(Ev([0, 0, .4, .6, 0]), Rf(), lambda t: [0, 0, .4, .6, 0], handoff_tau=0.7)
+    assert run(g)["handoff"] == "human"
+    g = build_graph_v3(Ev([0, 0, 0, .1, .9]), Rf(), lambda t: [0, 0, 0, .1, .9], handoff_tau=0.7)
+    assert run(g)["handoff"] == "auto"
