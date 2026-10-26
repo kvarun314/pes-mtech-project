@@ -1011,3 +1011,4 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - Phase 1 LoRA with the same rule (its own dev2 thresholds): eval coverage .42 → 66.9; natural_test coverage .55 → 67.9.
 - Reading: the main stack's confidence is informative and Phase 1's much less so. At about half coverage the hand-off agent gives 81–93% vs 63–68% for Phase 1. Handed-off reviews are 35–55% accurate, so routing them to a person is where the errors are.
 - The figure's curves use per-split coverage quantiles (descriptive curve); the table uses the declared dev2 thresholds.
+- 2026-10-26 19:17: deletion readout chained after B2 (user approved): `e23/night_DEL.sh` waits for B2_natural_test_DONE in `stage_B2.txt`, then runs `b2_deletion.py` on eval and natural_test (~3.5 h; expected end ~11:00 Oct 27).
