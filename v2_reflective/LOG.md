@@ -958,3 +958,13 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - Pilot 3: first-draft 15/20, final 19/20, mean rounds 0.3, judge unparsed 0, ~9.4 s per review.
 - Tests: 28 v3 tests pass (new: stop-word / repeat filter).
 - Next: dev check on 500 dev2 rows (`b2_run_dev2.out`), then freeze the prompts and declare B2 before any test read.
+
+### 2026-10-26 — B2 dev check RESULT (dev2, 500 rows) and B2 DECLARED (before the readout; prompts frozen at commit 2cdc581)
+- **Dev check** (`e23/b2_run_dev2.out`): first-draft faithful 64.0% (320/500), final 87.6% (438/500); the Critic loop fixed 118 and broke 0. Rewrite rate 36%, mean rounds 0.53, judge unparsed 0, 2.56 LLM calls and 11.0 s per review. A hand read of 20 random rationales found no invented product facts; only style issues (some cite weights or confidence). Prompts are now frozen.
+- **B2 declared:**
+  - Rows: all 3,000 test reviews (eval 1,000 + natural_test 2,000), read once. Star = SH (stored P3 probabilities + E6b, Reflector fit on dev2), fixed before the explanation step; the star accuracy is unchanged and already reported.
+  - Explainer: Llama-3-8B-Instruct 4-bit MLX, greedy, max 90 tokens. Critic: checks 1-4 (rules) + 5 (same model as judge, only when the rules pass); max 2 rewrites.
+  - Metrics: faithfulness = all checks pass; first draft vs final with an exact McNemar test on the paired outcome; rewrite rate; mean rounds; per-check failure counts; judge-unparsed count; LLM calls and seconds per review.
+  - Claim tested (SC3): final faithfulness > first-draft faithfulness, McNemar p < .05 on each split. Reported whatever the outcome.
+  - Deletion test (Task 10, `b2_deletion.py`): comprehensiveness = p(star | review) − p(star | review minus cited phrases) vs the same number of random words (3 draws, seeded by review id); paired bootstrap CI + Wilcoxon. Sufficiency = p(star | cited phrases only) vs the same number of random words. Review text only (title empty) for every variant, including the reference p.
+- **Run:** `e23/night_B2.sh` (starts 22:30 on AC power, swap < 6 GB, `caffeinate`; resumable; marker `stage_B2.txt`). About 9 h for 3,000 reviews at 11 s each.
