@@ -983,3 +983,10 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - SH: 66.1 ± 0.6 / 75.4 ± 0.7 (with E6b held fixed: 65.8 ± 0.6 / 75.4 ± 0.8).
   - SH − E6b: +4.4 ± 1.4 / +6.7 ± 0.7. SH − P3: +5.4 ± 0.9 / +2.4 ± 0.9. SH − S0: +0.9 ± 1.4 / +1.0 ± 1.0.
 - Reading: retraining the Evidence model per seed changes nothing material. The stack's advantage over each agent holds in every seed; the margin over the earlier stack refit on dev2 (S0) stays about 1 point and within noise, as already disclosed. Disclosure 5 ("E6b held fixed") is closed. `% FACT` comment added under the variance table in `paper/e23_results.tex`.
+
+### 2026-10-26 — Decision: Colab option #1 (fine-tuned LLaMA classifier) NOT added
+- User rule: run on Colab only if it is worth it. Assessment: not worth it.
+  - The LLaMA signal looks used up: the probe went from 40K to 120K training rows for +0.3 on dev2 (A1 FAIL).
+  - Fine-tuning LLaMA has not paid off here three times: Phase 1 LoRA 54.0%, LoRA on 10K (FAIL), LoRA added back to SH (no gain).
+  - The gate needs +1.0 with a CI above 0; a third view from the same model is unlikely to clear it, and a Colab-trained model would also need converting to run in the local MLX demo.
+- A2 (DeBERTa, a different model family; already in the spec for Nov 1) stays optional. Decide on Nov 1 based on time left for the paper prose.
