@@ -1012,3 +1012,4 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - Reading: the main stack's confidence is informative and Phase 1's much less so. At about half coverage the hand-off agent gives 81–93% vs 63–68% for Phase 1. Handed-off reviews are 35–55% accurate, so routing them to a person is where the errors are.
 - The figure's curves use per-split coverage quantiles (descriptive curve); the table uses the declared dev2 thresholds.
 - 2026-10-26 19:17: deletion readout chained after B2 (user approved): `e23/night_DEL.sh` waits for B2_natural_test_DONE in `stage_B2.txt`, then runs `b2_deletion.py` on eval and natural_test (~3.5 h; expected end ~11:00 Oct 27).
+- 2026-10-26 20:06: B2 started early at 20:05 (user request); waiting scheduler stopped and restarted with START=00:00. Deletion chain unchanged.
