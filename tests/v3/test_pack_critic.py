@@ -23,7 +23,7 @@ def test_each_rule_gives_specific_feedback():
     assert any("You said 4 stars; the final rating is 3 stars." == f for f in fb)
     assert any("'amazing sound' does not occur in the review." == f for f in fb)
     assert any(f.startswith("Quote at least 2 of these phrases") for f in fb)
-    assert "The agents disagreed; say so." in fb
+    assert any(f.startswith("The agents disagreed;") for f in fb)
     assert rule_checks('"Great screen" and "screen" mixed.', PACK, "", TEXT)[0] == "State the final rating as '3 stars'."
 
 

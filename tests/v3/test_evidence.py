@@ -28,3 +28,11 @@ def test_probs_and_phrases_for_star():
     assert any("great" in d["phrase"] for d in pos)
     assert any("terrible" in d["phrase"] for d in neg) and all(d["weight"] < 0 for d in neg)
     assert all(set(d) == {"phrase", "display", "weight"} for d in pos + neg)
+
+
+def test_phrases_skip_stop_words_and_repeats():
+    ag = _agent()
+    pos, neg = ag.phrases("", "it is not great but it works great", star=5)
+    ps = [d["phrase"] for d in pos + neg]
+    assert not any(set(p.split()) <= {"it", "is", "not", "but", "didn"} for p in ps)
+    assert sum(p == "great" for p in ps) <= 1 and not ("great" in ps and "works great" in ps and ps.index("works great") < ps.index("great"))

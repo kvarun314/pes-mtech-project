@@ -1,7 +1,11 @@
 """Evidence agent: TF-IDF + LR (the ~497K-review Evidence model). Probabilities plus per-phrase contributions (coef[star] x tf-idf weight)."""
 from dataclasses import dataclass, field
 import numpy as np
-from agentic_sentiment.v3.text import display_span
+from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
+from agentic_sentiment.v3.text import contains, display_span
+
+# stop words plus the stubs the tokenizer leaves from contractions (didn't -> didn)
+WEAK = ENGLISH_STOP_WORDS | {"don", "didn", "doesn", "isn", "wasn", "won", "couldn", "wouldn", "shouldn", "aren", "haven", "hasn", "ve", "ll", "re", "videoid"}
 
 
 def evidence_text(title: str, text: str) -> str:
@@ -28,6 +32,13 @@ class EvidenceAgent:
         order = np.argsort(contrib)
         fmt = lambda j: {"phrase": str(self.names[x.indices[j]]), "display": display_span(full, str(self.names[x.indices[j]])),
                          "weight": round(float(contrib[j]), 4)}
-        pos = [fmt(j) for j in order[::-1] if contrib[j] > 0][:k_for]
-        neg = [fmt(j) for j in order if contrib[j] < 0][:k_against]
-        return pos, neg
+        def pick(idx, k):                                   # informative phrases only, no phrase inside an already chosen one
+            out = []
+            for j in idx:
+                p = str(self.names[x.indices[j]])
+                if any(w not in WEAK for w in p.split()) and not any(contains(o["phrase"].split(), p) for o in out):
+                    out.append(fmt(j))
+                if len(out) == k:
+                    break
+            return out
+        return pick([j for j in order[::-1] if contrib[j] > 0], k_for), pick([j for j in order if contrib[j] < 0], k_against)

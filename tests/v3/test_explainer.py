@@ -7,7 +7,7 @@ PACK = {"star": 2, "confidence": .55, "shares": {"probe": .3, "evidence": .7}, "
 def test_prompt_contains_pack_and_instructions():
     u = explainer_user(PACK, "Meh", "Looks nice but stopped working.")
     assert '"stopped working"' in u and '"nice"' in u and "2 stars" in u and "70%" in u
-    assert "say that the agents disagreed" in u
+    assert "The two agents disagreed on this review." in u and "never call them support" in u
     assert "Previous explanation" not in u
 
 

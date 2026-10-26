@@ -10,11 +10,12 @@ def explainer_user(pack, title, text, previous=None, feedback=()):
     s, sh = pack["star"], pack["shares"]
     lines = [f"Review title: {title}", f"Review: {text[:1200]}", "",
              f"Final rating: {s} stars (confidence {pack['confidence']:.0%}).",
-             f"Phrases supporting {s} stars: {f(pack['for'])}", f"Phrases pointing away: {f(pack['against'])}",
+             f"Phrases supporting {s} stars: {f(pack['for'])}", f"Phrases pointing away from {s} stars (they argue against this rating; never call them support): {f(pack['against'])}",
              f"Share of the decision: Evidence agent {sh['evidence']:.0%}, LLaMA probe agent {sh['probe']:.0%}.",
              f"Agents agreed: {'yes' if pack['agreed'] is not False else 'no'}.", "",
-             f"Write 1-2 sentences that state \"{s} stars\", quote at least two supporting phrases in double quotes exactly as written above, "
-             + ("say that the agents disagreed, " if pack["agreed"] is False else "") + "and add nothing that is not in the review."]
+             ("Start with the sentence \"The two agents disagreed on this review.\" Then write" if pack["agreed"] is False else "Write")
+             + f" at most 45 words that state \"{s} stars\", quote at least two supporting phrases in double quotes exactly as written above, "
+             + "and add nothing that is not in the review."]
     if previous:
         lines += ["", f"Previous explanation: {previous}", "Fix these problems:"] + [f"- {x}" for x in feedback]
     return "\n".join(lines)

@@ -949,3 +949,12 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - Stored `probe_probs` in the input are used instead of calling the probe (batch runs). `llm_calls`, `timings`, `faithful_first` / `faithful` and failed checks are recorded per review for Task 9.
 - `tests/v3/test_graph_v3.py`: 4 tests (router skip, stored probe probabilities, rewrite until faithful, stop after max rewrites). Full suite 156 passed.
 - No model run, no numbers; no backup needed (code is in git).
+
+### 2026-10-26 — Task 9: B2 runner + prompt tuning on dev2 (dev only; no gate, no test read)
+- `e23/b2_run.py` written (from the plan). Star = SH with stored P3 probabilities, fixed before the explanation step.
+- Three pilots on the first 20 dev2 rows (scratch outputs, not kept); each fix targeted a problem seen in the drafts:
+  - Pilot 1 (Task 7 prompts): first-draft faithful 11/20, final 17/20. Main failures: disagreement not mentioned (check 4, 10 times, and rewrites ignored the feedback); stop-word or contraction-stub phrases ("but", "not", "don", "this") cited as evidence; "against" phrases described as support.
+  - Fixes: `EvidenceAgent.phrases` skips phrases made only of stop words / contraction stubs / "videoid" and phrases contained in an already chosen one. The Explainer prompt labels "against" phrases explicitly ("never call them support"), asks for at most 45 words, and, when the agents disagree, requires the opening sentence "The two agents disagreed on this review." The Critic feedback for check 4 names that exact sentence.
+  - Pilot 3: first-draft 15/20, final 19/20, mean rounds 0.3, judge unparsed 0, ~9.4 s per review.
+- Tests: 28 v3 tests pass (new: stop-word / repeat filter).
+- Next: dev check on 500 dev2 rows (`b2_run_dev2.out`), then freeze the prompts and declare B2 before any test read.

@@ -39,14 +39,14 @@ def rule_checks(rationale: str, pack: dict, title: str, text: str) -> list[str]:
     if sum(contains(rt, p["phrase"]) for p in top) < need:
         fb.append(f"Quote at least {need} of these phrases: " + ", ".join(f'"{p["display"]}"' for p in top))
     if pack["agreed"] is False and not any(w in rationale.lower() for w in DISAGREE):    # 4: disagreement mentioned
-        fb.append("The agents disagreed; say so.")
+        fb.append("The agents disagreed; add the sentence \"The two agents disagreed on this review.\"")
     return fb
 
 
 def _check_no(f: str) -> int:
     if f.startswith("Quote"): return 3
     if f.endswith("does not occur in the review.") or f.endswith("is not one of the evidence phrases."): return 2
-    if f == "The agents disagreed; say so.": return 4
+    if f.startswith("The agents disagreed;"): return 4
     return 1
 
 
