@@ -25,6 +25,7 @@ R = [
  ("03_baselines", "stack_week1_natural_prior.json", E + "stack_week1_results.json", "Numbers for the above", "—"),
  ("04_robustness", "variance_first_stack_5seeds.out", E + "variance.out", "First stack, 5 seeds", "gain over Evidence 5/5 positive"),
  ("04_robustness", "variance_main_stack_5seeds.out", E + "variance_H.out", "Main stack, 5 seeds (Evidence model fixed)", "65.8 ± 0.6 / 75.4 ± 0.8"),
+ ("04_robustness", "variance_main_stack_5seeds_evidence_retrained.out", E + "variance_H2.out", "Main stack, 5 seeds, Evidence model also retrained per seed (C1)", "66.1 ± 0.6 / 75.4 ± 0.7"),
  ("04_robustness", "variance_main_stack_e6b_retrained_PARTIAL.out", E + "variance_H2.out", "Main stack, Evidence model retrained per seed (C1)", "stopped 2026-10-24 (laptop strain); rerun pending"),
  ("04_robustness", "lora_seed2_report.out", E + "seed2_report.out", "Second LoRA seed", "eval stable; natural single-model unstable"),
  ("04_robustness", "polarity_paired_ci.out", E + "polarity_ci.out", "Polarity (neg/neu/pos) paired CIs", "stack beats each agent on both sets"),

@@ -71,6 +71,9 @@ LLaMA probe alone & +6.3 [+3.8, +8.8], $p$=6.4e-7 (Holm 4.4e-6) & +1.4 [$-$0.1, 
 \begin{table}[htbp]
 \centering
 \caption{Variance over 5 seeds (bootstrap of the probe fit set and of dev2; Evidence model held fixed). Mean $\pm$ sd.}
+% FACT (C1, variance_H2.out, LOG.md 2026-10-26): with the Evidence model also retrained on a bootstrap of its ~497K rows each seed,
+% SH = 66.1 +/- 0.6 (eval) and 75.4 +/- 0.7 (natural_test), macro-F1 .660 / .611; SH minus Evidence +4.4 +/- 1.4 / +6.7 +/- 0.7; SH minus probe +5.4 / +2.4;
+% SH minus S0 +0.9 +/- 1.4 / +1.0 +/- 1.0. Same conclusions as with the Evidence model fixed.
 \label{tab:e23var}
 \small
 \begin{tabular}{lcc}

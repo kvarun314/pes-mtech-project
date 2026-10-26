@@ -117,7 +117,7 @@ Numbers freeze on Nov 1. The paper is due Nov 21–22.
 | Nov 16–20 | Buffer, final checks, submit by Nov 20 | todo |
 
 **Optional experiments.** Only if time allows before Nov 1. Each needs a gate declared first, and none is needed for the paper.
-- Retrain E6b inside the variance seeds. This closes disclosure 5. CPU, about 20 min per seed.
+- ~~Retrain E6b inside the variance seeds~~: done as C1 (Oct 26): SH 66.1 ± 0.6 / 75.4 ± 0.7, same as with E6b fixed. Disclosure 5 closed.
 - ~~Probe on more rows~~: done as A1 (120K), failed (F18).
 - Disagreement routing on top of SH. Earlier it gave +0.8, not significant.
 

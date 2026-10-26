@@ -976,3 +976,10 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - Sufficiency: cited phrases alone keep p = .552 vs .326 for random words; diff +.226 [+.205, +.248], p = 1.6e-57.
   - Reading: the phrases the explanations cite are the ones the stack relies on. This is a dev preview; the declared readout runs on eval + natural_test after B2.
 - C1 (variance rerun) running on the CPU at the same time; 3 of 5 seeds done.
+
+### 2026-10-26 — C1 RESULT: SH variance with E6b retrained per seed (robustness only, not a selection step)
+- `e23/variance_H2.out`, `variance_H2_seed{0-4}.json`; ran 14:56–15:45 on the CPU (alongside the deletion preview).
+- Over 5 seeds, eval / natural_test exact:
+  - SH: 66.1 ± 0.6 / 75.4 ± 0.7 (with E6b held fixed: 65.8 ± 0.6 / 75.4 ± 0.8).
+  - SH − E6b: +4.4 ± 1.4 / +6.7 ± 0.7. SH − P3: +5.4 ± 0.9 / +2.4 ± 0.9. SH − S0: +0.9 ± 1.4 / +1.0 ± 1.0.
+- Reading: retraining the Evidence model per seed changes nothing material. The stack's advantage over each agent holds in every seed; the margin over the earlier stack refit on dev2 (S0) stays about 1 point and within noise, as already disclosed. Disclosure 5 ("E6b held fixed") is closed. `% FACT` comment added under the variance table in `paper/e23_results.tex`.
