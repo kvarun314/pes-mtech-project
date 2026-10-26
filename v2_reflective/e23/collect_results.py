@@ -51,6 +51,7 @@ R = [
  ("07_phase2_v3", "llm_rerating_sc2_gate.out", E + "gate_SC2.out", "LLM re-rating of uncertain reviews (SC2)", "FAIL: dev2 fixed 76 / broken 89; no test read"),
  ("07_phase2_v3", "llm_rerating_sc2_gate.json", E + "gate_SC2.json", "Numbers for the above", "—"),
  ("07_phase2_v3", "explanations_dev_check_dev2.out", E + "b2_run_dev2.out", "Explainer + Critic dev check (500 dev2 rows)", "first draft 64.0% → final 87.6% faithful; 118 fixed, 0 broken"),
+ ("07_phase2_v3", "deletion_test_dev_preview_dev2.out", E + "b2_deletion_dev2.out", "Deletion test, dev preview (500 dev2 explanations)", "cited > random: comprehensiveness +.067, sufficiency +.226"),
  ("07_phase2_v3", "explanations_report.out", E + "b2_report.out", "Explanation faithfulness, Critic loop (SC3), deletion test", "pending"),
  ("07_phase2_v3", "probe_120k_gate_A1.out", E + "gate_A1.out", "LLaMA probe on 120K reviews (A1)", "FAIL (dev2 +0.003)"),
  ("08_extraction_logs", "probe_extraction_10k.out", E + "probe_agent.out", "Hidden-state extraction log (10K)", "log"),

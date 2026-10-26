@@ -968,3 +968,11 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - Claim tested (SC3): final faithfulness > first-draft faithfulness, McNemar p < .05 on each split. Reported whatever the outcome.
   - Deletion test (Task 10, `b2_deletion.py`): comprehensiveness = p(star | review) − p(star | review minus cited phrases) vs the same number of random words (3 draws, seeded by review id); paired bootstrap CI + Wilcoxon. Sufficiency = p(star | cited phrases only) vs the same number of random words. Review text only (title empty) for every variant, including the reference p.
 - **Run:** `e23/night_B2.sh` (starts 22:30 on AC power, swap < 6 GB, `caffeinate`; resumable; marker `stage_B2.txt`). About 9 h for 3,000 reviews at 11 s each.
+
+### 2026-10-26 — Task 10: deletion test script + dev2 preview (dev only; the test-set readout stays as declared)
+- `e23/b2_deletion.py` written (from the plan). Smoke test on 20 dev2 rows: all values in [0, 1], every row has ≥ 1 cited token, ~4 s per review (3,000 reviews ≈ 3.5 h).
+- Dev preview on the 500 dev2 explanations (`e23/b2_deletion_dev2.out`; SH probability of the explained star, review text only, mean 6.2 cited tokens):
+  - Comprehensiveness: removing cited phrases drops p by .176 vs .109 for the same number of random words; diff +.067 [+.054, +.080], Wilcoxon p = 2.6e-22.
+  - Sufficiency: cited phrases alone keep p = .552 vs .326 for random words; diff +.226 [+.205, +.248], p = 1.6e-57.
+  - Reading: the phrases the explanations cite are the ones the stack relies on. This is a dev preview; the declared readout runs on eval + natural_test after B2.
+- C1 (variance rerun) running on the CPU at the same time; 3 of 5 seeds done.
