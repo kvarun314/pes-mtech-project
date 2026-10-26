@@ -990,3 +990,9 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - Fine-tuning LLaMA has not paid off here three times: Phase 1 LoRA 54.0%, LoRA on 10K (FAIL), LoRA added back to SH (no gain).
   - The gate needs +1.0 with a CI above 0; a third view from the same model is unlikely to clear it, and a Colab-trained model would also need converting to run in the local MLX demo.
 - A2 (DeBERTa, a different model family; already in the spec for Nov 1) stays optional. Decide on Nov 1 based on time left for the paper prose.
+
+### 2026-10-26 — Selective-prediction preview (reporting on the frozen SH, no selection step; disclosed as computed before a formal declaration)
+- SH confidence = max Reflector probability. Thresholds set on dev2 quantiles only, then applied once to eval / natural_test. SH itself is unchanged.
+- eval (all 67.5%): coverage .81 → 72.5%; .62 → 76.4%; .53 → 80.8%; .42 → 85.0%.
+- natural_test (all 75.7%): coverage .89 → 79.9%; .75 → 85.4%; .65 → 89.4%; .56 → 93.1%.
+- Reading: SH knows when it is unsure (consistent with ECE .05–.06). An abstain / hand-off agent can answer the confident majority at high accuracy and route the rest. The script and a formal table (with CIs) follow as Task "S1 selective prediction"; these numbers were computed inline and are logged now so nothing is hidden.
