@@ -48,6 +48,7 @@ Numbers freeze on Nov 1. The paper is due Nov 21–22.
 | W7 | **Frozen LLaMA hidden-state probe on 40K rows (P3)** replaces the LoRA Analyst | Phase H gate PASS: dev2 +3.9 [+2.4, +5.8] | SH |
 | W8 | **Evidence on ~497K rows (E6b)** inside SH | Alone +1.9 dev CV; best stack partner for P3 | SH |
 | W9 | **Polarity / binary reporting** | Stack vs Evidence polarity +2.9 to +4.5, significant on both splits and both seeds (metric added post hoc, disclosed) | Paper metrics |
+| W11 | **Router with escalation (SC1, B1-b, tau .70)** | eval 92 fixed vs 50 broken (p 5e-4), natural_test 152 vs 78 (p 1e-6); LLaMA skipped on 39–48%, accuracy unchanged | Phase 2 v3 agentic layer |
 | W10 | **Phase 2 audit fixes (Run 2, Oct 9)**: grounding floor removed, ties go to the Analyst, RAG prompt fixed, Visual Verifier excluded | Run 2 −91 net becomes +2 net on 96 rows | Historical pipeline |
 
 ## 3. What failed or was not adopted
@@ -70,6 +71,8 @@ Numbers freeze on Nov 1. The paper is due Nov 21–22.
 | F14 | Visual Verifier: BLIP, moondream2, Qwen2-VL | Constant output (always 3, then always 5) | Excluded permanently | A product photo does not show satisfaction |
 | F15 | Claim-splitting for RAG grounding | Mean grounding .144 vs .340 whole-review | Reverted | |
 | F16 | Adding LoRA back to SH (A + E6b + P3) | dev2 .633 vs .639 | Not adopted | |
+| F17 | SC2: Instruct LLM re-rates uncertain reviews (Oct 25) | dev2 fixed 76 vs broken 89, p = .35; natural_dev net −6 | FAIL | Third LLM-judge failure; LLMs explain, not decide |
+| F18 | A1: LLaMA probe on 120K rows (P3b, Oct 25 night) | dev2 CV +.003 [−.011, +.009] vs SH; natural_dev .827 vs .818 | FAIL | Probe saturated at 40K; SH unchanged |
 
 ## 4. Baselines and robustness (reported, not selection steps)
 
@@ -115,7 +118,7 @@ Numbers freeze on Nov 1. The paper is due Nov 21–22.
 
 **Optional experiments.** Only if time allows before Nov 1. Each needs a gate declared first, and none is needed for the paper.
 - Retrain E6b inside the variance seeds. This closes disclosure 5. CPU, about 20 min per seed.
-- Probe on more layers or more rows (P3 at 40K beat 10K). Possible small gain; probably over-tuning on dev2.
+- ~~Probe on more rows~~: done as A1 (120K), failed (F18).
 - Disagreement routing on top of SH. Earlier it gave +0.8, not significant.
 
 **Not planned (closed lines):** LLM adjudicator, more LoRA data, vision agent, extra classical text views, natural-prior Reflectors.

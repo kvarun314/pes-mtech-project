@@ -931,3 +931,14 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - The schedule row is Done.
   - `Presenter_Notes.md`: self-correction is now described as two points (escalation measured; Critic loop pending), plus a new Q&A "Did you try letting the LLM fix the star?".
 - Rendered and checked. Synced to Google Slides.
+
+### 2026-10-26 — A1 bigger probe RESULT: FAIL; SH unchanged; no test read
+- **Run:** started 22:30 Oct 25 (scheduler, AC power, `caffeinate`). Extraction of all 80K fit3 rows finished 04:34; gate finished 04:45. Full data, so no shortfall note needed.
+- **P3b:** LR on 120K rows (fit 10K + fit2 30K + fit3 80K). C chosen on dev2: .001 (dev2 exact .620 / .622 / .612 for C .0003 / .001 / .003).
+- **Gate (5-fold CV x3), P3b+E6b vs SH (P3+E6b):**
+  - dev2 exact .642 vs .639: **+.003 < required +.010**. Paired CI (repeat 0) [−.011, +.009]: **lower bound not > 0**.
+  - dev2 macro-F1 .640 vs .637 (ok). natural_dev exact .827 vs .818 (ok), macro-F1 .619 vs .603 (ok).
+- **Gate: FAIL** on the two primary criteria. Per the declaration, no readout on eval or natural_test; SH stays the main stack.
+- **Reading:** the probe gained from 10K to 40K rows (Phase H) but tripling to 120K adds almost nothing on dev2. The probe has saturated; further gains need a different signal, not more probe data. The natural_dev direction was positive but is a secondary check and does not rescue the gate.
+- Output `e23/gate_A1.out` / `.json`, log `e23/probe_agent4.out`, `e23/night_A1.log`, marker `stage_A1.txt` (A1_gate_DONE).
+- **Updated:** deck (ledger 2/2 probe row now 10K / 120K, "How it solves" card, schedule row Done, roadmap), speaker notes, `Presenter_Notes.md` (schedule script, ledger script, main-stack Q&A), `EXPERIMENTS_SUMMARY.md` (W11 Router, F17 SC2, F18 A1), `collect_results.py` labels.

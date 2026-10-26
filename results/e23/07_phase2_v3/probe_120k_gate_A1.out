@@ -1,0 +1,17 @@
+fit rows 120000 (fit3 rows 80000 of 80000)
+P3b C=0.0003: dev2 exact 0.620
+P3b C=0.001: dev2 exact 0.622
+P3b C=0.003: dev2 exact 0.612
+chosen on dev2: C = 0.001
+=== dev2 5-fold CV (3 repeats)
+SH P3+E6b  exact 0.639 macroF1 0.637
+P3b+E6b    exact 0.642 macroF1 0.640
+P3 alone   exact 0.616 macroF1 0.613
+P3b alone  exact 0.616 macroF1 0.614
+=== natural_dev 5-fold CV (3 repeats)
+SH P3+E6b  exact 0.818 macroF1 0.603
+P3b+E6b    exact 0.827 macroF1 0.619
+P3 alone   exact 0.826 macroF1 0.607
+P3b alone  exact 0.831 macroF1 0.626
+gain on dev2 +0.003; paired CI (rep 0) [-0.011, +0.009]
+=== GATE A1: FAIL

@@ -120,7 +120,7 @@ Start with the data line in the subtitle. It answers any leakage question:
 - Left: the Evidence model wins on short reviews (70.0 vs 54.6), the LLaMA probe on long ones (64.3 vs 55.8), and the stack is best or near-best in every length band.
 - Right: when the agents disagree, the stack is still right 56% of the time, against 36–50% for either alone. That's the case for combining two different kinds of signal.
 
-**Tried / dropped / kept:** **Don't read every row.** On the first "tried and dropped" slide, pick three: the LLM judge (failed twice, which is why the LLM doesn't decide the star), the Visual Verifier (constant output) and the recalibration (the gain was the leak). On the second one, say: more views of the same text, more LoRA data and fancier Reflectors didn't help; more probe data and a bigger Reflector fit set did. Mention the honest near-miss (the 10K probe missed by .001). On "What we kept", walk the ten kept changes quickly; each has its evidence on the right.
+**Tried / dropped / kept:** **Don't read every row.** On the first "tried and dropped" slide, pick three: the LLM judge (failed twice, which is why the LLM doesn't decide the star), the Visual Verifier (constant output) and the recalibration (the gain was the leak). On the second one, say: more views of the same text, more LoRA data and fancier Reflectors didn't help; more probe data and a bigger Reflector fit set did. Mention the honest near-miss (the 10K probe missed by .001) and that 120K added nothing (+0.3 on dev2): the probe has saturated at 40K. On "What we kept", walk the ten kept changes quickly; each has its evidence on the right.
 
 **Robustness:**
 **Say:** "I checked whether the result survives four questions."
@@ -138,7 +138,7 @@ Start with the data line in the subtitle. It answers any leakage question:
 - **Be open about it:** "This was our second threshold. The first (0.60) missed its natural-dev check by 0.3 points and was never tested on the test sets. The second was declared before running, and both are reported."
 
 ### 8. Build schedule and conclusions (slides 24–25)
-**Say:** "This is the build plan for the next ten days. Today the saved agents were rebuilt and match the frozen results exactly. Next come the shared LLaMA model and the Router with the first level of self-correction, then the Critic, the Explainer and the LLM re-rating check. The heavy runs (the bigger probe, explanations on all 3,000 test reviews, the deletion test) run overnight on the charger. Numbers freeze in two stages: Nov 1 for local work, Nov 5 once the Colab result is in or out."
+**Say:** "This is the build plan for the next ten days. Today the saved agents were rebuilt and match the frozen results exactly. Next come the shared LLaMA model and the Router with the first level of self-correction, then the Critic, the Explainer and the LLM re-rating check. The bigger probe ran on the night of Oct 25 and failed its check: 120K training reviews gave only +0.3 points on dev2, so the 40K probe stays. The other heavy runs (explanations on all 3,000 test reviews, the deletion test) run overnight on the charger. Numbers freeze in two stages: Nov 1 for local work, Nov 5 once the Colab result is in or out."
 
 **Conclusions:** four cards.
 - Phase 1 was reproduced honestly, and two problems were found in the original protocol.
@@ -163,7 +163,7 @@ End with the dates: freeze Nov 1 / 5, draft Nov 8, submit Nov 20, final presenta
   - Two readers: the **LLaMA probe**, frozen LLaMA-3-8B whose layer-20 state goes to a small classifier and reads meaning, and the **Evidence model**, TF-IDF on ~497K reviews, which reads key words.
   - A **Reflector** (a learned referee) combines them into the final star.
   - The two readers make different mistakes: alone 61–62%, together 67.5%.
-  - It changes only if the bigger probe (A1) or the optional extra specialist (A2) passes its dev check.
+  - The bigger probe (A1, 120K reviews) was tested on Oct 25 night: +0.3 on dev2, failed, so the main stack is unchanged. It changes only if the optional extra specialist (A2) passes its dev check.
 - **"Did you try letting the LLM fix the star?"** Three times. Gate 0 on Kaggle and on Electronics, then on Oct 25 with Llama-3-8B-Instruct, evidence for both candidate stars and an order-swap consistency check. It fixed 76 and broke 89 on dev2, so it was dropped before any test read. LLMs are better at explaining and checking than at deciding.
 - **"Is the tried-and-dropped table final?"** For everything run so far, yes. A pending experiment that fails adds a row; one that passes moves to "What We Kept". This is updated at the Nov 1 / Nov 5 freezes.
 

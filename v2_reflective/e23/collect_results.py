@@ -51,11 +51,11 @@ R = [
  ("07_phase2_v3", "llm_rerating_sc2_gate.out", E + "gate_SC2.out", "LLM re-rating of uncertain reviews (SC2)", "FAIL: dev2 fixed 76 / broken 89; no test read"),
  ("07_phase2_v3", "llm_rerating_sc2_gate.json", E + "gate_SC2.json", "Numbers for the above", "—"),
  ("07_phase2_v3", "explanations_report.out", E + "b2_report.out", "Explanation faithfulness, Critic loop (SC3), deletion test", "pending"),
- ("07_phase2_v3", "probe_120k_gate_A1.out", E + "gate_A1.out", "LLaMA probe on 120K reviews (A1)", "pending (extraction 45K / 80K)"),
+ ("07_phase2_v3", "probe_120k_gate_A1.out", E + "gate_A1.out", "LLaMA probe on 120K reviews (A1)", "FAIL (dev2 +0.003)"),
  ("08_extraction_logs", "probe_extraction_10k.out", E + "probe_agent.out", "Hidden-state extraction log (10K)", "log"),
  ("08_extraction_logs", "probe_extraction_multilayer.out", E + "probe_agent2.out", "Hidden-state extraction log (multi-layer)", "log"),
  ("08_extraction_logs", "probe_extraction_40k.out", E + "probe_agent3.out", "Hidden-state extraction log (Phase H, 40K)", "log"),
- ("08_extraction_logs", "probe_extraction_120k_A1.out", E + "probe_agent4.out", "Hidden-state extraction log (A1, paused)", "log"),
+ ("08_extraction_logs", "probe_extraction_120k_A1.out", E + "probe_agent4.out", "Hidden-state extraction log (A1, 80K done)", "log"),
 ]
 figs = [("09_figures", os.path.basename(p), p, d, "figure") for p, d in [
  (F + "main_bars.png", "All models, exact accuracy with 95% CI (main stack in red)"), (F + "cm_main_eval.png", "Main-stack confusion matrix, balanced eval"),

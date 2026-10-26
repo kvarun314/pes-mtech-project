@@ -1,2 +1,5 @@
 A1 paused at Sun Oct 25 08:00:24 IST 2026 (planned, before presentation)
 A1_extract_FAILED
+A1 night run started Sun Oct 25 22:30:12 IST 2026
+A1_extract_DONE
+A1_gate_DONE Mon Oct 26 04:45:36 IST 2026
