@@ -942,3 +942,10 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - **Reading:** the probe gained from 10K to 40K rows (Phase H) but tripling to 120K adds almost nothing on dev2. The probe has saturated; further gains need a different signal, not more probe data. The natural_dev direction was positive but is a secondary check and does not rescue the gate.
 - Output `e23/gate_A1.out` / `.json`, log `e23/probe_agent4.out`, `e23/night_A1.log`, marker `stage_A1.txt` (A1_gate_DONE).
 - **Updated:** deck (ledger 2/2 probe row now 10K / 120K, "How it solves" card, schedule row Done, roadmap), speaker notes, `Presenter_Notes.md` (schedule script, ledger script, main-stack Q&A), `EXPERIMENTS_SUMMARY.md` (W11 Router, F17 SC2, F18 A1), `collect_results.py` labels.
+
+### 2026-10-26 — Task 8: LangGraph v3 wiring (code only, no experiment)
+- `src/agentic_sentiment/v3/graph.py`: `build_graph_v3(evidence, reflector, probe_fn, explain_fn=None, judge_fn=None, tau=None, max_rewrites=2)`.
+  - Flow: evidence → router → [probe] → reflector → pack → explainer → critic → (rewrite, max 2) → END. Without `explain_fn` it stops after the Reflector.
+  - Stored `probe_probs` in the input are used instead of calling the probe (batch runs). `llm_calls`, `timings`, `faithful_first` / `faithful` and failed checks are recorded per review for Task 9.
+- `tests/v3/test_graph_v3.py`: 4 tests (router skip, stored probe probabilities, rewrite until faithful, stop after max rewrites). Full suite 156 passed.
+- No model run, no numbers; no backup needed (code is in git).
