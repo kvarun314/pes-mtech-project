@@ -1032,3 +1032,43 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
   - Sufficiency: eval .556 vs .308, [+.233, +.263], p = 3.2e-122; natural .641 vs .353, [+.277, +.300], p = 6.8e-256.
 - Reading: matches the dev check (64.0 → 87.6%) and the dev preview. The Critic loop raises faithful explanations by about 25-28 points and never breaks one. The phrases cited are the ones the stack's decision depends on. About 11% of final explanations still fail a check; they are labelled as such, not hidden.
 - Faithfulness figure legend moved to lower right after the run (cosmetic; the script was patched the same way).
+
+### 2026-10-27 — X1 DECLARED: Phase 1 justification vs Phase 2 explanation, same reviews, same judge (reporting on frozen systems; no selection)
+- Why: deck shortcoming 4 says Phase 1's justifications are a template. This measures it against Phase 2's agentic explanations with one instrument.
+- Rows: the 150 balanced eval reviews that already have saved Phase 1 generations (`p1/halluc_R_generations.jsonl`, Oct 17). No new Phase 1 generation: those outputs repeat one rubric sentence up to the token limit, so 3,000 more would add cost, not information (a full run was considered and dropped).
+- Phase 1 text = output up to its first "!" (where the repetition starts). Phase 2 text = final draft from `b2/eval.jsonl`.
+- Metrics per system: distinct-output share (digits and punctuation stripped); star consistency (stated star = own predicted star); grounded = some 3-word window with a content word occurs in the review; judge pass = Critic check-5 judge (same Instruct model and prompt) answers NO unsupported claim; unparsed count; mean words; share with repeated template.
+- Paired exact McNemar on grounded and on judge pass. Reported whatever the outcome. No claim threshold: descriptive comparison.
+- Script `e23/x1_explain_compare.py`; output `x1_explain_compare.out` / `.json`. ~300 judge calls, ~10 min on the GPU.
+
+### 2026-10-27 — H1 DECLARED: hard-case analysis, Phase 1 vs main stack (reporting on frozen predictions; CPU only; no selection)
+- Rows: eval (1,000) and natural_test (2,000). Predictions: Phase 1 = argmax of `p1/probs_R_<split>.jsonl`; main stack (SH) = `Reflector.combine(evid7, evid6b)` as in `s1_selective.py`.
+- Subsets, defined before reading any result (review text only; TextBlob polarity, the Phase 1 paper's own tool):
+  - Surface-positive negatives (irony / sarcasm proxy): polarity >= 0.2 and true star 1-2.
+  - Surface-negative positives: polarity <= 0 and true star 4-5.
+  - Mixed with contrast: a contrast word (but, however, although, though, except, yet) and true star 2-4.
+  - Sarcasm cues: regex for "yeah right", "thanks a lot", "just great", "so much for", "what a joke", "/s", "not!" (expected small; n reported).
+- Metrics per subset and split: n; exact and within-one for both systems; SH − Phase 1 with a paired bootstrap CI (2,000 resamples, seed 0); rescues (Phase 1 wrong, SH right) vs reverse, exact McNemar p.
+- Descriptive; reported whatever the outcome. Script `e23/hard_cases.py`; output `hard_cases.out` / `.json` (numbers only, no review text).
+
+### 2026-10-27 — Task 11 completed (CPU): agent audit, frozen tables, paper tables
+- Fix found before building the tables: the plan's `b2_report.py` stored `gate_B1.json` (Router attempt 1, tau 0.60, failed) as the Router result. It now reads `gate_B1b.json` (attempt 2, tau 0.70, the declared and passed one); the `router` key in `b2_report.json` was replaced the same way. No B2 number changed.
+- `freeze_tables.py` now appends "Phase 2 v3: Router and explanations" and "Self-correction (three levels)" to `results_frozen.md` (`freeze_tables.out`). SC3 broken = 0 on both splits (checked in the `b2_report.out` supplement).
+- `e23/agent_audit.md` (C6) written: original agents → evidence → role now, including the Router, Hand-off, Explainer and Critic.
+- `paper/e23_results.tex`: added `tab:e23router`, `tab:e23faith`, `fig:e23deletion`, `tab:e23audit` with `% FACT` lines. Both papers build; overfull-box count unchanged (main 10, conference 3, same as before the change).
+
+### 2026-10-27 — X1 RESULT: Phase 1 justification vs Phase 2 explanation (150 balanced eval reviews, same judge)
+- `e23/x1_explain_compare.out` / `.json`.
+- Distinct outputs: Phase 1 3.3% (5 different sentences over 150 reviews) vs Phase 2 100%.
+- Grounded in the review (a 3-word span with a content word copied from the review): Phase 1 0.0% vs Phase 2 78.7%; McNemar 118 vs 0, p = 6.0e-36.
+- Judge finds no unsupported claim: Phase 1 85.3% vs Phase 2 94.0%; 18 vs 5, p = .011. Note: Phase 1's sentence is a vague rubric line ("high level of satisfaction"), which seldom states anything checkable, so the judge passes it often; the grounding and distinct-output numbers carry the template finding.
+- Star stated and consistent with the system's own star: Phase 1 100% (the template always says "rating N") vs Phase 2 98.7%. Phase 1 output repeats its template in 54.7% of reviews. Mean length 12 vs 36 words.
+- Reading: measured support for shortcoming 4. Phase 1 justifications are not about the review; Phase 2's explanations quote it and are judged supported more often.
+
+### 2026-10-27 — H1 RESULT: hard-case analysis (`e23/hard_cases.out` / `.json`)
+- Check: the "all" rows reproduce the frozen numbers (SH 67.5 / 75.7, Phase 1 54.0 / 53.4).
+- Surface-negative positives (polarity <= 0, true 4-5 stars): eval n=40, SH 62.5 vs P1 35.0, +27.5 [+10.0, +45.0], rescued 13 / lost 2, p = .0074; natural_test n=193, 71.0 vs 43.0, +28.0 [+20.2, +35.8], 64 / 10, p = 9e-11.
+- Surface-positive negatives (irony proxy; polarity >= 0.2, true 1-2): eval n=72, 61.1 vs 54.2, +6.9 [−4.2, +18.1], p = .36 (not significant); natural_test n=68, 60.3 vs 45.6, +14.7 [+2.9, +27.9], 15 / 5, p = .041.
+- Mixed with contrast (contrast word, true 2-4): eval n=311, 62.7 vs 55.6, +7.1 [+0.6, +13.2], p = .041; natural_test n=282, 63.1 vs 63.8, −0.7 [−6.7, +5.3], p = .91 (no difference).
+- Sarcasm cue words: n=6 (eval) and n=1 (natural_test); too few to report.
+- Reading: the stack's largest gains are on reviews whose wording sounds negative but whose star is high (+28 points on both splits), and on ironic-sounding negatives in natural_test. On mixed reviews the gain is small (eval) or absent (natural_test). Explicit sarcasm is too rare in this data to measure.

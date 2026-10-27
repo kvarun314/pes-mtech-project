@@ -181,3 +181,76 @@ Calibration: ECE; mean confidence vs accuracy & .047; .650 vs .675 & .062; .704 
 %     natural_test 1,035 escalated, fixed 152 / broken 78, net +74, p 1.2e-6. dev2 (CV): fixed 194 / broken 101, p 6.7e-8.
 %   - Disclose: two Router candidates tried; readout p-values join the Holm family at freeze.
 % AUTHOR: write the robustness paragraph(s) here.
+
+% ---- Phase 2 v3 tables (Task 11; numbers typed from e23/b2_report.json and e23/gate_B1b.json) ----
+\begin{table}[htbp]
+\centering
+\caption{Router (attempt 2, $\tau = 0.70$): exact accuracy of the full stack vs the routed system, share of reviews where the LLaMA probe is skipped, and exact McNemar $p$.}
+\label{tab:e23router}
+\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Split} & \textbf{Full stack} & \textbf{Routed} & \textbf{Probe skipped} & \textbf{McNemar $p$} \\
+\midrule
+eval & 67.5 & 67.4 & 39.3\% & 1.0 \\
+natural\_test & 75.7 & 75.5 & 48.2\% & .68 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Explanations on all 3,000 test reviews: share faithful (all Critic checks pass) for the first draft and after the Critic loop (exact McNemar $p$), and the deletion test (cited phrases vs the same number of random words; Wilcoxon $p$).}
+% FACT (B2, b2_report.out, LOG.md 2026-10-27): fixed 284 / broken 0 (eval), 509 / 0 (natural_test); rewrite rate 39.5% / 36.7%; mean rounds 0.55 / 0.54;
+%   judge unparsed 0; LLM calls 2.64 / 2.67 per review; median Explainer 6.4 / 6.1 s, Critic 1.6 s per review.
+% FACT: first-draft failures (eval / natural_test): star 7 / 10; quote not in review or pack 196 / 345; top phrases missing 181 / 294; disagreement 0 / 0; judge 76 / 206.
+% FACT: deletion diff 95% bootstrap CI: comprehensiveness +.061 to +.079 (eval), +.082 to +.096 (natural_test);
+%   sufficiency +.233 to +.263 (eval), +.277 to +.300 (natural_test). Dev check (dev2, 500): 64.0% -> 87.6%, 118 fixed / 0 broken.
+\label{tab:e23faith}
+\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Split} & \textbf{Faithful, first} & \textbf{Faithful, final} & \textbf{McNemar $p$} & \textbf{Compr. cited / random} & \textbf{Suff. cited / random} & \textbf{Wilcoxon $p$ (both)} \\
+\midrule
+eval & 60.5\% & 88.9\% & 6.4e-86 & .158 / .089 & .556 / .308 & $<$1e-46 \\
+natural\_test & 63.4\% & 88.8\% & 1.2e-153 & .212 / .124 & .641 / .353 & $<$1e-115 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{\efigdir deletion_test.png}
+\caption{Deletion test. Left: drop in the main stack's probability of its star when the cited phrases (red) or the same number of random words (grey) are removed. Right: probability with only those words kept.}
+\label{fig:e23deletion}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\caption{Agent audit: each agent of the original Phase 2 design, what the experiments found, and its role in the final system (full table with file references: e23/agent\_audit.md).}
+\label{tab:e23audit}
+\small
+\begin{tabular}{p{0.2\linewidth}p{0.4\linewidth}p{0.3\linewidth}}
+\toprule
+\textbf{Original agent} & \textbf{Finding} & \textbf{Role now} \\
+\midrule
+Analyst (LoRA, one-shot) & One-shot leak ($\approx$8 pts); rationale is a repeated template & Replaced by the layer-20 probe agent \\
+Visual Verifier & Constant output (always 3, then always 5) & Excluded \\
+RAG Prover & Weak vote (37.5\%) & Replaced by the Evidence agent \\
+Critic (dissonance) & Override on 0.4\% of rows; LLM adjudicator failed three times & Star moved to the Reflector; Critic checks explanations \\
+Router (new) & Probe skipped on 39--48\% at no accuracy cost & Kept \\
+Hand-off (new) & 93.1\% exact at 55.7\% coverage (natural\_test) & Kept \\
+Explainer + Critic loop (new) & Faithful 60.5--63.4\% $\to$ 88.8--88.9\%, 0 broken & Kept \\
+\bottomrule
+\end{tabular}
+\end{table}
+% FACT (X1, x1_explain_compare.out, 150 balanced eval reviews, same Instruct judge as Critic check 5):
+%   distinct outputs Phase 1 3.3% (5 sentences) vs Phase 2 100%; grounded in the review 0.0% vs 78.7% (McNemar 118 vs 0, p 6.0e-36);
+%   judge finds no unsupported claim 85.3% vs 94.0% (18 vs 5, p .011; Phase 1's rubric sentence is vague, so it is seldom judged unsupported);
+%   Phase 1 repeats its template in 54.7% of outputs; mean 12 vs 36 words.
+% FACT (H1, hard_cases.out; subsets by TextBlob polarity and contrast words, defined before reading):
+%   negative-sounding positives (polarity <= 0, 4-5 stars): main stack vs Phase 1 62.5 vs 35.0 (eval, n=40, p .0074), 71.0 vs 43.0 (natural_test, n=193, p 9e-11);
+%   positive-sounding negatives (polarity >= 0.2, 1-2 stars): 61.1 vs 54.2 (eval, n=72, p .36, n.s.), 60.3 vs 45.6 (natural_test, n=68, p .041);
+%   mixed with contrast (2-4 stars): 62.7 vs 55.6 (eval, n=311, p .041), 63.1 vs 63.8 (natural_test, n=282, p .91, no difference);
+%   sarcasm cue words: n=6 / 1, too few to report.

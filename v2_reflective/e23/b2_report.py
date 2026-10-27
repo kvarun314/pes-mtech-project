@@ -21,7 +21,7 @@ for s in ("eval", "natural_test"):
               "comp_cited": float(comp_c.mean()), "comp_random": float(comp_r.mean()), "comp_diff_ci": boot(comp_c - comp_r), "comp_wilcoxon_p": float(wilcoxon(comp_c, comp_r).pvalue),
               "suff_cited": float(suf_c.mean()), "suff_random": float(suf_r.mean()), "suff_diff_ci": boot(suf_c - suf_r), "suff_wilcoxon_p": float(wilcoxon(suf_c, suf_r).pvalue)}
     print(s, json.dumps(res[s], indent=1))
-res["router"] = json.load(open(D + "gate_B1.json")); json.dump(res, open(D + "b2_report.json", "w"), indent=1)
+res["router"] = json.load(open(D + "gate_B1b.json")); json.dump(res, open(D + "b2_report.json", "w"), indent=1)
 fig, ax = plt.subplots(1, 2, figsize=(10, 3.6))
 for i, (k1, k2, t) in enumerate([("comp_cited", "comp_random", "Comprehensiveness (drop in p, higher = cited words matter)"), ("suff_cited", "suff_random", "Sufficiency (p with only these words)")]):
     x = np.arange(2); ax[i].bar(x - .18, [res[s][k1] for s in ("eval", "natural_test")], .36, label="cited phrases", color="#c0392b")

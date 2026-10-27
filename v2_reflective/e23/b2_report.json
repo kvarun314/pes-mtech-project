@@ -66,7 +66,8 @@
   "suff_wilcoxon_p": 6.751748546039512e-256
  },
  "router": {
-  "tau": 0.6,
+  "tol": 0.0,
+  "tau": 0.7,
   "dev2_full": 0.642,
   "dev2_routed": {
    "0.30": 0.5995,
@@ -85,17 +86,47 @@
    "0.95": 0.6425
   },
   "sc1_dev2": {
-   "escalated": 961,
-   "changed": 326,
-   "fixed": 169,
-   "broken": 85,
-   "net": 84,
-   "p": 1.4855809678538804e-07
+   "escalated": 1258,
+   "changed": 371,
+   "fixed": 194,
+   "broken": 101,
+   "net": 93,
+   "p": 6.667912399912708e-08
   },
   "natural_dev": {
    "full": 0.784,
-   "routed": 0.776,
-   "skip_share": 0.64
+   "routed": 0.784,
+   "skip_share": 0.52
+  },
+  "readout": {
+   "eval": {
+    "full": 0.675,
+    "routed": 0.674,
+    "skip_share": 0.393,
+    "mcnemar_p": 1.0,
+    "sc1": {
+     "escalated": 607,
+     "changed": 183,
+     "fixed": 92,
+     "broken": 50,
+     "net": 42,
+     "p": 0.0005337707534569335
+    }
+   },
+   "natural_test": {
+    "full": 0.757,
+    "routed": 0.7555,
+    "skip_share": 0.4825,
+    "mcnemar_p": 0.6776394844055176,
+    "sc1": {
+     "escalated": 1035,
+     "changed": 277,
+     "fixed": 152,
+     "broken": 78,
+     "net": 74,
+     "p": 1.2122453400939628e-06
+    }
+   }
   }
  }
 }

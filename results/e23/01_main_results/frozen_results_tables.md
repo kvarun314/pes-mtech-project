@@ -40,3 +40,25 @@ Exact = 5-class exact match; 95% CI = bootstrap (3,000) on exact. dev is selecti
 | LoRA seed 2 + Evidence stack | 72.7 [70.7, 74.7] | 0.576 | 96.2 | 0.327 |
 
 Prior-corrected natural_test rows, paired comparisons, variance and Gate 0 are in `LOG.md` (2026-10-18, 10-20, 10-21) with outputs `stack_week1.out`, `prior_baseline.out`, `base_vs_lora.out`, `variance.out`, `gate0_e23.out`, `encoder_2k.out`. Phase H (SH main config): `readout_H.out` (paired tests), `variance_H.out` (5 seeds, E6b fixed), `gate_H.out`.
+
+## Phase 2 v3: Router and explanations (all 3,000 test reviews)
+
+| Split | Faithful first draft | Faithful after Critic loop | McNemar p | Rewrite rate | Mean rounds | Comprehensiveness cited / random | Sufficiency cited / random | LLM calls / review |
+|---|---|---|---|---|---|---|---|---|
+| eval | 0.605 | 0.889 | 6.4e-86 | 0.395 | 0.55 | 0.158 / 0.089 | 0.556 / 0.308 | 2.64 |
+| natural_test | 0.633 | 0.888 | 1.2e-153 | 0.366 | 0.54 | 0.212 / 0.124 | 0.641 / 0.353 | 2.67 |
+
+Router (eval, tau 0.7): SH 0.675, routed 0.674, probe skipped on 39.3%, McNemar p 1
+
+Router (natural_test, tau 0.7): SH 0.757, routed 0.755, probe skipped on 48.2%, McNemar p 0.68
+
+## Self-correction (three levels)
+
+| Level | Split | Corrected reviews | Fixed | Broken | Net | p |
+|---|---|---|---|---|---|---|
+| SC1 escalation (rating) | eval | 607 escalated | 92 | 50 | +42 | 0.00053 |
+| SC1 escalation (rating) | natural_test | 1035 escalated | 152 | 78 | +74 | 1.2e-06 |
+| SC2 LLM re-rating (rating) | dev2 | 644 uncertain, 159 abstained | 76 | 89 | -13 | 0.35 |
+| SC2 LLM re-rating (rating) | natural_dev | 100 uncertain, 40 abstained | 4 | 10 | -6 | 0.18 |
+| SC3 Critic loop (explanation) | eval | faithful 0.605 -> 0.889 | 284 | 0 | +284 | 6.4e-86 |
+| SC3 Critic loop (explanation) | natural_test | faithful 0.633 -> 0.888 | 509 | 0 | +509 | 1.2e-153 |

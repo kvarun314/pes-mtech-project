@@ -49,6 +49,9 @@ Numbers freeze on Nov 1. The paper is due Nov 21–22.
 | W8 | **Evidence on ~497K rows (E6b)** inside SH | Alone +1.9 dev CV; best stack partner for P3 | SH |
 | W9 | **Polarity / binary reporting** | Stack vs Evidence polarity +2.9 to +4.5, significant on both splits and both seeds (metric added post hoc, disclosed) | Paper metrics |
 | W11 | **Router with escalation (SC1, B1-b, tau .70)** | eval 92 fixed vs 50 broken (p 5e-4), natural_test 152 vs 78 (p 1e-6); LLaMA skipped on 39–48%, accuracy unchanged | Phase 2 v3 agentic layer |
+| W12 | **Explainer + Critic loop (SC3, B2)** on all 3,000 test reviews | Faithful 60.5 → 88.9% (eval), 63.4 → 88.8% (natural_test); 793 fixed, 0 broken; McNemar p 6e-86 / 1e-153 | Phase 2 v3 agentic layer |
+| W13 | **Cited phrases carry the decision (deletion test)** | Comprehensiveness .158 vs .089 / .212 vs .124; sufficiency .556 vs .308 / .641 vs .353 (cited vs random, p < 1e-46) | Explanations |
+| W14 | **Hand-off agent (selective prediction, S1)** | natural_test 93.1% exact at 55.7% coverage; eval 85.0% at 42% | Phase 2 v3 agentic layer |
 | W10 | **Phase 2 audit fixes (Run 2, Oct 9)**: grounding floor removed, ties go to the Analyst, RAG prompt fixed, Visual Verifier excluded | Run 2 −91 net becomes +2 net on 96 rows | Historical pipeline |
 
 ## 3. What failed or was not adopted
@@ -87,6 +90,8 @@ Numbers freeze on Nov 1. The paper is due Nov 21–22.
 | Kaggle paper-protocol re-score (appendix) | 69.1% exact leak-free (was 70.7% leaky) |
 | Evidence learning curve (Phase G) | 11K .535 → 90K .568: still rising, which led to G2/E6b |
 | SH variance (5 seeds, E6b fixed) | SH − E6b +3.3 ± 0.6 / +5.2 ± 0.8; SH − P3 +5.2 ± 0.9 / +2.4 ± 1.2; SH − old stack on dev2 +0.7 ± 1.2 / +1.0 ± 0.6 |
+| Phase 1 vs Phase 2 explanations (X1, 150 eval) | Grounded in the review 0% vs 79% (p 6e-36); distinct outputs 3% vs 100%; judge pass 85% vs 94% (p .011) |
+| Hard cases (H1) | Negative-sounding positives: stack +27.5 / +28.0 over Phase 1 (p .007 / 9e-11); ironic-sounding negatives +6.9 (ns) / +14.7 (p .04); mixed reviews +7.1 (p .04) / −0.7 (ns); sarcasm cues too rare (n 6 / 1) |
 
 ## 5. Historical results (superseded, kept for the record)
 

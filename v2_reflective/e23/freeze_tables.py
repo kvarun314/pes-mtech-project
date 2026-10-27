@@ -29,3 +29,28 @@ fig, ax = plt.subplots(1, 2, figsize=(11, 4.5), sharey=True)
 for a, s in zip(ax, bars):
     b = bars[s]; a.barh([x[0] for x in b], [x[1] for x in b], xerr=[[x[1] - x[2] for x in b], [x[3] - x[1] for x in b]], color=["#C44E52" if "(main)" in x[0] else "#4C72B0" for x in b]); a.set_title(s); a.set_xlabel("exact %"); a.invert_yaxis()
 plt.tight_layout(); plt.savefig("paper/figures/e23/main_bars.png", dpi=150)
+
+# ---- Phase 2 v3 (Router, Explainer + Critic), copied from b2_report.json; written to results_frozen.md
+import os
+if os.path.exists(D + "b2_report.json"):
+    B = json.load(open(D + "b2_report.json")); lines = ["", "## Phase 2 v3: Router and explanations (all 3,000 test reviews)", "",
+        "| Split | Faithful first draft | Faithful after Critic loop | McNemar p | Rewrite rate | Mean rounds | Comprehensiveness cited / random | Sufficiency cited / random | LLM calls / review |", "|---|---|---|---|---|---|---|---|---|"]
+    for s in ("eval", "natural_test"):
+        b = B[s]; lines.append(f"| {s} | {b['faithful_first']:.3f} | {b['faithful_final']:.3f} | {b['mcnemar_p']:.2g} | {b['rewrite_rate']:.3f} | {b['mean_rounds']:.2f} | "
+                               f"{b['comp_cited']:.3f} / {b['comp_random']:.3f} | {b['suff_cited']:.3f} / {b['suff_random']:.3f} | {b['llm_calls']:.2f} |")
+    ro = B["router"].get("readout", {})
+    for s, v in ro.items():
+        lines.append(f"\nRouter ({s}, tau {B['router']['tau']}): SH {v['full']:.3f}, routed {v['routed']:.3f}, probe skipped on {v['skip_share']:.1%}, McNemar p {v['mcnemar_p']:.2g}")
+    sc = ["", "## Self-correction (three levels)", "", "| Level | Split | Corrected reviews | Fixed | Broken | Net | p |", "|---|---|---|---|---|---|---|"]
+    for s, v in ro.items():
+        e_ = v["sc1"]; sc.append(f"| SC1 escalation (rating) | {s} | {e_['escalated']} escalated | {e_['fixed']} | {e_['broken']} | {e_['net']:+d} | {e_['p']:.2g} |")
+    if os.path.exists(D + "gate_SC2.json"):
+        S2 = json.load(open(D + "gate_SC2.json"))
+        for s in ("dev2", "natural_dev", "eval", "natural_test"):
+            v = S2.get(s) or S2.get("readout", {}).get(s)
+            if v: sc.append(f"| SC2 LLM re-rating (rating) | {s} | {v['uncertain']} uncertain, {v['abstained']} abstained | {v['fixed']} | {v['broken']} | {v['net']:+d} | {v['p']:.2g} |")
+    for s in ("eval", "natural_test"):
+        b = B[s]; f0, f1 = round(b["faithful_first"] * b["n"]), round(b["faithful_final"] * b["n"])
+        sc.append(f"| SC3 Critic loop (explanation) | {s} | faithful {b['faithful_first']:.3f} -> {b['faithful_final']:.3f} | {f1 - f0} | 0 | {f1 - f0:+d} | {b['mcnemar_p']:.2g} |")
+    lines += sc
+    open(D + "results_frozen.md", "a").write("\n".join(lines) + "\n"); print("\n".join(lines))
