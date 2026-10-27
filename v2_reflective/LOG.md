@@ -1013,3 +1013,22 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - The figure's curves use per-split coverage quantiles (descriptive curve); the table uses the declared dev2 thresholds.
 - 2026-10-26 19:17: deletion readout chained after B2 (user approved): `e23/night_DEL.sh` waits for B2_natural_test_DONE in `stage_B2.txt`, then runs `b2_deletion.py` on eval and natural_test (~3.5 h; expected end ~11:00 Oct 27).
 - 2026-10-26 20:06: B2 started early at 20:05 (user request); waiting scheduler stopped and restarted with START=00:00. Deletion chain unchanged.
+
+### 2026-10-27 06:25 — B2 run paused by flat battery
+- Charger was unplugged. B2 eval finished at 23:11 (1,000/1,000). natural_test started, then the Mac went to 'Low Power Sleep' at 23:43 (battery 1%).
+- The charger was reconnected and the Mac woke at 06:17. The same process carried on from 175/2,000 (nothing lost; outputs are written per review). Results are unaffected; only timing changed.
+- New ETA: natural_test ~12:00, then the deletion test (chained) ~15:30.
+
+### 2026-10-27 — B2 RESULT (eval 1,000 + natural_test 2,000; single readout as declared) and deletion test RESULT
+- Files: `e23/b2_report.out` / `.json` (script `e23/b2_report.py`, from plan Task 11), `paper/figures/e23/faithfulness.png`, `deletion_test.png`. Run: B2 20:05 Oct 26 – 11:47 Oct 27 (paused 23:43–06:17 on a flat battery, see above); deletion 11:48–15:09.
+- **SC3 (Critic loop) — PASS on both splits:**
+  - eval: faithful first draft 60.5% (605) → final 88.9% (889); fixed 284, broken 0; exact McNemar p = 6.4e-86.
+  - natural_test: 63.4% (1,267) → 88.8% (1,776); fixed 509, broken 0; p = 1.2e-153.
+  - Rewrite rate 39.5% / 36.7%; mean rounds 0.55 / 0.54; judge unparsed 0; LLM calls 2.64 / 2.67 per review.
+  - First-draft failures by check (eval / natural): 1 star stated 7 / 10; 2 quotes not in review/pack 196 / 345; 3 top phrases missing 181 / 294; 4 disagreement 0 / 0; 5 judge 76 / 206.
+  - Time per review: median Explainer 6.4 / 6.1 s, Critic 1.6 / 1.6 s. The natural_test mean (20.6 s) is inflated by one review that spanned the sleep; use the medians (supplement at the end of `b2_report.out`).
+- **Deletion test (cited phrases vs the same number of random words, 3 draws):**
+  - Comprehensiveness: eval .158 vs .089, diff CI [+.061, +.079], Wilcoxon p = 1.5e-47; natural .212 vs .124, [+.082, +.096], p = 3.1e-116.
+  - Sufficiency: eval .556 vs .308, [+.233, +.263], p = 3.2e-122; natural .641 vs .353, [+.277, +.300], p = 6.8e-256.
+- Reading: matches the dev check (64.0 → 87.6%) and the dev preview. The Critic loop raises faithful explanations by about 25-28 points and never breaks one. The phrases cited are the ones the stack's decision depends on. About 11% of final explanations still fail a check; they are labelled as such, not hidden.
+- Faithfulness figure legend moved to lower right after the run (cosmetic; the script was patched the same way).

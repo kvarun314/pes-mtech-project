@@ -55,7 +55,8 @@ R = [
  ("07_phase2_v3", "deletion_test_dev_preview_dev2.out", E + "b2_deletion_dev2.out", "Deletion test, dev preview (500 dev2 explanations)", "cited > random: comprehensiveness +.067, sufficiency +.226"),
  ("07_phase2_v3", "handoff_agent_selective_prediction.out", E + "s1_selective.out", "Hand-off agent: accuracy vs coverage (dev2 thresholds)", "natural_test 93.1% at 56% coverage; eval 85.0% at 42%"),
  ("07_phase2_v3", "handoff_agent_selective_prediction.json", E + "s1_selective.json", "Numbers for the above", "—"),
- ("07_phase2_v3", "explanations_report.out", E + "b2_report.out", "Explanation faithfulness, Critic loop (SC3), deletion test", "pending"),
+ ("07_phase2_v3", "explanations_report.out", E + "b2_report.out", "Explanation faithfulness, Critic loop (SC3), deletion test", "SC3 PASS: faithful 60.5→88.9% eval, 63.4→88.8% natural; 793 fixed, 0 broken; cited > random"),
+ ("07_phase2_v3", "explanations_report.json", E + "b2_report.json", "Numbers for the above", "—"),
  ("07_phase2_v3", "probe_120k_gate_A1.out", E + "gate_A1.out", "LLaMA probe on 120K reviews (A1)", "FAIL (dev2 +0.003)"),
  ("08_extraction_logs", "probe_extraction_10k.out", E + "probe_agent.out", "Hidden-state extraction log (10K)", "log"),
  ("08_extraction_logs", "probe_extraction_multilayer.out", E + "probe_agent2.out", "Hidden-state extraction log (multi-layer)", "log"),
@@ -65,6 +66,7 @@ R = [
 figs = [("09_figures", os.path.basename(p), p, d, "figure") for p, d in [
  (F + "main_bars.png", "All models, exact accuracy with 95% CI (main stack in red)"), (F + "cm_main_eval.png", "Main-stack confusion matrix, balanced eval"),
  (F + "cm_main_natural_test.png", "Main-stack confusion matrix, natural test"), (F + "recall_phase1_vs_main.png", "Per-star recall, Phase 1 LoRA vs main stack"),
+ (F + "faithfulness.png", "Explanations faithful: first draft vs after Critic loop (SC3)"), (F + "deletion_test.png", "Deletion test: cited phrases vs random words"),
  (F + "selective_SH.png", "Hand-off agent: accuracy vs share answered automatically, main stack vs Phase 1"), (F + "agents_complement.png", "Accuracy by review length; agents' disagreement"), (F + "reliability_SH_eval.png", "Reliability diagram (calibration), balanced eval"),
  (F + "reliability_SH_natural_test.png", "Reliability diagram (calibration), natural test"), (F + "cm_stack_eval.png", "First stack confusion matrix, eval (superseded)"),
  (F + "cm_stack_natural_test.png", "First stack confusion matrix, natural test (superseded)"), (F + "recall_eval.png", "First stack per-star recall, eval (superseded)"),
