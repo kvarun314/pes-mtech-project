@@ -79,6 +79,8 @@ Numbers freeze on Nov 1. The paper is due Nov 21–22.
 | F18 | A1: LLaMA probe on 120K rows (P3b, Oct 25 night) | dev2 CV +.003 [−.011, +.009] vs SH; natural_dev .827 vs .818 | FAIL | Probe saturated at 40K; SH unchanged |
 | F19 | I2: learned Hand-off (8 features) vs confidence only (Oct 28) | dev2 AUROC .701 vs .706; accuracy at 50% coverage 78.2 vs 78.2 | FAIL | The Reflector's confidence already carries the extra signals |
 | F20 | I3: fixed-form fallback explanation after 4 rewrites (Oct 28) | dev2 27 of 43 pass the Critic (gate 30) | FAIL | All 16 failures are the LLM judge rejecting a sentence that only quotes the review |
+| F21 | Q2: later-time holdout (Oct 28) | Not run: every agent was fit on reviews from 1999-2023 | Dropped | Year bands (Q5) are the time check |
+| F22 | Q3 / Q3b: Qwen2.5-7B-Instruct as a second judge (Oct 28) | dev2: accepts 0 of 38 Llama-rejected, rejects 60 of 60 Llama-accepted, under both prompts | FAIL | Constant verdict; flags the stated star and agent shares as unsupported |
 
 ## 4. Baselines and robustness (reported, not selection steps)
 

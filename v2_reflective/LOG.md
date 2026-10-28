@@ -1223,3 +1223,15 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - Deck (25 slides): slide 16 band adds star ranges (box moved up and enlarged after the render showed overflow); slide 21 band "New checks (Oct 28)" with Q4 and Q5; slide 25 Agentic-layer and Limits cards (gain holds in every year band; needs the review title, −5.6 without it). Speaker notes for slides 16 and 21 updated. Rendered 16, 21, 25 and checked.
 - Paper: new `tab:e23conformal`; FACT lines for Q1, Q4, Q5; Hand-off audit row. The faithfulness table from the I1 update had 9 columns under an 8-column spec (3 LaTeX errors, committed in 7a308da); it is now split into `tab:e23faith` (first / max 2 / max 4) and `tab:e23deltest` (deletion test). Build: 0 errors, overfull boxes 10 (unchanged).
 - `Presenter_Notes.md` (Hand-off, Robustness, Limits), `agent_audit.md` (Hand-off row), `EXPERIMENTS_SUMMARY.md` section 4 (Q1, Q4, Q5 rows).
+
+### 2026-10-28 — Q3b RESULT: second judge with the clarified prompt — FAIL (no test read); Q3 closed
+- `e23/q3b_second_judge_gate.out`. Same constant verdict: Qwen accepted 0 of 38 Llama-rejected and rejected 60 of 60 Llama-accepted, 0 unparsed.
+- Reading: with this yes/no protocol and greedy decoding, Qwen2.5-7B-Instruct answers "YES" (unsupported claim) to every explanation, with or without the instruction to ignore system statements. It cannot serve as a second judge here, and it says nothing about whether the Llama judge is too strict. Two declared attempts; no further prompt tuning (that would be searching until something passes). The judge-strictness question stays with the 50-explanation human check (user, pending).
+- Added to the tried-and-dropped list. The Qwen model stays in `.scratch/` (gitignored, 4.0 GB).
+
+### 2026-10-28 — Improvement round Q1-Q5: conclusions
+- Kept: **Q1 star ranges** (PASS). The Hand-off agent now has three outcomes: answer, answer with a 90%-guaranteed star range, or hand to a person. A person is needed for 16% (eval) / 2% (natural) of reviews instead of 58% / 44%; ranges are about half a star narrower than Phase 1's, and Phase 1 misses the 90% target on natural test.
+- Reported robustness: **Q4** the main stack is much less sensitive to formatting than Phase 1 (flat text flips 11.7% vs 29.7%; typos 0.3% vs 2.0%) but loses 5.6 points without the title. **Q5** the gain over Phase 1 is positive in every review-year and product-popularity band.
+- Dropped: **Q2** later-time holdout (not possible without refitting every agent); **Q3 / Q3b** second judge (constant output under both prompts).
+- Open: whether the Llama judge (check 5) is too strict — the human check decides; I3 and Q3 together suggest the check-5 prompt is underspecified about system statements.
+- No accuracy number changed in this round (main stack 67.5 / 75.7). Every test read was declared; failed gates read no test set.

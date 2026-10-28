@@ -59,3 +59,9 @@
 - 2026-10-24 Phase H variance (5 seeds, E6b fixed): SH eval 65.8±0.6, natural_test 75.4±0.8; gain over each single agent 5/5 seeds. Logged.
 - 2026-10-24 freeze_tables.py extended with Phase H rows; tables regenerated.
 - 2026-10-24 late: deck v6 + shared paper results section (both tex) done for Oct 25 presentation. Logged.
+- 2026-10-26/27 B2: Explainer + Critic loop on all 3,000 test reviews; faithful 60.5/63.4% -> 88.9/88.8%, 793 fixed / 0 broken; deletion test passes. Battery pause overnight, resumed with nothing lost. Logged.
+- 2026-10-28 Task 11/12: B2 report, paper tables, agent audit, X1 (Phase 1 vs Phase 2 explanations), H1 (hard cases), final demo notebook (check_demo PASS), deck at 25 slides. Logged.
+- 2026-10-28 I1 PASS: Critic max 4 rewrites -> faithful 90.6 / 91.1%, 0 broken; now the default. I2 (learned Hand-off) FAIL, I3 (fixed-form fallback) FAIL. Logged.
+- 2026-10-28 Improvement round (plan 2026-10-28-phase2-v3-improve-plan.md): Q1 star ranges PASS (person needed for 16% / 2% instead of 58% / 44%); Q4 robustness (flat text flips 11.7% vs Phase 1 29.7%; no title -5.6); Q5 gain positive in every year/popularity band; Q2 dropped; Q3/Q3b second judge FAIL (constant verdict). Deck, paper, notes updated. Logged.
+- 2026-10-28 Disk: 11 old backup tarballs moved to Google Drive after Drive confirmed each upload (user's request); free 14 -> 33 GB; newest tarball kept locally.
+- Pending (user): human check of 50 explanations (`human_check.py score` after marking). Next dates: freeze 1 Nov 1, freeze 2 Nov 5, paper draft Nov 8.

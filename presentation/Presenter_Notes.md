@@ -612,6 +612,9 @@ Phase 2 is slower (3.7 times in Run 1). The next design only reflects on uncerta
 **Why is Run 2 lower than Run 1?**
 Different dataset, different baseline behaviour, and the Run 2 pipeline had the defects described on slide 18. Run 1's baseline had collapsed, which exaggerated the gain.
 
+**Is your LLM judge too strict? Did you try a second judge?**
+Yes. Qwen2.5-7B-Instruct as a second judge rejected every explanation, under two prompts, so it could not referee (logged as a failure, no test read). It flags the stated star and the agent shares as "not in the review", which shows the judge prompt does not say those parts come from the system. Whether our Llama judge is too strict is being settled by a human check of 50 explanations.
+
 **What are the limits of your evidence?**
 Small test sets for some checks (96 and 300 rows), a community 4-bit base, a one-shot example chosen with the true rating, unrecorded training rows, and no ablations of VGST or the quality filter.
 
