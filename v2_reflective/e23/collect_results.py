@@ -69,6 +69,8 @@ R = [
  ("07_phase2_v3", "conformal_ranges_Q1.json", E + "q1_conformal.json", "Numbers for the above", "—"),
  ("07_phase2_v3", "breakdown_year_popularity_Q5.out", E + "q5_breakdown.out", "Q5: main stack vs Phase 1 by review year and product popularity", "gain > 0 in every band (eval +8.7 to +17.5; natural +20.8 to +23.7)"),
  ("07_phase2_v3", "breakdown_year_popularity_Q5.json", E + "q5_breakdown.json", "Numbers for the above", "—"),
+ ("07_phase2_v3", "robustness_text_changes_Q4.out", E + "q4_robustness.out", "Q4: flips under typos / flat text / no title, main stack vs Phase 1 (300 eval)", "flat text: 11.7% vs 29.7% flips; typos 0.3% vs 2.0%; no title hurts the main stack (-5.6)"),
+ ("07_phase2_v3", "robustness_text_changes_Q4.json", E + "q4_robustness.json", "Numbers for the above", "—"),
  ("07_phase2_v3", "fallback_explanation_I3_dev2.out", E + "i3_fallback_dev2.out", "I3: fixed-form fallback after 4 rewrites (dev2)", "FAIL: 27 of 43 (gate 30)"),
  ("07_phase2_v3", "agent_audit_C6.md", E + "agent_audit.md", "Agent audit: original Phase 2 agents, evidence, role now", "—"),
  ("07_phase2_v3", "demo_check.out", E + "check_demo.out", "Final demo notebook headless check", "PASS: live run 56 s, 10 paper numbers verified"),

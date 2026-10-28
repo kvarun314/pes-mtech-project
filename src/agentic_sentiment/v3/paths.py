@@ -9,3 +9,4 @@ PROBE_JOBLIB = AGENTS + "p3.joblib"
 REFLECTOR_JOBLIB = AGENTS + "reflector.joblib"
 PROBE_PREFIX = "evid7"            # becomes "evid8" only if gate A1 passes (LOG.md)
 B2 = D + "b2/"                    # rationales and packs, gitignored
+JUDGE2 = ".scratch/mlx-qwen2.5-7b-instruct-q4"   # Q3 second judge (LOG.md 2026-10-28)

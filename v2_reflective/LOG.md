@@ -1176,3 +1176,29 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - Product popularity (reviews of the same product in the pool): eval 1 review +12.2, 2-5 +13.4, 6+ +15.5; natural_test +23.7 / +21.6 / +20.8.
 - Every CI is above 0. Main-stack accuracy by year ranges 61.2-71.2% (eval) and 74.0-77.4% (natural_test); the 2018-20 eval band is the weakest for both systems.
 - Reading: no sign that the system only works for one period or for well-reviewed products. This is not a future-data test (all agents saw reviews from every year).
+
+### 2026-10-28 — Q4 DECLARED: robustness to label-preserving text changes (reported analysis, no selection)
+- Sample fixed now: the first 60 eval reviews of each star in file order (300).
+- Variants: original (recomputed in the same run), typos (adjacent letters swapped in 10% of words longer than 3 letters, seed 0), flat (lowercase, punctuation removed), no title (Evidence agent only reads the title; probe and Phase 1 never do).
+- Per variant: exact accuracy and flip rate (star differs from the same system's original star) for the main stack (probe + Evidence + Reflector) and Phase 1 (LLaMA + LoRA digit probabilities). Paired comparison of flips: exact McNemar.
+- Script `e23/q4_robustness.py`; one LLaMA in memory (SharedLlama), ~1.4 s per review-variant, ~30 min.
+
+### 2026-10-28 — Disk space: older backups moved to Google Drive (user: "move it to google drive and keep it free")
+- The Mac disk was 97% full (14 GB free; `results_archive/backups/` held 23 GB of tarballs, ~2.2 GB each). It slowed every job (two git write timeouts, a 10-minute test run).
+- 6 tarballs already on Drive (same size, matching `.sha256`, Drive shows them uploaded: 0 local blocks) had their local copies removed. Free space 14 → 23 GB.
+- The 11 older tarballs (Oct 18-24) that were never on Drive are copied with `cp -n`, one at a time; each local copy is removed only after Drive confirms the upload. The newest tarball (`pes_20261028_1801`) stays on the Mac. Nothing in Drive is moved or deleted.
+
+### 2026-10-28 — Q3 DECLARED: second LLM judge (Qwen2.5-7B-Instruct 4-bit) for Critic check 5 (dev2 gate)
+- Download approved by the user in chat (`mlx-community/Qwen2.5-7B-Instruct-4bit`, ~4.3 GB, `.scratch/mlx-qwen2.5-7b-instruct-q4`, gitignored).
+- Same prompt, parser and greedy decoding as check 5; only the model differs.
+- dev2 sets: A = the 16 I3 fallbacks the Llama judge rejected; B = the 22 dev2 explanations still failing after 4 rewrites only on check 5; C = 60 dev2 final explanations the Llama judge accepted (random, seed 0).
+- Gate: Qwen accepts at least 50% of A∪B (38) and rejects at most 10% of C.
+- If PASS: test readout on the eval and natural_test explanations whose last failure after 4 rewrites is check 5 only (b2/i1_<split>.jsonl), plus 60 accepted ones per split as a control. Report faithful under "reject only if both judges reject" next to the current single-judge figure, and the control rejection rate. This loosens check 5, so it is reported as a variant; the human check (pending, user) decides which judge to trust.
+
+### 2026-10-28 — Q4 RESULT: robustness to text changes (300 eval reviews, 60 per star)
+- `e23/q4_robustness.out` / `.json`; rows in `q4/robustness.jsonl` (gitignored). Unit tests `tests/v3/test_perturb.py` (v3 suite 37 passed). Run 56 min (~11 s per review for 4 variants × 2 systems).
+- Check: recomputed originals gave 0 flips for both systems (deterministic). Original exact on this subset: main stack 69.3%, Phase 1 50.0%.
+- Typos (10% of longer words): main stack flips 0.3%, Phase 1 2.0% (only-SH 0 vs only-P1 5, p = .062); exact 69.7% / 51.0%.
+- Flat text (lowercase, no punctuation): main stack flips 11.7%, Phase 1 29.7% (20 vs 74, p = 1.8e-8); exact 66.0% / 43.7% (−3.3 vs −6.3 points).
+- No title: main stack flips 8.0% and exact drops to 63.7% (−5.6); Phase 1 0% by construction (it never reads the title). The Evidence agent relies on the title.
+- Reading: the main stack is far less sensitive to formatting than Phase 1 (2.5× fewer flips on flat text) and barely affected by typos. Its one weak point is a missing title, because the Evidence agent was trained on title + text; this is stated as a limit, not hidden.

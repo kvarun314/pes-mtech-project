@@ -1,0 +1,16 @@
+25/300 325s
+50/300 610s
+75/300 892s
+100/300 1183s
+125/300 1522s
+150/300 1804s
+175/300 2084s
+200/300 2372s
+225/300 2660s
+250/300 2888s
+275/300 3131s
+300/300 3366s
+original  exact SH 0.693 P1 0.500 | flips SH 0.000 P1 0.000 | only-SH 0 only-P1 0 p 1
+typos     exact SH 0.697 P1 0.510 | flips SH 0.003 P1 0.020 | only-SH 0 only-P1 5 p 0.062
+flat      exact SH 0.660 P1 0.437 | flips SH 0.117 P1 0.297 | only-SH 20 only-P1 74 p 1.8e-08
+no_title  exact SH 0.637 P1 0.500 | flips SH 0.080 P1 0.000 | only-SH 24 only-P1 0 p 1.2e-07
