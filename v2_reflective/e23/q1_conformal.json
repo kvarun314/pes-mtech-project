@@ -1,0 +1,59 @@
+{
+ "gate_dev2": {
+  "SH": {
+   "coverage": 0.9019999999999999,
+   "mean_size": 1.9505,
+   "single_star": 0.2245
+  },
+  "P1": {
+   "coverage": 0.9020000000000001,
+   "mean_size": 2.4505000000000003,
+   "single_star": 0.05
+  },
+  "pass": true
+ },
+ "readout": {
+  "eval": {
+   "q_SH": 0.8434232648699869,
+   "q_P1": 0.8700747350565066,
+   "SH": {
+    "coverage": 0.926,
+    "mean_size": 1.929,
+    "single_star": 0.241
+   },
+   "P1": {
+    "coverage": 0.918,
+    "mean_size": 2.4,
+    "single_star": 0.047
+   },
+   "three_way": {
+    "auto_share": 0.42,
+    "auto_exact": 0.85,
+    "range_share": 0.417,
+    "range_coverage": 0.894484412470024,
+    "human_share": 0.163
+   }
+  },
+  "natural_test": {
+   "q_SH": 0.7724656753936129,
+   "q_P1": 0.8438303154087274,
+   "SH": {
+    "coverage": 0.9045,
+    "mean_size": 1.5245,
+    "single_star": 0.5
+   },
+   "P1": {
+    "coverage": 0.8795,
+    "mean_size": 2.079,
+    "single_star": 0.111
+   },
+   "three_way": {
+    "auto_share": 0.5575,
+    "auto_exact": 0.9309417040358744,
+    "range_share": 0.419,
+    "range_coverage": 0.850835322195704,
+    "human_share": 0.0235
+   }
+  }
+ }
+}

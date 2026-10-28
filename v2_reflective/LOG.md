@@ -1143,3 +1143,36 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - `paper/e23_results.tex`: `tab:e23faith` has "Final, max 2" and "Final, max 4" columns; FACT lines for I1, I2 and I3; audit row updated. Paper builds (overfull boxes unchanged at 10); integrity audit rerun.
 - Deck: slide 23 table has Max 2 / Max 4 columns and the I1 line; "max 4" on slides 11 and 12; "→ 91%" on slides 12 and 25 and in the speaker notes. The Oct 26-27 schedule row keeps the B2 number (89%) because that row describes the run. Rendered slides 11, 12, 23 and 25 and checked them; widened one column so "Broken" fits. Synced to Drive `current_deck/`.
 - `Presenter_Notes.md`, `agent_audit.md`, `EXPERIMENTS_SUMMARY.md` (W15 = I1; F19 = I2, F20 = I3) and `collect_results.py` (I1, I2, I3 outputs) updated.
+
+### 2026-10-28 — Improvement round Q1-Q5 started (plan `docs/superpowers/plans/2026-10-28-phase2-v3-improve-plan.md`)
+- Order: Q1 star ranges (CPU) → Q5 breakdown (CPU) → Q4 robustness (GPU) → Q3 second judge (GPU; 4.3 GB download only with the user's OK) → fold-in. Q2 (later-time holdout) dropped: every agent was fit on reviews from 1999-2023, so no clean future set exists without refitting; Q5's year bands are the time check.
+
+### 2026-10-28 — Q1 DECLARED: star ranges with a 90% coverage guarantee (split conformal; dev2 gate)
+- Score = 1 − probability of the true star. q = the ⌈(n+1)·0.9⌉/n quantile on a calibration set. Range = the smallest contiguous span of stars containing every star with probability ≥ 1 − q (contiguous hull, so coverage can only rise).
+- Gate (dev2, out-of-fold main-stack probabilities, 5-fold: calibrate on 4 folds, score on 1): main stack coverage within [0.88, 0.92], and mean range size at least 0.2 stars smaller than Phase 1's under the same procedure.
+- If PASS: calibrate once on all of dev2 → read eval; calibrate once on natural_dev (natural class mix) → read natural_test. Report coverage, mean size and single-star share for the main stack and Phase 1; a three-way Hand-off: answer (confidence ≥ the S1 threshold), answer with a range (range ≤ 2 stars), otherwise a person. Share and coverage of each path.
+- Script `e23/q1_conformal.py`; CPU only, minutes.
+
+### 2026-10-28 — Q1 RESULT: star ranges with 90% coverage — PASS
+- `e23/q1_conformal.out` / `.json`. Unit tests `tests/v3/test_conformal.py` (v3 suite 34 passed). The synthetic-data test bound was widened to 0.96 because the contiguous hull can only add coverage; the declared gate was not changed.
+- Gate (dev2, out-of-fold, 5-fold): main stack coverage 0.902 (needed 0.88-0.92), mean range 1.95 stars vs Phase 1 2.45 (needed ≥ 0.2 smaller: 0.50 smaller). Single-star ranges 22.5% vs 5.0%. PASS.
+- Readout (calibrated once on dev2 → eval; once on natural_dev → natural_test):
+  - eval: main stack coverage 92.6%, mean range 1.93 stars, single star 24.1%; Phase 1 91.8%, 2.40, 4.7%.
+  - natural_test: main stack coverage 90.5%, mean range 1.52, single star 50.0%; Phase 1 88.0% (below target), 2.08, 11.1%.
+- Three-way Hand-off (answer if confidence ≥ the S1 threshold; else a range if it is at most 2 stars; else a person):
+  - eval: answer 42.0% (85.0% exact), range 41.7% (true star inside 89.4%), person 16.3%.
+  - natural_test: answer 55.8% (93.1% exact), range 41.9% (true star inside 85.1%), person 2.4%.
+- Reading: the main stack gives the guaranteed coverage with ranges about half a star narrower than Phase 1, and on natural test half of all answers are a single star. Adding the range path cuts reviews sent to a person from 58% / 44% (S1, answer or hand off) to 16% / 2%. The range path itself covers 85-89%, below 90%, because it is the harder subset; the 90% guarantee is for all reviews together.
+- Note: pytest hung once for 12 min during this task and then ran normally (34 passed in 10.7 s; the LLaMA test alone 51 s). Cause not found. My own wait loop also matched its own command line (same mistake as the I3 queue) and was stopped.
+
+### 2026-10-28 — Q5 DECLARED: accuracy by review year and product popularity (reported analysis, no selection)
+- Bands fixed now: year ≤2014 / 2015–2017 / 2018–2020 / 2021–2023 (review timestamp from pool.jsonl); product popularity = reviews of the same parent_asin in pool.jsonl: 1 / 2–5 / 6+.
+- Per band, eval and natural_test: n, main-stack exact, Phase 1 exact, difference with a paired bootstrap 95% CI (1,000 resamples, seed 0). Length bands already exist (analysis_C) and are not repeated.
+- A later-time holdout is not possible without refitting every agent (training covers 1999–2023), so year bands are the time check.
+
+### 2026-10-28 — Q5 RESULT: the gain over Phase 1 holds in every year and popularity band
+- `e23/q5_breakdown.out` / `.json`. Totals match the frozen tables (eval SH .675 / P1 .540; natural_test .757 / .534).
+- Year (main stack − Phase 1, 95% bootstrap CI): eval ≤2014 +14.1 [+5.8, +23.1], 2015-17 +14.6, 2018-20 +8.7 [+3.3, +14.7] (smallest), 2021-23 +17.5; natural_test +21.5 / +21.9 / +23.3 / +21.6.
+- Product popularity (reviews of the same product in the pool): eval 1 review +12.2, 2-5 +13.4, 6+ +15.5; natural_test +23.7 / +21.6 / +20.8.
+- Every CI is above 0. Main-stack accuracy by year ranges 61.2-71.2% (eval) and 74.0-77.4% (natural_test); the 2018-20 eval band is the weakest for both systems.
+- Reading: no sign that the system only works for one period or for well-reviewed products. This is not a future-data test (all agents saw reviews from every year).
