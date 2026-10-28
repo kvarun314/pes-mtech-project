@@ -113,6 +113,7 @@ Start with the data line in the subtitle. It answers any leakage question:
 - **Say:** "Exact accuracy has plateaued at about 67 and 76. The agentic answer is for the system to know when it is unsure. The Hand-off agent answers automatically only when the stack is confident and sends the rest to a person."
 - The threshold was fixed on dev2 before the test sets were read.
 - **Numbers:** natural test, answers 55.7% of reviews and is right 93.1% [91.6, 94.5]; balanced eval, 85.0% on 42%. The handed-off reviews are only 54–55% right, so they are the hard ones. Phase 1 with the same rule: 67.9% / 66.9%.
+- **New (Q1, star ranges):** when the system is unsure, it can answer with a range of stars instead of handing the review on. The range is calibrated (conformal prediction) to contain the true star 90% of the time: 92.6% on eval and 90.5% on natural test. Ranges are 1.9 stars wide on eval and 1.5 on natural test; Phase 1 needs 2.4 and 2.1 and still misses 90% on natural test (88.0%). With three options (answer, range, person) only 16% (eval) and 2% (natural) still need a person. Be open: the range option on its own covers 85–89%, because it gets the harder reviews; the 90% holds over all reviews.
 - The old "All models" bar chart is out of the deck (it is in `paper/figures/e23/main_bars.png` if asked; base LLaMA zero-shot 34%, a probe on its hidden state 61 / 74).
 
 ### 7. In depth (slides 17–23)
@@ -134,6 +135,8 @@ Start with the data line in the subtitle. It answers any leakage question:
 - **Errors:** 90% (eval) and 86% (natural) of errors are one star off. 2★ and 3★ are hardest. When the two agents agree (64–72% of rows) the main stack is right 74–84% of the time; when they disagree, 56%.
 - **Calibration:** ECE .047 and .062, slightly under-confident. The confidence can be trusted, which is what the Router needs.
 - **Cost:** the LLaMA probe takes about 0.67 s per review; TF-IDF and the Reflector take under 0.1 ms each.
+- **New, text changes (Q4, 300 eval reviews):** lowercase text without punctuation changes the main stack's star for 11.7% of reviews and Phase 1's for 29.7% (p 2e-8); typos change 0.3% vs 2.0%. Be open: with the title removed the main stack loses 5.6 points (69.3 → 63.7), because the Evidence agent reads the title; Phase 1 never reads it.
+- **New, years and products (Q5):** the gain over Phase 1 is positive in every review-year band (2001–2023) and every product-popularity band, all confidence intervals above 0: eval +8.7 to +17.5, natural +20.8 to +23.7. This is not a future-data test; all agents saw reviews from every year.
 
 **Self-correction 1, measured (slide 23):**
 - **Say:** "When the quick Evidence-model draft is unsure, the system calls the LLaMA probe and the Reflector revises the star."
@@ -157,7 +160,7 @@ Start with the data line in the subtitle. It answers any leakage question:
 - Phase 1 was reproduced honestly, and two problems were found in the original protocol.
 - Phase 2's two-agent stack beats the single fine-tuned model, significantly.
 - The agentic layer is measured on 3,000 reviews: escalation fixes about two stars per one broken (LLaMA skipped on 39–48%); the Critic loop makes 91% of explanations faithful with none broken; the Hand-off agent is right 93% of the time on the 56% it answers. LLM re-rating was tested and dropped (third LLM-judge failure).
-- **Limits, said plainly:** one dataset; part of the gain comes from the larger Reflector fit set; explicit sarcasm is too rare in the data to measure.
+- **Limits, said plainly:** one dataset (but the gain holds in every year band); the main stack needs the review title (−5.6 points without it); part of the gain comes from the larger Reflector fit set; explicit sarcasm is too rare in the data to measure.
 
 End with the dates: freeze Nov 1 / 5, draft Nov 8, submit Nov 20, final presentation in December with a live demo.
 

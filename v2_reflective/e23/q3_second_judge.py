@@ -1,12 +1,17 @@
 """Q3 (declared LOG.md 2026-10-28): second judge (Qwen2.5-7B-Instruct 4-bit) on explanations the Llama judge rejected / accepted.
-usage: q3_second_judge.py gate | q3_second_judge.py test   (tee to q3_second_judge_<part>.out; updates q3_second_judge.json)"""
+usage: q3_second_judge.py gate|test [--prompt b]   (tee to q3[b]_second_judge_<part>.out; updates q3[b]_second_judge.json)
+Q3b (declared LOG.md 2026-10-28, second attempt): --prompt b adds one sentence telling the judge to ignore system statements."""
 import json, os, random, sys
 sys.path.insert(0, "src")
 from mlx_lm import load
 from agentic_sentiment.v3 import paths as PT
 from agentic_sentiment.v3.critic import JUDGE_SYSTEM, judge_user, parse_judge
 from agentic_sentiment.v3.explainer import make_chat_fn
-part = sys.argv[1]; J = PT.D + "q3_second_judge.json"; res = json.load(open(J)) if os.path.exists(J) else {}
+part, B_ = sys.argv[1], "--prompt" in sys.argv and sys.argv[sys.argv.index("--prompt") + 1] == "b"
+J = PT.D + ("q3b" if B_ else "q3") + "_second_judge.json"
+SYSTEM = JUDGE_SYSTEM + (" The explanation may state the system's star rating and facts about the rating system (its agents, their shares, whether they agreed); "
+                         "these are not claims about the review. Check only what the explanation says about the product or the reviewer's words and experience." if B_ else "")
+res = json.load(open(J)) if os.path.exists(J) else {}
 L = lambda f: [json.loads(l) for l in open(PT.B2 + f)]
 T = lambda s: {x["review_id"]: x for x in map(json.loads, open(f"{PT.D}{s}.jsonl"))}
 
@@ -22,7 +27,7 @@ if part == "test":
     assert res.get("gate_dev2", {}).get("pass"), "gate not passed: no test read"
 model, tok = load(PT.JUDGE2); chat = make_chat_fn(model, tok)
 def judge(split, items):
-    t = T(split); return [parse_judge(chat(JUDGE_SYSTEM, judge_user(x, t[i]["title"], t[i]["review_text"])))[0] for i, x in items]
+    t = T(split); return [parse_judge(chat(SYSTEM, judge_user(x, t[i]["title"], t[i]["review_text"])))[0] for i, x in items]
 
 
 if part == "gate":

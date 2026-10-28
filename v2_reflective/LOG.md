@@ -1202,3 +1202,24 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - Flat text (lowercase, no punctuation): main stack flips 11.7%, Phase 1 29.7% (20 vs 74, p = 1.8e-8); exact 66.0% / 43.7% (−3.3 vs −6.3 points).
 - No title: main stack flips 8.0% and exact drops to 63.7% (−5.6); Phase 1 0% by construction (it never reads the title). The Evidence agent relies on the title.
 - Reading: the main stack is far less sensitive to formatting than Phase 1 (2.5× fewer flips on flat text) and barely affected by typos. Its one weak point is a missing title, because the Evidence agent was trained on title + text; this is stated as a limit, not hidden.
+
+### 2026-10-28 — Q3 RESULT: second judge (Qwen2.5-7B-Instruct) — FAIL (no test read)
+- `e23/q3_second_judge_gate.out`. dev2: Qwen accepted 0 of the 38 explanations the Llama judge rejected (16 I3 fallbacks + 22 loop failures) and rejected 60 of 60 the Llama judge accepted; 0 unparsed. Gate needed ≥ 50% and ≤ 10%: FAIL.
+- Diagnostic (`e23/q3_second_judge_diag.out`, 3 dev2 rows, after the gate): Qwen flags the system's own statements as unsupported: the stated star ("deserves 1 star", "gave the product 5 stars") and the agent shares ("probe 95%, evidence 5%"), because the review text never says them. The check-5 prompt never says these are allowed. Llama tolerates them; Qwen reads the prompt literally.
+- Reading: a constant verdict, so Qwen with the current prompt says nothing about Llama's strictness. The finding is about the prompt: check 5 does not tell the judge which parts of the explanation come from the system.
+
+### 2026-10-28 — Q3b DECLARED (second attempt, declared after seeing the Q3 failure mode): judge prompt that excludes system statements
+- Same three dev2 sets, same gate (Qwen accepts ≥ 50% of the 38 Llama-rejected, rejects ≤ 10% of the 60 Llama-accepted), same decoding.
+- Only the judge's system prompt changes: "The explanation may state the system's star rating and facts about the rating system (its agents, their shares, whether they agreed); these are not claims about the review. Check only what the explanation says about the product or the reviewer's words and experience." The user prompt and parser are unchanged.
+- If PASS: test readout as declared for Q3 (judge-only failures after 4 rewrites + 60 accepted controls per split), with this prompt. Check 5 in the Critic is not changed by this run; any change would need its own gate.
+- Script: `e23/q3_second_judge.py` gains a `--prompt b` option; outputs `q3b_second_judge_<part>.out`.
+
+### 2026-10-28 — Backup move to Google Drive finished
+- All 11 older tarballs are on Drive; the local copies were removed only after Drive's own metadata database (read-only query) listed each with a cloud id and its full server-side size, with no pending Drive operations. The first check (0 local blocks) was replaced because Drive keeps fresh uploads in its local cache, so it would have waited indefinitely.
+- macOS `cp -n` exits non-zero when the target exists, so `pes_20261018_0007` (copied in the first attempt) was skipped by the mover and cleared afterwards with the same check.
+- Local `results_archive/backups/` now holds only `pes_20261028_1801.tar.gz` plus all `.sha256` files. Free disk 14 → 33 GB. Nothing in Drive was moved or deleted.
+
+### 2026-10-28 — Q1, Q4, Q5 folded into deck, paper and notes
+- Deck (25 slides): slide 16 band adds star ranges (box moved up and enlarged after the render showed overflow); slide 21 band "New checks (Oct 28)" with Q4 and Q5; slide 25 Agentic-layer and Limits cards (gain holds in every year band; needs the review title, −5.6 without it). Speaker notes for slides 16 and 21 updated. Rendered 16, 21, 25 and checked.
+- Paper: new `tab:e23conformal`; FACT lines for Q1, Q4, Q5; Hand-off audit row. The faithfulness table from the I1 update had 9 columns under an 8-column spec (3 LaTeX errors, committed in 7a308da); it is now split into `tab:e23faith` (first / max 2 / max 4) and `tab:e23deltest` (deletion test). Build: 0 errors, overfull boxes 10 (unchanged).
+- `Presenter_Notes.md` (Hand-off, Robustness, Limits), `agent_audit.md` (Hand-off row), `EXPERIMENTS_SUMMARY.md` section 4 (Q1, Q4, Q5 rows).

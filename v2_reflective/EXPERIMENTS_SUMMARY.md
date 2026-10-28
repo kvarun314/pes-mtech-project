@@ -95,6 +95,9 @@ Numbers freeze on Nov 1. The paper is due Nov 21–22.
 | SH variance (5 seeds, E6b fixed) | SH − E6b +3.3 ± 0.6 / +5.2 ± 0.8; SH − P3 +5.2 ± 0.9 / +2.4 ± 1.2; SH − old stack on dev2 +0.7 ± 1.2 / +1.0 ± 0.6 |
 | Phase 1 vs Phase 2 explanations (X1, 150 eval) | Grounded in the review 0% vs 79% (p 6e-36); distinct outputs 3% vs 100%; judge pass 85% vs 94% (p .011) |
 | Hard cases (H1) | Negative-sounding positives: stack +27.5 / +28.0 over Phase 1 (p .007 / 9e-11); ironic-sounding negatives +6.9 (ns) / +14.7 (p .04); mixed reviews +7.1 (p .04) / −0.7 (ns); sarcasm cues too rare (n 6 / 1) |
+| Star ranges (Q1, conformal, 90% target) | Coverage 92.6 / 90.5%; mean range 1.93 / 1.52 stars vs Phase 1 2.40 / 2.08 (Phase 1 misses 90% on natural: 88.0%); with ranges, a person is needed for 16% / 2% of reviews |
+| Text changes (Q4, 300 eval) | Star flips: flat text 11.7% vs Phase 1 29.7% (p 2e-8); typos 0.3% vs 2.0%; no title: main stack −5.6 points (Evidence agent reads the title) |
+| Year and product popularity (Q5) | Gain over Phase 1 positive in every band, all CIs > 0: eval +8.7 to +17.5, natural +20.8 to +23.7 |
 
 ## 5. Historical results (superseded, kept for the record)
 

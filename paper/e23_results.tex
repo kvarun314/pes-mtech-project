@@ -200,7 +200,7 @@ natural\_test & 75.7 & 75.5 & 48.2\% & .68 \\
 
 \begin{table}[htbp]
 \centering
-\caption{Explanations on all 3,000 test reviews: share faithful (all Critic checks pass) for the first draft and after the Critic loop with at most 2 and at most 4 rewrites (exact McNemar $p$, final vs first), and the deletion test (cited phrases vs the same number of random words; Wilcoxon $p$).}
+\caption{Explanations on all 3,000 test reviews: share faithful (all Critic checks pass) for the first draft and after the Critic loop with at most 2 and at most 4 rewrites (exact McNemar $p$, final vs first).}
 % FACT (B2, b2_report.out, LOG.md 2026-10-27): fixed 284 / broken 0 (eval), 509 / 0 (natural_test); rewrite rate 39.5% / 36.7%; mean rounds 0.55 / 0.54;
 %   judge unparsed 0; LLM calls 2.64 / 2.67 per review; median Explainer 6.4 / 6.1 s, Critic 1.6 s per review.
 % FACT: first-draft failures (eval / natural_test): star 7 / 10; quote not in review or pack 196 / 345; top phrases missing 181 / 294; disagreement 0 / 0; judge 76 / 206.
@@ -215,15 +215,29 @@ natural\_test & 75.7 & 75.5 & 48.2\% & .68 \\
 %   all 16 failures were the judge rejecting a sentence that only quotes the review.
 \label{tab:e23faith}
 \small
-\resizebox{\linewidth}{!}{%
-\begin{tabular}{lccccccc}
+\begin{tabular}{lccccc}
 \toprule
-\textbf{Split} & \textbf{Faithful, first} & \textbf{Final, max 2} & \textbf{McNemar $p$} & \textbf{Final, max 4} & \textbf{McNemar $p$} & \textbf{Compr. cited / random} & \textbf{Suff. cited / random} & \textbf{Wilcoxon $p$ (both)} \\
+\textbf{Split} & \textbf{First draft} & \textbf{Max 2 rewrites} & \textbf{$p$} & \textbf{Max 4 rewrites} & \textbf{$p$} \\
 \midrule
-eval & 60.5\% & 88.9\% & 6.4e-86 & 90.6\% & 4.9e-91 & .158 / .089 & .556 / .308 & $<$1e-46 \\
-natural\_test & 63.4\% & 88.8\% & 1.2e-153 & 91.1\% & 1.7e-167 & .212 / .124 & .641 / .353 & $<$1e-115 \\
+eval & 60.5\% & 88.9\% & 6.4e-86 & 90.6\% & 4.9e-91 \\
+natural\_test & 63.4\% & 88.8\% & 1.2e-153 & 91.1\% & 1.7e-167 \\
 \bottomrule
-\end{tabular}}
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Deletion test on the cited phrases vs the same number of random words (Wilcoxon $p$ for both measures).}
+\label{tab:e23deltest}
+\small
+\begin{tabular}{lccc}
+\toprule
+\textbf{Split} & \textbf{Compr. (cited / random)} & \textbf{Suff. (cited / random)} & \textbf{Wilcoxon $p$} \\
+\midrule
+eval & .158 / .089 & .556 / .308 & $<$1e-46 \\
+natural\_test & .212 / .124 & .641 / .353 & $<$1e-115 \\
+\bottomrule
+\end{tabular}
 \end{table}
 
 \begin{figure}[htbp]
@@ -247,11 +261,34 @@ Visual Verifier & Constant output (always 3, then always 5) & Excluded \\
 RAG Prover & Weak vote (37.5\%) & Replaced by the Evidence agent \\
 Critic (dissonance) & Override on 0.4\% of rows; LLM adjudicator failed three times & Star moved to the Reflector; Critic checks explanations \\
 Router (new) & Probe skipped on 39--48\% at no accuracy cost & Kept \\
-Hand-off (new) & 93.1\% exact at 55.7\% coverage (natural\_test) & Kept \\
+Hand-off (new) & 93.1\% exact at 55.7\% coverage (natural\_test); 90\% star ranges 1.5--1.9 stars wide & Kept \\
 Explainer + Critic loop (new) & Faithful 60.5--63.4\% $\to$ 90.6--91.1\% (max 4 rewrites), 0 broken & Kept \\
 \bottomrule
 \end{tabular}
 \end{table}
+\begin{table}[htbp]
+\centering
+\caption{Star ranges with a 90\% coverage target (split conformal; calibrated on dev2 for eval and on natural\_dev for natural\_test). Coverage = share of reviews whose true star lies in the range.}
+% FACT (Q1, q1_conformal.out, LOG.md 2026-10-28): dev2 gate (5-fold, out-of-fold): main stack coverage .902, mean size 1.95 vs Phase 1 2.45: PASS.
+%   Three-way Hand-off (answer if confidence >= S1 threshold; else range if <= 2 stars; else person): eval answer 42.0% (85.0% exact), range 41.7% (89.4% covered),
+%   person 16.3%; natural_test answer 55.8% (93.1%), range 41.9% (85.1%), person 2.4%.
+\label{tab:e23conformal}
+\small
+\begin{tabular}{llccc}
+\toprule
+\textbf{Split} & \textbf{System} & \textbf{Coverage} & \textbf{Mean range (stars)} & \textbf{Single star} \\
+\midrule
+eval & Main stack & 92.6\% & 1.93 & 24.1\% \\
+eval & Phase 1 & 91.8\% & 2.40 & 4.7\% \\
+natural\_test & Main stack & 90.5\% & 1.52 & 50.0\% \\
+natural\_test & Phase 1 & 88.0\% & 2.08 & 11.1\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+% FACT (Q4, q4_robustness.out, 300 eval reviews, 60 per star): star flips vs the same system's original: typos 0.3% (SH) vs 2.0% (P1), p .062;
+%   flat text 11.7% vs 29.7%, p 1.8e-8 (exact 66.0 vs 43.7; original 69.3 vs 50.0); no title: SH 8.0% flips, exact 63.7 (-5.6); P1 unaffected (never reads the title).
+% FACT (Q5, q5_breakdown.out): main stack - Phase 1 by review year: eval +14.1 / +14.6 / +8.7 / +17.5 (<=2014, 2015-17, 2018-20, 2021-23),
+%   natural_test +21.5 / +21.9 / +23.3 / +21.6; by product popularity (1 / 2-5 / 6+ reviews): eval +12.2 / +13.4 / +15.5, natural +23.7 / +21.6 / +20.8; all 95% CIs > 0.
 % FACT (X1, x1_explain_compare.out, 150 balanced eval reviews, same Instruct judge as Critic check 5):
 %   distinct outputs Phase 1 3.3% (5 sentences) vs Phase 2 100%; grounded in the review 0.0% vs 78.7% (McNemar 118 vs 0, p 6.0e-36);
 %   judge finds no unsupported claim 85.3% vs 94.0% (18 vs 5, p .011; Phase 1's rubric sentence is vague, so it is seldom judged unsupported);
