@@ -16,7 +16,7 @@
 | What to say on each slide | `presentation/Presenter_Notes.md` (Part 0 = current deck) |
 | Full story: Phase 1 to now, failures, why | `presentation/Project_Journey.md` |
 | Explaining the `v2_reflective/` code | `presentation/V2_Reflective_Guide.md` |
-| Demo notebook | `presentation/Presentation_Demo.ipynb` (being rebuilt for Phase 2 v3) |
+| Demo notebook | `presentation/Final_Demo.ipynb` (Phase 1 + Phase 2 live on 5 reviews, ~1 min, cached fallback). Build: `.venv/bin/python v2_reflective/build_final_demo.py`; check: `.venv/bin/python v2_reflective/check_demo.py`. Notebook and cache are gitignored (review text). Older v2 demo: `presentation/Presentation_Demo.ipynb` |
 | **Lab notebook**: every experiment, rule declared first | `v2_reflective/LOG.md` |
 | One-page summary of what worked and what failed | `v2_reflective/EXPERIMENTS_SUMMARY.md` |
 | **All saved results, labelled** (9 categories, with index) | `results/e23/INDEX.md`, refreshed by `python v2_reflective/e23/collect_results.py` |

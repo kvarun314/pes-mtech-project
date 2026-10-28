@@ -13,8 +13,8 @@ Slides no longer in the deck (Run 1 historical, Kaggle baseline, dissonance Crit
 - Evidence for the shortcomings: 3 min
 - Phase 2 intro, system, and how it answers each shortcoming: 4 min
 - Phase 1 results (with the data line): 1 min
-- Phase 2 results (main result, gain, all models): 3 min
-- In depth (errors, why it works, tried/dropped/kept, robustness, self-correction 1): 6 min
+- Phase 2 results (main result, gain, Hand-off agent): 3 min
+- In depth (errors, why it works, tried/dropped, kept, robustness, self-correction 1 and 3): 6 min
 - Schedule and conclusions: 2 min
 
 ### 1. Intro: title and problem (slides 1–2)
@@ -39,6 +39,7 @@ Use these when explaining or when someone asks what a word means.
 | Reflector | The learned combiner: weighs the probe and the Evidence model, outputs the final star |
 | Main stack | LLaMA probe + Evidence model + Reflector: the system behind the headline results |
 | Router | Decides whether the slow LLaMA probe is needed for a review |
+| Hand-off agent | Answers automatically when the stack is confident; sends unsure reviews to a person |
 | Explainer / Critic | Explainer (instruction-tuned LLM) writes the rationale; Critic checks it and asks for rewrites |
 | Self-correction | System revises its own output: escalation, LLM re-rating (rating) and the Critic loop (explanation) |
 | Balanced eval | 1,000 test reviews, 200 per star: every star counts equally |
@@ -82,13 +83,13 @@ Use these when explaining or when someone asks what a word means.
 - **Where Phase 2 started:** the original four-agent design (Analyst, Visual Verifier, RAG Prover, dissonance Critic). The audits showed the Visual Verifier gave constant output, RAG was weak, and the Critic barely acted.
 - **System slide:** walk the five boxes. Evidence model → Router → LLaMA probe → Reflector → Explainer + Critic.
   - The decision core (main stack) is built and frozen.
-  - The agentic layer is being built, and each part is measured.
-  - Self-correction happens at two points: escalation of unsure stars (measured, works) and the explanation loop (being measured). A third idea, an Instruct LLM re-rating unsure reviews, was tested and failed: 76 fixed vs 89 broken on dev2.
+  - The agentic layer (Router, Hand-off agent, Explainer, Critic) is built in LangGraph and measured on all 3,000 test reviews.
+  - Self-correction works at two points: escalation of unsure stars (92 vs 50 and 152 vs 78 fixed vs broken) and the explanation loop (faithful 60–63% → 89%, 0 broken). A third idea, an Instruct LLM re-rating unsure reviews, was tested and failed: 76 fixed vs 89 broken on dev2.
 - **"How Phase 2 answers each shortcoming"** (the table): read it as problem → fix → the number that checks it. Spend time on three rows:
   - Two agents instead of one pass.
   - LLMs explain and check instead of judging, because the judge failed twice.
   - Template justifications replaced by evidence-based explanations that a Critic checks.
-  - Self-correction 1 is now measured (see its slide). Faithfulness and the deletion test come next.
+  - Every row is now measured, including the explanations (see the Self-correction 3 slide).
 
 ### 5. Results of Phase 1 (slide 13)
 Start with the data line in the subtitle. It answers any leakage question:
@@ -108,7 +109,11 @@ Start with the data line in the subtitle. It answers any leakage question:
 
 **Phase 1 → Phase 2:** lead with the gain, +13.5 / +22.3 points (29% / 48% fewer errors), significant after Holm. Then why: the agents complement each other; the Evidence model is strong on short reviews, the probe on long ones. Say the caveat yourself: the earlier stack refit on the same dev reviews is only 2.0 / 1.5 behind. Never quote 70.7 / 60.1 (leaky), 74.8 (one seed) or 79.9 (class-mix correction).
 
-**All models:** **Say:** "Every model, with 95% confidence intervals. The main stack is in red. Notice base LLaMA: as a zero-shot rater it gets 34%, but a probe on its hidden state gets 61 and 74."
+**Hand-off agent (slide 16):**
+- **Say:** "Exact accuracy has plateaued at about 67 and 76. The agentic answer is for the system to know when it is unsure. The Hand-off agent answers automatically only when the stack is confident and sends the rest to a person."
+- The threshold was fixed on dev2 before the test sets were read.
+- **Numbers:** natural test, answers 55.7% of reviews and is right 93.1% [91.6, 94.5]; balanced eval, 85.0% on 42%. The handed-off reviews are only 54–55% right, so they are the hard ones. Phase 1 with the same rule: 67.9% / 66.9%.
+- The old "All models" bar chart is out of the deck (it is in `paper/figures/e23/main_bars.png` if asked; base LLaMA zero-shot 34%, a probe on its hidden state 61 / 74).
 
 ### 7. In depth (slides 17–23)
 **Where the main stack is right and where it errs:**
@@ -119,8 +124,9 @@ Start with the data line in the subtitle. It answers any leakage question:
 **Why two agents beat one:**
 - Left: the Evidence model wins on short reviews (70.0 vs 54.6), the LLaMA probe on long ones (64.3 vs 55.8), and the stack is best or near-best in every length band.
 - Right: when the agents disagree, the stack is still right 56% of the time, against 36–50% for either alone. That's the case for combining two different kinds of signal.
+- **Hard cases (band):** reviews that sound negative but are rated 4–5★: stack 62.5 vs Phase 1 35.0 (eval), 71.0 vs 43.0 (natural), +28 points on both. Positive-sounding 1–2★ reviews: +6.9 (eval, not significant), +14.7 (natural, p .04). Mixed reviews with "but / however": +7.1 (eval), no difference on natural. Explicit sarcasm cue words: only 6 and 1 reviews, too few to measure; say so if asked about sarcasm.
 
-**Tried / dropped / kept:** **Don't read every row.** On the first "tried and dropped" slide, pick three: the LLM judge (failed twice, which is why the LLM doesn't decide the star), the Visual Verifier (constant output) and the recalibration (the gain was the leak). On the second one, say: more views of the same text, more LoRA data and fancier Reflectors didn't help; more probe data and a bigger Reflector fit set did. Mention the honest near-miss (the 10K probe missed by .001) and that 120K added nothing (+0.3 on dev2): the probe has saturated at 40K. On "What we kept", walk the ten kept changes quickly; each has its evidence on the right.
+**Tried / dropped / kept:** **Don't read every row.** The ledger is now one slide. Pick three: the LLM judge (failed twice, which is why the LLM doesn't decide the star), the Visual Verifier (constant output) and the recalibration (the gain was the leak). The last two rows: the probe on 120K reviews added nothing (+0.3 on dev2; the 10K probe had missed by .001, so the probe has saturated at 40K), and the Instruct-LLM re-rating, the third LLM-judge failure (76 fixed vs 89 broken). If asked about the other dropped ideas (extra Reflector features, natural-prior Reflectors, MiniLM / character n-grams, LoRA on 10K, several layers, pooled-dev Reflector): more views of the same text, more LoRA data and fancier Reflectors didn't help. On "What we kept", walk the ten kept changes quickly; each has its evidence on the right.
 
 **Robustness:**
 **Say:** "I checked whether the result survives four questions."
@@ -137,14 +143,21 @@ Start with the data line in the subtitle. It answers any leakage question:
   - LLaMA was skipped on 39% / 48% of reviews, with no significant accuracy change (67.4 vs 67.5; 75.5 vs 75.7).
 - **Be open about it:** "This was our second threshold. The first (0.60) missed its natural-dev check by 0.3 points and was never tested on the test sets. The second was declared before running, and both are reported."
 
+**Self-correction 3, measured (slide 23):**
+- **Say:** "The Explainer writes a short explanation from the evidence only. The Critic checks five things: the star, that quotes really occur in the review, the key phrases, the disagreement, and no invented claims. If one fails, it sends specific feedback and the Explainer rewrites, at most twice."
+- **Numbers:** faithful first drafts 60.5% (eval) / 63.4% (natural); after the loop 88.9% / 88.8%. 284 + 509 fixed, 0 broken; McNemar p < 1e-85.
+- **Deletion test (right):** removing the cited phrases lowers the stack's confidence by .158 vs .089 for random words (eval) and .212 vs .124 (natural); keeping only the cited phrases holds .556 vs .308 and .641 vs .353. p < 1e-46 everywhere.
+- **Phase 1 comparison (left, small text):** same 150 reviews, same judge: Phase 1's justification never quotes the review (0% vs 79%), is one of 5 stock sentences (3% distinct vs 100%), and is judged free of unsupported claims 85% vs 94%.
+- **Be open:** about 11% of final explanations still fail a check; they are labelled, not hidden. The judge is the same Llama-3-8B-Instruct model that writes the explanation; the deletion test and the Phase 1 comparison are the independent checks. A human check of 50 is under way.
+
 ### 8. Build schedule and conclusions (slides 24–25)
-**Say:** "This is the build plan for the next ten days. Today the saved agents were rebuilt and match the frozen results exactly. Next come the shared LLaMA model and the Router with the first level of self-correction, then the Critic, the Explainer and the LLM re-rating check. The bigger probe ran on the night of Oct 25 and failed its check: 120K training reviews gave only +0.3 points on dev2, so the 40K probe stays. The other heavy runs (explanations on all 3,000 test reviews, the deletion test) run overnight on the charger. Numbers freeze in two stages: Nov 1 for local work, Nov 5 once the Colab result is in or out."
+**Say:** "Every row had its rule written first and is logged. The bigger probe failed its check (120K reviews gave +0.3 on dev2), so the 40K probe stays. Explanations and the Critic loop ran on all 3,000 test reviews, then the deletion test; the report, paper tables, hard cases and the demo notebook are done. Numbers freeze in two stages: Nov 1 for local work, Nov 5 once the optional Colab result is in or out."
 
 **Conclusions:** four cards.
 - Phase 1 was reproduced honestly, and two problems were found in the original protocol.
 - Phase 2's two-agent stack beats the single fine-tuned model, significantly.
-- The agentic layer's first part is measured: escalation fixes about two stars per one broken, and LLaMA is skipped on 39–48%. LLM re-rating was tested and dropped (third LLM-judge failure). Explanations come next.
-- **Limits, said plainly:** one dataset; part of the gain comes from the larger Reflector fit set; agentic-layer numbers are still pending.
+- The agentic layer is measured on 3,000 reviews: escalation fixes about two stars per one broken (LLaMA skipped on 39–48%); the Critic loop makes 89% of explanations faithful with none broken; the Hand-off agent is right 93% of the time on the 56% it answers. LLM re-rating was tested and dropped (third LLM-judge failure).
+- **Limits, said plainly:** one dataset; part of the gain comes from the larger Reflector fit set; explicit sarcasm is too rare in the data to measure.
 
 End with the dates: freeze Nov 1 / 5, draft Nov 8, submit Nov 20, final presentation in December with a live demo.
 
@@ -178,7 +191,7 @@ LLM re-rating of uncertain reviews (gated) · Explainer ⇄ Critic loop (max 2 r
 - **"You tried many things; isn't the winner luck?"** Every rule was written before running, and failures never touched the test sets. Five candidates were compared on dev2, and I disclose that. The test sets were read once.
 - **"Then what is the role of LoRA?"** Phase 1 is still the paper's baseline reproduction. Inside Phase 2 it is an ablation row: adding it to the main stack did not help (dev2 .633 versus .639).
 - **"Why is natural-test accuracy higher than balanced?"** About 65% of natural reviews are 5-star, which are easier. That is why macro-F1 (.612) is reported next to it.
-- **"Is this agentic?"** Today: two independent agents plus a learned Reflector that arbitrates between them. The LLM-as-judge version (Gate 0) was tested and failed, and that is reported. Phase 2 v3 (the "How it solves the problem" slide) adds LLM agents for routing, explanation and self-correction: escalation (measured, works) and the Critic loop on explanations; LLM re-rating of the star was tested a third time and failed, so LLMs explain and check rather than decide.
+- **"Is this agentic?"** Today: two independent agents plus a learned Reflector that arbitrates between them. The LLM-as-judge version (Gate 0) was tested and failed, and that is reported. Phase 2 v3 (the "How it solves the problem" slide) adds agents for routing, hand-off, explanation and self-correction: escalation (measured, works), the Hand-off agent (93% right on the 56% it answers) and the Critic loop on explanations (60–63% → 89% faithful, 0 broken); LLM re-rating of the star was tested a third time and failed, so LLMs explain and check rather than decide.
 - **"One slip?"** Yes, disclosed: Evidence-alone test accuracy was printed once before the gate ran. It was not used for any choice.
 
 ### Names to say out loud

@@ -61,6 +61,7 @@ R = [
  ("07_phase2_v3", "hard_cases_H1.out", E + "hard_cases.out", "Hard cases: Phase 1 vs main stack on negative-sounding positives, ironic negatives, mixed reviews", "negative-sounding positives +28 pts both splits"),
  ("07_phase2_v3", "hard_cases_H1.json", E + "hard_cases.json", "Numbers for the above", "—"),
  ("07_phase2_v3", "agent_audit_C6.md", E + "agent_audit.md", "Agent audit: original Phase 2 agents, evidence, role now", "—"),
+ ("07_phase2_v3", "demo_check.out", E + "check_demo.out", "Final demo notebook headless check", "PASS: live run 56 s, 10 paper numbers verified"),
  ("07_phase2_v3", "probe_120k_gate_A1.out", E + "gate_A1.out", "LLaMA probe on 120K reviews (A1)", "FAIL (dev2 +0.003)"),
  ("08_extraction_logs", "probe_extraction_10k.out", E + "probe_agent.out", "Hidden-state extraction log (10K)", "log"),
  ("08_extraction_logs", "probe_extraction_multilayer.out", E + "probe_agent2.out", "Hidden-state extraction log (multi-layer)", "log"),

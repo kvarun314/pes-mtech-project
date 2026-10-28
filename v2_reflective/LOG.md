@@ -1072,3 +1072,19 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - Mixed with contrast (contrast word, true 2-4): eval n=311, 62.7 vs 55.6, +7.1 [+0.6, +13.2], p = .041; natural_test n=282, 63.1 vs 63.8, −0.7 [−6.7, +5.3], p = .91 (no difference).
 - Sarcasm cue words: n=6 (eval) and n=1 (natural_test); too few to report.
 - Reading: the stack's largest gains are on reviews whose wording sounds negative but whose star is high (+28 points on both splits), and on ironic-sounding negatives in natural_test. On mixed reviews the gain is small (eval) or absent (natural_test). Explicit sarcasm is too rare in this data to measure.
+
+### 2026-10-28 — Human check of 50 explanations DECLARED (author marks; blind to the Critic)
+- 50 explanations drawn at random (seed 0) from the 3,000 B2 final explanations. Sheet: `e23/b2/human_check_50.csv` (contains review text, gitignored; a copy is in Drive `PES_backups/human_check_50.csv`). The Critic's verdicts are in `e23/b2/human_check_key.json`, not on the sheet.
+- The author marks each explanation Y/N: every claim is in the review and the rating is stated correctly.
+- Report: human faithful share, Critic faithful share, agreement, and both kinds of disagreement (`human_check.py score`, output `human_check.out`). Reported whatever the outcome. Note: 48 of the 50 sampled explanations passed the Critic (96%, vs 88.9% overall), so this sample mainly tests whether Critic passes are real.
+
+### 2026-10-28 — Task 12: final demo notebook + headless check — PASS
+- `src/agentic_sentiment/v3/demo.py` (cached live calls, `PAPER:` tagged numbers, `pick_demo_ids`), `tests/v3/test_demo.py` (2 tests; v3 suite 31 passed), `v2_reflective/build_final_demo.py`, `v2_reflective/check_demo.py`. `presentation/Final_Demo*.ipynb` and `demo_cache.json` are gitignored (they hold review text).
+- Changes from the plan: the Router tau is read from `gate_B1b.json` (the passed attempt, 0.70), not `gate_B1.json`; the Hand-off agent is added (`handoff_tau` = dev2 threshold for the 40% target, 0.673) and shown per review; the notebook declares the `pes-mtech` (.venv) kernel (the default kernel was anaconda, without mlx); `check_demo.py` also reads `EXPERIMENTS_SUMMARY.md` (the leak audit number lives there) and normalises Unicode / LaTeX minus signs.
+- `e23/check_demo.out`: record run 281 s; timed live run 56 s (limit 180 s); 10 `PAPER:` numbers, all found in the frozen sources; no fallback to the cache was needed. DEMO CHECK PASS.
+- Note for the talk: the 5 demo reviews (first eval review per star, 15-60 words, main stack correct, chosen by rule) happen to be rated correctly by Phase 1 too, so the demo shows the mechanics (routing, hand-off, Critic loop), not a Phase 1 vs Phase 2 difference; the difference is in the frozen results shown at the end.
+
+### 2026-10-28 — Deck and presenter notes updated (25 slides)
+- Slide 16 "All models" bar chart replaced by the Hand-off agent slide (`selective_SH.png`; 93.1% at 55.7% coverage, natural_test). Ledger merged into one slide (x2's two key rows, 120K probe and Instruct re-rating, moved into x1; x2 stays defined in the builder). New slide 23 "Self-correction 3" (faithfulness table, X1 line, deletion test figure).
+- Updated: system subtitle and band (Hand-off agent), "How Phase 2 answers" (template row now has the measured numbers), "Why two agents beat one" band (+28 points on negative-sounding positives), schedule (B2, deletion test, report/demo rows Done), conclusions (agentic layer measured; sarcasm too rare as a limit), speaker notes.
+- Rendered slides 11, 12, 16, 18, 19, 23, 24, 25 with soffice and checked visually; fixed one wrapped header and a two-line subtitle on slide 23. Synced to Drive `current_deck/`. `Presenter_Notes.md` Part 0 updated in the same order.
