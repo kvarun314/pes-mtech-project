@@ -65,3 +65,4 @@ v2_reflective/e23/agents/
 v2_reflective/e23/b2/
 presentation/Final_Demo*.ipynb
 presentation/demo_cache.json
+v2_reflective/e23/q4/            # Q4 robustness rows (data .jsonl)
