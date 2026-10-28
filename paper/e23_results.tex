@@ -200,21 +200,28 @@ natural\_test & 75.7 & 75.5 & 48.2\% & .68 \\
 
 \begin{table}[htbp]
 \centering
-\caption{Explanations on all 3,000 test reviews: share faithful (all Critic checks pass) for the first draft and after the Critic loop (exact McNemar $p$), and the deletion test (cited phrases vs the same number of random words; Wilcoxon $p$).}
+\caption{Explanations on all 3,000 test reviews: share faithful (all Critic checks pass) for the first draft and after the Critic loop with at most 2 and at most 4 rewrites (exact McNemar $p$, final vs first), and the deletion test (cited phrases vs the same number of random words; Wilcoxon $p$).}
 % FACT (B2, b2_report.out, LOG.md 2026-10-27): fixed 284 / broken 0 (eval), 509 / 0 (natural_test); rewrite rate 39.5% / 36.7%; mean rounds 0.55 / 0.54;
 %   judge unparsed 0; LLM calls 2.64 / 2.67 per review; median Explainer 6.4 / 6.1 s, Critic 1.6 s per review.
 % FACT: first-draft failures (eval / natural_test): star 7 / 10; quote not in review or pack 196 / 345; top phrases missing 181 / 294; disagreement 0 / 0; judge 76 / 206.
 % FACT: deletion diff 95% bootstrap CI: comprehensiveness +.061 to +.079 (eval), +.082 to +.096 (natural_test);
 %   sufficiency +.233 to +.263 (eval), +.277 to +.300 (natural_test). Dev check (dev2, 500): 64.0% -> 87.6%, 118 fixed / 0 broken.
+% FACT (I1, i1_more_rounds_<split>.out, LOG.md 2026-10-28): max 4 vs max 2 rewrites: dev2 gate 19 of 62 fixed (PASS, >= 15), 87.6% -> 91.4%;
+%   eval 17 of 111 fixed (88.9% -> 90.6%, p 1.5e-5), natural_test 46 of 224 (88.8% -> 91.1%, p 2.8e-14), 0 broken; rounds 0-2 reproduced 111/111, 224/224;
+%   +0.34 LLM calls per review. Max-4 vs first draft: 301 / 555 fixed, 0 broken, p 4.9e-91 / 1.7e-167 (freeze_tables.out).
+%   Still failing after 4 rewrites, mostly the judge (check 5): 51 of 94 (eval), 110 of 178 (natural_test).
+% FACT (I2, i2_handoff_learned.out): learned 8-feature Hand-off AUROC .701 vs max probability .706 on dev2 (gate +.02): FAIL, no test read.
+% FACT (I3, i3_fallback_dev2.out): fixed-form fallback after 4 rewrites passed the Critic for 27 of 43 dev2 rows (gate 30): FAIL, no test read;
+%   all 16 failures were the judge rejecting a sentence that only quotes the review.
 \label{tab:e23faith}
 \small
 \resizebox{\linewidth}{!}{%
-\begin{tabular}{lcccccc}
+\begin{tabular}{lccccccc}
 \toprule
-\textbf{Split} & \textbf{Faithful, first} & \textbf{Faithful, final} & \textbf{McNemar $p$} & \textbf{Compr. cited / random} & \textbf{Suff. cited / random} & \textbf{Wilcoxon $p$ (both)} \\
+\textbf{Split} & \textbf{Faithful, first} & \textbf{Final, max 2} & \textbf{McNemar $p$} & \textbf{Final, max 4} & \textbf{McNemar $p$} & \textbf{Compr. cited / random} & \textbf{Suff. cited / random} & \textbf{Wilcoxon $p$ (both)} \\
 \midrule
-eval & 60.5\% & 88.9\% & 6.4e-86 & .158 / .089 & .556 / .308 & $<$1e-46 \\
-natural\_test & 63.4\% & 88.8\% & 1.2e-153 & .212 / .124 & .641 / .353 & $<$1e-115 \\
+eval & 60.5\% & 88.9\% & 6.4e-86 & 90.6\% & 4.9e-91 & .158 / .089 & .556 / .308 & $<$1e-46 \\
+natural\_test & 63.4\% & 88.8\% & 1.2e-153 & 91.1\% & 1.7e-167 & .212 / .124 & .641 / .353 & $<$1e-115 \\
 \bottomrule
 \end{tabular}}
 \end{table}
@@ -241,7 +248,7 @@ RAG Prover & Weak vote (37.5\%) & Replaced by the Evidence agent \\
 Critic (dissonance) & Override on 0.4\% of rows; LLM adjudicator failed three times & Star moved to the Reflector; Critic checks explanations \\
 Router (new) & Probe skipped on 39--48\% at no accuracy cost & Kept \\
 Hand-off (new) & 93.1\% exact at 55.7\% coverage (natural\_test) & Kept \\
-Explainer + Critic loop (new) & Faithful 60.5--63.4\% $\to$ 88.8--88.9\%, 0 broken & Kept \\
+Explainer + Critic loop (new) & Faithful 60.5--63.4\% $\to$ 90.6--91.1\% (max 4 rewrites), 0 broken & Kept \\
 \bottomrule
 \end{tabular}
 \end{table}

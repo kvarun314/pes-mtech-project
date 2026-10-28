@@ -1,5 +1,6 @@
 """Frozen main table (S4) recomputed from stored probs. Writes v2_reflective/e23/results_frozen.md and paper/figures/e23/main_bars.png. No selection: fixed list of models. Rerun on Nov 1 after seed-2."""
-import functools, json, os, numpy as np
+import functools, json, os, re, numpy as np
+from scipy.stats import binomtest
 import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import f1_score
@@ -52,5 +53,9 @@ if os.path.exists(D + "b2_report.json"):
     for s in ("eval", "natural_test"):
         b = B[s]; f0, f1 = round(b["faithful_first"] * b["n"]), round(b["faithful_final"] * b["n"])
         sc.append(f"| SC3 Critic loop (explanation) | {s} | faithful {b['faithful_first']:.3f} -> {b['faithful_final']:.3f} | {f1 - f0} | 0 | {f1 - f0:+d} | {b['mcnemar_p']:.2g} |")
+        i1 = D + f"i1_more_rounds_{s}.out"                                                    # I1: max 4 rewrites (LOG.md 2026-10-28)
+        if os.path.exists(i1):
+            t = open(i1).read(); fx = int(re.search(r"fixed by rounds 3-4 (\d+)", t).group(1)); m4 = float(re.search(r"max-4 ([\d.]+)", t).group(1))
+            sc.append(f"| SC3 Critic loop, max 4 rewrites (I1) | {s} | faithful {b['faithful_first']:.3f} -> {m4:.3f} | {f1 - f0 + fx} | 0 | {f1 - f0 + fx:+d} | {binomtest(f1 - f0 + fx, f1 - f0 + fx).pvalue:.2g} |")
     lines += sc
     open(D + "results_frozen.md", "a").write("\n".join(lines) + "\n"); print("\n".join(lines))

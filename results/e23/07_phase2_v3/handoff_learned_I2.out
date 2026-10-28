@@ -1,0 +1,11 @@
+GATE dev2 {
+ "dev2_oof_exact": 0.642,
+ "auroc_maxprob": 0.7061774482674603,
+ "auroc_learned": 0.7014490767329749,
+ "acc50_maxprob": 0.782,
+ "acc50_learned": 0.782,
+ "acc40_maxprob": 0.81875,
+ "acc40_learned": 0.82125,
+ "pass": false
+}
+FAIL: no test read

@@ -1088,3 +1088,58 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - Slide 16 "All models" bar chart replaced by the Hand-off agent slide (`selective_SH.png`; 93.1% at 55.7% coverage, natural_test). Ledger merged into one slide (x2's two key rows, 120K probe and Instruct re-rating, moved into x1; x2 stays defined in the builder). New slide 23 "Self-correction 3" (faithfulness table, X1 line, deletion test figure).
 - Updated: system subtitle and band (Hand-off agent), "How Phase 2 answers" (template row now has the measured numbers), "Why two agents beat one" band (+28 points on negative-sounding positives), schedule (B2, deletion test, report/demo rows Done), conclusions (agentic layer measured; sarcasm too rare as a limit), speaker notes.
 - Rendered slides 11, 12, 16, 18, 19, 23, 24, 25 with soffice and checked visually; fixed one wrapped header and a two-line subtitle on slide 23. Synced to Drive `current_deck/`. `Presenter_Notes.md` Part 0 updated in the same order.
+
+### 2026-10-28 — I1 and I2 DECLARED (improvement attempts; dev2 gates; a FAIL never reads a test set)
+- **I1: two more Critic rounds (max_rewrites 2 → 4), only for explanations still unfaithful after round 2.** Faithful explanations are untouched, so nothing can be broken. Generation is greedy, so rounds 0-2 must reproduce the stored drafts; the share reproduced exactly is reported.
+  - Gate (dev2, the 62 still-unfaithful of 500): at least 15 of the 62 become faithful (dev2 final ≥ 453/500 = 90.6%, vs 87.6% now).
+  - If PASS: rerun the still-unfaithful test reviews (eval 111, natural_test 224) once. Report: final faithful with max 4 vs max 2 (paired, exact McNemar), first draft vs final, extra LLM calls and seconds per review.
+  - Script `e23/i1_more_rounds.py`; outputs `i1_more_rounds_<split>.out`, rows in `b2/i1_<split>.jsonl` (gitignored).
+- **I2: learned Hand-off (when to defer) vs the confidence-only rule.**
+  - Features per review, all from stored probabilities: main-stack max probability, top-1 minus top-2 margin, entropy; probe max, Evidence max; agents agree (same argmax); star gap between the agents; review length in words. Logistic regression predicting "main stack correct".
+  - The Reflector was fit on dev2, so dev2 main-stack probabilities are recomputed out-of-fold (5-fold refit of the same Reflector), and the deferral model is scored by 5-fold CV on those.
+  - Gate (dev2 CV): AUROC for "correct" at least +.02 over max probability alone, and exact accuracy at 50% coverage at least +1.0 point.
+  - If PASS: fit on all dev2 (out-of-fold features), thresholds from dev2 quantiles as in S1, one readout on eval and natural_test at the same coverage targets; paired bootstrap of the accuracy difference at the 40% target.
+  - Script `e23/i2_handoff_learned.py`; outputs `i2_handoff_learned.out` / `.json`.
+
+### 2026-10-28 — I2 RESULT: learned Hand-off — FAIL (no test read)
+- `e23/i2_handoff_learned.out` / `.json`. dev2 out-of-fold main stack exact 64.2% (matches the frozen dev2 number).
+- AUROC for "main stack correct": max probability .706 vs learned 8-feature rule .701 (needed +.02). Accuracy at 50% coverage 78.2 vs 78.2 (needed +1.0); at 40% 81.9 vs 82.1.
+- Reading: the Reflector's confidence already carries what agent disagreement, margin, entropy and length add. The Hand-off agent keeps the simple confidence rule (S1). Added to the tried-and-dropped list.
+
+### 2026-10-28 — I1 dev2 RESULT: two more Critic rounds — PASS
+- `e23/i1_more_rounds_dev2.out`. Of the 62 dev2 explanations still unfaithful after round 2, rounds 3-4 fixed 19 (30.6%; gate ≥ 15). Rounds 0-2 reproduced the stored drafts exactly in 62/62 (greedy decoding is deterministic).
+- dev2 faithful: first 64.0%, max-2 87.6%, max-4 91.4%; max-4 vs max-2 fixed 19 / broken 0, p = 3.8e-6.
+- Cost: 2.69 extra LLM calls per re-run review = 0.33 per review over the split; ~33 s per re-run review.
+- Still failing after round 4: check 1: 1, check 2: 15, check 3: 10, check 5 (judge): 22.
+- Next, as declared: one readout on the still-unfaithful test reviews (eval 111, natural_test 224), ~3 h on the GPU.
+
+### 2026-10-28 — I3 DECLARED: deterministic fallback explanation after the Critic loop (dev2 gate; a FAIL never reads a test set)
+- Motivation: after max 4 rewrites, 43 dev2 explanations still fail. Many repeat the same draft every round (the Explainer is stuck on quotes that are not evidence phrases); judge failures (check 5) are the largest group.
+- Method: when the loop ends unfaithful, build one fixed-form explanation from the evidence pack only: optional "The two agents disagreed on this review.", then "The system rated this review S stars because it says "P1" and "P2"." (P1, P2 = top-2 supporting phrases as written in the review). It goes through the same Critic (rules 1-4 + LLM judge, one call). Rows that use it are flagged.
+- Dry check (no LLM): the fallback passes rules 1-4 on 497/500 dev2 packs; the 3 failures quote a phrase containing another star number.
+- Gate (dev2, the 43 still unfaithful after max 4): the fallback passes all five checks for at least 30 of the 43 (dev2 final ≥ 483/500 = 96.6%).
+- If PASS: apply once to the still-unfaithful eval and natural_test explanations after I1. Report final faithful (max 4 + fallback vs max 4, exact McNemar) and the share of all explanations that come from the fallback (it is a fixed form, so it is reported separately from LLM-written explanations; unlike Phase 1's template it quotes the review's own phrases).
+- Script `e23/i3_fallback.py`; outputs `i3_fallback_<split>.out`, rows in `b2/i3_<split>.jsonl` (gitignored). ~1 judge call per row, a few minutes per split.
+
+### 2026-10-28 — I1 TEST RESULT: two more Critic rounds hold on both test sets
+- `e23/i1_more_rounds_eval.out`, `e23/i1_more_rounds_natural_test.out`. One readout, as declared after the dev2 PASS.
+- eval: of 111 still unfaithful after round 2, rounds 3-4 fixed 17 (15.3%). Faithful: first 60.5%, max-2 88.9%, max-4 90.6%; fixed 17 / broken 0, McNemar p = 1.5e-5.
+- natural_test: of 224, fixed 46 (20.5%). Faithful: first 63.3%, max-2 88.8%, max-4 91.1%; fixed 46 / broken 0, p = 2.8e-14.
+- Rounds 0-2 reproduced the stored drafts exactly: 111/111 and 224/224.
+- Cost: about 3.0 extra LLM calls per re-run review, 0.34 per review over the split.
+- Still failing after round 4 (eval / natural_test), by check: 1: 5 / 11, 2: 23 / 43, 3: 16 / 27, 4: 2 / 2, 5 (judge): 51 / 110.
+- Decision: the Critic loop default becomes max 4 rewrites. Tables, paper and deck are updated after I3.
+- Note: the first I3 queue waited on its own command string (pgrep self-match) and was restarted directly; no run was affected.
+
+### 2026-10-28 — I3 RESULT: fallback explanation — FAIL (no test read)
+- `e23/i3_fallback_dev2.out`. Of the 43 dev2 explanations still unfaithful after max 4 rounds, the fixed-form fallback passed all five checks for 27 (62.8%); the declared gate was at least 30. FAIL, so eval and natural_test were not run.
+- It passed rules 1-4 on all 43; all 16 failures are the LLM judge (check 5) rejecting a sentence that only states the star and quotes two of the review's own phrases.
+- Arithmetic note on the declaration: the parenthetical "≥ 483/500 = 96.6%" was computed from the I1 gate floor (453), not the actual max-4 count (457). The primary criterion, "at least 30 of the 43", is the one applied. Measured dev2 faithful with the fallback would be 96.8% (484/500); not used.
+- Reading: the remaining failures are mostly the judge, and the judge also rejects explanations that quote only review text. This is a judge-reliability question, which the 50-explanation human check (pending, user) addresses. Added to the tried-and-dropped list.
+
+### 2026-10-28 — Tables, paper, deck and notes updated for I1 (max 4 rewrites)
+- `graph.py`: Critic loop default `max_rewrites` 2 → 4 (v3 tests 31 passed; the demo cache is unchanged).
+- `freeze_tables.py`: SC3 rows for max 4 rewrites read from `i1_more_rounds_<split>.out` (eval 0.605 → 0.906, 301 fixed / 0 broken, p 4.9e-91; natural_test 0.633 → 0.911, 555 / 0, p 1.7e-167). `results_frozen.md` and `freeze_tables.out` regenerated.
+- `paper/e23_results.tex`: `tab:e23faith` has "Final, max 2" and "Final, max 4" columns; FACT lines for I1, I2 and I3; audit row updated. Paper builds (overfull boxes unchanged at 10); integrity audit rerun.
+- Deck: slide 23 table has Max 2 / Max 4 columns and the I1 line; "max 4" on slides 11 and 12; "→ 91%" on slides 12 and 25 and in the speaker notes. The Oct 26-27 schedule row keeps the B2 number (89%) because that row describes the run. Rendered slides 11, 12, 23 and 25 and checked them; widened one column so "Broken" fits. Synced to Drive `current_deck/`.
+- `Presenter_Notes.md`, `agent_audit.md`, `EXPERIMENTS_SUMMARY.md` (W15 = I1; F19 = I2, F20 = I3) and `collect_results.py` (I1, I2, I3 outputs) updated.

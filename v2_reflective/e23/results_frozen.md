@@ -61,4 +61,6 @@ Router (natural_test, tau 0.7): SH 0.757, routed 0.755, probe skipped on 48.2%, 
 | SC2 LLM re-rating (rating) | dev2 | 644 uncertain, 159 abstained | 76 | 89 | -13 | 0.35 |
 | SC2 LLM re-rating (rating) | natural_dev | 100 uncertain, 40 abstained | 4 | 10 | -6 | 0.18 |
 | SC3 Critic loop (explanation) | eval | faithful 0.605 -> 0.889 | 284 | 0 | +284 | 6.4e-86 |
+| SC3 Critic loop, max 4 rewrites (I1) | eval | faithful 0.605 -> 0.906 | 301 | 0 | +301 | 4.9e-91 |
 | SC3 Critic loop (explanation) | natural_test | faithful 0.633 -> 0.888 | 509 | 0 | +509 | 1.2e-153 |
+| SC3 Critic loop, max 4 rewrites (I1) | natural_test | faithful 0.633 -> 0.911 | 555 | 0 | +555 | 1.7e-167 |

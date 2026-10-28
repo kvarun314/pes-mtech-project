@@ -52,6 +52,7 @@ Numbers freeze on Nov 1. The paper is due Nov 21–22.
 | W12 | **Explainer + Critic loop (SC3, B2)** on all 3,000 test reviews | Faithful 60.5 → 88.9% (eval), 63.4 → 88.8% (natural_test); 793 fixed, 0 broken; McNemar p 6e-86 / 1e-153 | Phase 2 v3 agentic layer |
 | W13 | **Cited phrases carry the decision (deletion test)** | Comprehensiveness .158 vs .089 / .212 vs .124; sufficiency .556 vs .308 / .641 vs .353 (cited vs random, p < 1e-46) | Explanations |
 | W14 | **Hand-off agent (selective prediction, S1)** | natural_test 93.1% exact at 55.7% coverage; eval 85.0% at 42% | Phase 2 v3 agentic layer |
+| W15 | **Two more Critic rounds (I1, max 2 → 4 rewrites)** | Faithful 88.9 → 90.6% (eval), 88.8 → 91.1% (natural_test); 17 + 46 more fixed, 0 broken; p 1.5e-5 / 2.8e-14; +0.34 LLM calls per review | Phase 2 v3 agentic layer (dev2 gate 19/62, PASS) |
 | W10 | **Phase 2 audit fixes (Run 2, Oct 9)**: grounding floor removed, ties go to the Analyst, RAG prompt fixed, Visual Verifier excluded | Run 2 −91 net becomes +2 net on 96 rows | Historical pipeline |
 
 ## 3. What failed or was not adopted
@@ -76,6 +77,8 @@ Numbers freeze on Nov 1. The paper is due Nov 21–22.
 | F16 | Adding LoRA back to SH (A + E6b + P3) | dev2 .633 vs .639 | Not adopted | |
 | F17 | SC2: Instruct LLM re-rates uncertain reviews (Oct 25) | dev2 fixed 76 vs broken 89, p = .35; natural_dev net −6 | FAIL | Third LLM-judge failure; LLMs explain, not decide |
 | F18 | A1: LLaMA probe on 120K rows (P3b, Oct 25 night) | dev2 CV +.003 [−.011, +.009] vs SH; natural_dev .827 vs .818 | FAIL | Probe saturated at 40K; SH unchanged |
+| F19 | I2: learned Hand-off (8 features) vs confidence only (Oct 28) | dev2 AUROC .701 vs .706; accuracy at 50% coverage 78.2 vs 78.2 | FAIL | The Reflector's confidence already carries the extra signals |
+| F20 | I3: fixed-form fallback explanation after 4 rewrites (Oct 28) | dev2 27 of 43 pass the Critic (gate 30) | FAIL | All 16 failures are the LLM judge rejecting a sentence that only quotes the review |
 
 ## 4. Baselines and robustness (reported, not selection steps)
 

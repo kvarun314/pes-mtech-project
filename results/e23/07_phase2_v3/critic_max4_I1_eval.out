@@ -1,0 +1,16 @@
+resume: 0 done of 111
+10/111 364s
+20/111 690s
+30/111 1038s
+40/111 1369s
+50/111 1692s
+60/111 2039s
+70/111 2383s
+80/111 2735s
+90/111 3093s
+100/111 3431s
+110/111 3796s
+eval: still unfaithful after 2 rounds 111; fixed by rounds 3-4 17 (15.3%); rounds 0-2 reproduced exactly 111/111
+faithful: first 0.605  max-2 0.889  max-4 0.906  | max-4 vs max-2 McNemar fixed 17 broken 0 p 1.5e-05
+extra LLM calls per re-run review 3.03; per review over the split 0.34
+still failing after round 4, by check: {1: 5, 2: 23, 3: 16, 4: 2, 5: 51}

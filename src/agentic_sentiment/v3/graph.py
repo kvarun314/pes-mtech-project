@@ -1,4 +1,4 @@
-"""Phase 2 v3 LangGraph: evidence -> router -> [probe] -> reflector (+ hand-off decision) -> pack -> explainer -> critic -(rewrite, max 2)-> END.
+"""Phase 2 v3 LangGraph: evidence -> router -> [probe] -> reflector (+ hand-off decision) -> pack -> explainer -> critic -(rewrite, max 4; I1, LOG.md 2026-10-28)-> END.
 The specialists decide the star; LLM agents only explain it and check the explanation."""
 import time
 from typing import TypedDict
@@ -17,7 +17,7 @@ class V3State(TypedDict, total=False):
     failed_checks: list; judge_unparsed: int; llm_calls: int; timings: dict
 
 
-def build_graph_v3(evidence, reflector, probe_fn, explain_fn=None, judge_fn=None, tau=None, max_rewrites=2, handoff_tau=None):
+def build_graph_v3(evidence, reflector, probe_fn, explain_fn=None, judge_fn=None, tau=None, max_rewrites=4, handoff_tau=None):
     def timed(state, key, t0):
         return {**state.get("timings", {}), key: state.get("timings", {}).get(key, 0.0) + time.time() - t0}
 

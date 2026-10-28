@@ -1,0 +1,21 @@
+100 rows, 369s
+200 rows, 773s
+300 rows, 1174s
+400 rows, 1559s
+500 rows, 1922s
+600 rows, 2318s
+700 rows, 2732s
+800 rows, 3083s
+900 rows, 3445s
+1000 rows, 3823s
+1100 rows, 4218s
+1200 rows, 4564s
+1300 rows, 4916s
+1400 rows, 5319s
+1500 rows, 5696s
+1600 rows, 6121s
+1700 rows, 6486s
+1800 rows, 6875s
+1900 rows, 7258s
+2000 rows, 7636s
+done v2_reflective/e23/b2/deletion_natural_test.jsonl
