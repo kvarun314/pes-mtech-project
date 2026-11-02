@@ -67,3 +67,6 @@ presentation/Final_Demo*.ipynb
 presentation/demo_cache.json
 # Q4 robustness rows (data .jsonl)
 v2_reflective/e23/q4/
+
+# Round R NB-SVM agent probabilities (gate failed; kept in the backup tarball)
+v2_reflective/e23/nb1_*_probs.jsonl

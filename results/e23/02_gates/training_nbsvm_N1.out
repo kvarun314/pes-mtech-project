@@ -1,0 +1,10 @@
+rows 496819 features 400000 40s
+class 1 iters 178 68s
+class 2 iters 177 95s
+class 3 iters 119 115s
+class 4 iters 140 137s
+class 5 iters 157 161s
+dev2 alone exact 0.575
+dev alone exact 0.582
+natural_dev alone exact 0.724
+done 162s

@@ -287,6 +287,8 @@ natural\_test & Phase 1 & 88.0\% & 2.08 & 11.1\% \\
 \end{table}
 % FACT (Q4, q4_robustness.out, 300 eval reviews, 60 per star): star flips vs the same system's original: typos 0.3% (SH) vs 2.0% (P1), p .062;
 %   flat text 11.7% vs 29.7%, p 1.8e-8 (exact 66.0 vs 43.7; original 69.3 vs 50.0); no title: SH 8.0% flips, exact 63.7 (-5.6); P1 unaffected (never reads the title).
+% FACT (O1, o1_ordinal.out): quadratic weighted kappa main stack vs Phase 1: eval .888 vs .824 (diff CI +.045, +.082); natural_test .881 vs .779 (+.084, +.118). MAE eval .363 vs .529 (-.203, -.123); natural_test .288 vs .539 (-.278, -.224).
+% FACT (G1, N1, gn_gate_g1.out, gn_gate_n1.out; both FAIL, no test read): gradient-boosted Reflector dev2 CV .6205 vs .642; NB-SVM agent replacing Evidence dev2 CV .647 vs .642 (+0.5, CI -0.8, +1.8), natural_dev .774 vs .784.
 % FACT (Q5, q5_breakdown.out): main stack - Phase 1 by review year: eval +14.1 / +14.6 / +8.7 / +17.5 (<=2014, 2015-17, 2018-20, 2021-23),
 %   natural_test +21.5 / +21.9 / +23.3 / +21.6; by product popularity (1 / 2-5 / 6+ reviews): eval +12.2 / +13.4 / +15.5, natural +23.7 / +21.6 / +20.8; all 95% CIs > 0.
 % FACT (Q3 / Q3b, q3_second_judge_gate.out, q3b_second_judge_gate.out): Qwen2.5-7B-Instruct 4-bit as a second judge rejects every dev2 explanation

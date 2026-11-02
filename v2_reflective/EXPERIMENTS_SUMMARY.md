@@ -81,6 +81,8 @@ Numbers freeze on Nov 1. The paper is due Nov 21–22.
 | F20 | I3: fixed-form fallback explanation after 4 rewrites (Oct 28) | dev2 27 of 43 pass the Critic (gate 30) | FAIL | All 16 failures are the LLM judge rejecting a sentence that only quotes the review |
 | F21 | Q2: later-time holdout (Oct 28) | Not run: every agent was fit on reviews from 1999-2023 | Dropped | Year bands (Q5) are the time check |
 | F22 | Q3 / Q3b: Qwen2.5-7B-Instruct as a second judge (Oct 28) | dev2: accepts 0 of 38 Llama-rejected, rejects 60 of 60 Llama-accepted, under both prompts | FAIL | Constant verdict; flags the stated star and agent shares as unsupported |
+| F23 | G1: gradient-boosted Reflector (Nov 2) | dev2 .6205 vs .642; natural_dev .756 vs .784 | FAIL | A nonlinear combiner overfits 2,000 fit rows; LR stays |
+| F24 | N1: NB-SVM text agent, 497K rows (Nov 2) | Replace Evidence: dev2 +0.5 [−0.8, +1.8]; natural_dev .774 vs .784 | FAIL | Another view of the same words adds nothing, as in F8 |
 
 ## 4. Baselines and robustness (reported, not selection steps)
 
@@ -100,6 +102,7 @@ Numbers freeze on Nov 1. The paper is due Nov 21–22.
 | Star ranges (Q1, conformal, 90% target) | Coverage 92.6 / 90.5%; mean range 1.93 / 1.52 stars vs Phase 1 2.40 / 2.08 (Phase 1 misses 90% on natural: 88.0%); with ranges, a person is needed for 16% / 2% of reviews |
 | Text changes (Q4, 300 eval) | Star flips: flat text 11.7% vs Phase 1 29.7% (p 2e-8); typos 0.3% vs 2.0%; no title: main stack −5.6 points (Evidence agent reads the title) |
 | Year and product popularity (Q5) | Gain over Phase 1 positive in every band, all CIs > 0: eval +8.7 to +17.5, natural +20.8 to +23.7 |
+| Ordinal metrics (O1) | Quadratic weighted kappa .888 / .881 vs Phase 1 .824 / .779 (CIs of the difference exclude 0); MAE .363 / .288 vs .529 / .539 |
 
 ## 5. Historical results (superseded, kept for the record)
 
