@@ -1263,3 +1263,9 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - **N1** (`e23/n1_nbsvm.out`, `e23/gn_gate_n1.out`, `.json`). Fit on 496,819 rows in 162 s. Alone: dev2 .575, dev .582, natural_dev .724 (E6b: .579, .600, .712). In the stack, dev2 out-of-fold: replace .647, join .641, vs main stack .642. Chosen replace: +0.5 [−0.8, +1.8], below +1.0 with the CI spanning 0; natural_dev .774 vs .784 falls. FAIL on all three conditions. The eval and natural_test probabilities were written silently and not scored.
 - `nb1_*_probs.jsonl` are gitignored (kept in the backup tarball).
 - Added to the tried-and-dropped list (F23, F24). D1 remains the only open accuracy candidate, with the user on Colab.
+
+### 2026-11-04 — D1 second prep check: one-cell browser run; tokenizer dependency fixed
+- Training is unchanged; the D1 declaration stands. The user will run one pasted cell in browser Colab instead of the notebook.
+- Local check of that cell with a stubbed Drive mount and `SMOKE=1` on CPU: the no-GPU guard fires; training, both epochs and all five probability files complete.
+- A clean environment with `transformers` + `sentencepiece` fails to load the tokenizer (`tiktoken` is required); adding `protobuf` fixes it (`DebertaV2Tokenizer`). The install line is now `sentencepiece protobuf`. Notebook cell 2 updated and given a GPU guard; copied to Drive as `colab_deberta_v2.ipynb` with `cp -n` (the older notebook on Drive is left in place).
+- Not testable locally: Colab GPU, real Drive mount.
