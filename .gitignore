@@ -73,3 +73,4 @@ v2_reflective/e23/nb1_*_probs.jsonl
 
 # D1 DeBERTa probabilities (kept in the backup tarball and on Drive)
 v2_reflective/e23/deb3_*_probs.jsonl
+v2_reflective/e23/deb3s*_probs.jsonl

@@ -1,11 +1,12 @@
 """D1 (declared LOG.md 2026-10-28): DeBERTa-v3-base fine-tuned on evid_train (100K balanced Electronics reviews, title + text) as a third agent.
 Runs on Colab (L4 or A100 recommended: bf16). Resumable: per-epoch checkpoint and per-split probability files in the work folder on Drive.
-usage (Colab): python colab_deberta.py /content/drive/MyDrive/PES_backups/colab_deberta
+usage (Colab): python colab_deberta.py /content/drive/MyDrive/PES_backups/colab_deberta [seed]
 writes: ckpt/ (last, best, state.json, optim.pt), train_log.txt, deb3_<split>_probs.jsonl  ({"review_id", "gt_rating", "probs"})"""
 import json, os, random, sys, time, numpy as np, torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, get_linear_schedule_with_warmup
-W = sys.argv[1]; NAME = "microsoft/deberta-v3-base"; MAXLEN, BS, LR, EPOCHS, SEED = 256, 32, 2e-5, 2, 0
-CK = f"{W}/ckpt"; os.makedirs(CK, exist_ok=True); LOG = open(f"{W}/train_log.txt", "a")
+W = sys.argv[1]; NAME = "microsoft/deberta-v3-base"; MAXLEN, BS, LR, EPOCHS = 256, 32, 2e-5, 2
+SEED = int(sys.argv[2]) if len(sys.argv) > 2 else 0; TAG, PRE = (f"_s{SEED}", f"s{SEED}") if SEED else ("", "")   # D2: seed > 0 writes separate files; seed 0 = D1
+CK = f"{W}/ckpt{TAG}"; os.makedirs(CK, exist_ok=True); LOG = open(f"{W}/train_log{TAG}.txt", "a")
 random.seed(SEED); np.random.seed(SEED); torch.manual_seed(SEED)
 SMOKE = bool(os.environ.get("SMOKE"))                                              # local check: 32 train rows, 2 epochs, 8 rows per split
 DEV = "cuda" if torch.cuda.is_available() else "cpu"; BF16 = DEV == "cuda" and torch.cuda.is_bf16_supported(); AMP = torch.bfloat16 if BF16 else torch.float16
@@ -62,7 +63,7 @@ if state["epoch"] < EPOCHS:
         log(f"epoch {ep + 1} done: train loss {tl / (k + 1):.4f}, dev exact {acc:.3f}, {time.time() - t0:.0f}s; best epoch {state['best']}")
 m = AutoModelForSequenceClassification.from_pretrained(f"{CK}/best").float().to(DEV)
 for s in ("dev", "dev2", "natural_dev", "eval", "natural_test"):
-    out = f"{W}/deb3_{s}_probs.jsonl"
+    out = f"{W}/deb3{PRE}_{s}_probs.jsonl"
     if os.path.exists(out): continue
     rows = load(s); P = probs(m, rows)
     with open(out + ".tmp", "w") as f:
