@@ -1,0 +1,27 @@
+start Wed Nov  4 14:10:27 2026 | device Tesla T4 | smoke False | bf16 True | train 100000 dev 500 | state {'epoch': 0, 'dev_acc': [], 'best': None}
+epoch 1 step 500 loss 1.1866 1114s
+epoch 1 step 1000 loss 1.0282 2229s
+epoch 1 step 1500 loss 0.9662 3346s
+epoch 1 step 2000 loss 0.9312 4463s
+epoch 1 step 2500 loss 0.9080 5579s
+epoch 1 step 3000 loss 0.8924 6693s
+epoch 1 done: train loss 0.8895, dev exact 0.682, 7010s; best epoch 1
+epoch 2 step 500 loss 0.7584 1119s
+epoch 2 step 1000 loss 0.7483 2237s
+epoch 2 step 1500 loss 0.7445 3350s
+epoch 2 step 2000 loss 0.7400 4465s
+epoch 2 step 2500 loss 0.7399 5580s
+start Thu Nov  5 04:19:20 2026 | device NVIDIA L4 | smoke False | bf16 True | train 100000 dev 500 | state {'epoch': 1, 'dev_acc': [0.682], 'best': 1}
+epoch 2 step 500 loss 0.7603 267s
+epoch 2 step 1000 loss 0.7503 534s
+epoch 2 step 1500 loss 0.7460 799s
+epoch 2 step 2000 loss 0.7409 1064s
+epoch 2 step 2500 loss 0.7411 1329s
+epoch 2 step 3000 loss 0.7382 1595s
+epoch 2 done: train loss 0.7369, dev exact 0.676, 1675s; best epoch 1
+dev: 500 rows scored (DeBERTa alone exact 0.682)
+dev2: 2000 rows scored (DeBERTa alone exact 0.647)
+natural_dev: 500 rows scored (DeBERTa alone exact 0.800)
+eval: 1000 rows scored
+natural_test: 2000 rows scored
+done Thu Nov  5 04:49:18 2026

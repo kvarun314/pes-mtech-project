@@ -70,3 +70,6 @@ v2_reflective/e23/q4/
 
 # Round R NB-SVM agent probabilities (gate failed; kept in the backup tarball)
 v2_reflective/e23/nb1_*_probs.jsonl
+
+# D1 DeBERTa probabilities (kept in the backup tarball and on Drive)
+v2_reflective/e23/deb3_*_probs.jsonl

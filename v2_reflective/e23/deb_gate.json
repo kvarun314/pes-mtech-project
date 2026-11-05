@@ -1,0 +1,46 @@
+{
+ "gate": {
+  "deberta_alone_dev2": 0.6475,
+  "deberta_alone_natural_dev": 0.8,
+  "dev2_cv_SH": 0.642,
+  "dev2_cv_SH_plus_DeBERTa": 0.662,
+  "dev2_cv_diff": 0.02,
+  "dev2_cv_ci": [
+   0.006,
+   0.0335
+  ],
+  "natural_dev_SH": 0.784,
+  "natural_dev_SH_plus_DeBERTa": 0.804,
+  "pass": true
+ },
+ "readout": {
+  "eval": {
+   "SH": 0.675,
+   "SH_plus_DeBERTa": 0.675,
+   "DeBERTa_alone": 0.665,
+   "diff_ci": [
+    0.0,
+    -0.02,
+    0.020024999999999977
+   ],
+   "fixed": 58,
+   "broken": 58,
+   "mcnemar_p": 1.0,
+   "within1_SH_plus_DeBERTa": 0.973
+  },
+  "natural_test": {
+   "SH": 0.757,
+   "SH_plus_DeBERTa": 0.78,
+   "DeBERTa_alone": 0.7575,
+   "diff_ci": [
+    0.023,
+    0.0095,
+    0.0375
+   ],
+   "fixed": 115,
+   "broken": 69,
+   "mcnemar_p": 0.0008597408292289976,
+   "within1_SH_plus_DeBERTa": 0.974
+  }
+ }
+}

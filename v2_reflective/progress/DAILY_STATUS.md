@@ -66,3 +66,4 @@
 - 2026-10-28 Disk: 11 old backup tarballs moved to Google Drive after Drive confirmed each upload (user's request); free 14 -> 33 GB; newest tarball kept locally.
 - Pending (user): human check of 50 explanations (`human_check.py score` after marking). Next dates: freeze 1 Nov 1, freeze 2 Nov 5, paper draft Nov 8.
 - 2026-11-02 Round R: O1 kappa .888 / .881 vs Phase 1 .824 / .779; G1 gradient-boosted Reflector FAIL; N1 NB-SVM FAIL. Main stack unchanged (67.5 / 75.7). D1 with the user on Colab. Freeze 1 (due Nov 1) not done yet.
+- 2026-11-05 D1 DeBERTa: gate PASS; eval +0.0, natural_test +2.3 (78.0); alone 66.5 / 75.75. Adoption pending the user. Freeze 2 due today; Freeze 1 still not done.

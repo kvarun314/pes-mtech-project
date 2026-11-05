@@ -1269,3 +1269,13 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - Local check of that cell with a stubbed Drive mount and `SMOKE=1` on CPU: the no-GPU guard fires; training, both epochs and all five probability files complete.
 - A clean environment with `transformers` + `sentencepiece` fails to load the tokenizer (`tiktoken` is required); adding `protobuf` fixes it (`DebertaV2Tokenizer`). The install line is now `sentencepiece protobuf`. Notebook cell 2 updated and given a GPU guard; copied to Drive as `colab_deberta_v2.ipynb` with `cp -n` (the older notebook on Drive is left in place).
 - Not testable locally: Colab GPU, real Drive mount.
+
+### 2026-11-05 — D1 RESULT: DeBERTa-v3 third agent — gate PASS; readout eval +0.0, natural_test +2.3. Adoption not decided (user)
+- Run (`e23/deb3_train_log.txt`): browser Colab, seed and settings as declared. The runtime changed mid-run: epoch 1 on Tesla T4 (7,010 s), then a resume on NVIDIA L4 for epoch 2 (1,675 s), using the saved checkpoint and optimizer state. Dev exact .682 / .676, so epoch 1 (trained on the T4) is the model scored. Five probability files copied with `cp -n`, compared with `cmp`, valid probabilities, review ids match the other agents.
+- Gate (`e23/deb_gate.out`, `.json`): dev2 out-of-fold 64.2 → 66.2, +2.0 [+0.6, +3.35] (needed ≥ +1.0); natural_dev 78.4 → 80.4 (needed no fall). PASS. Alone: dev2 64.75, natural_dev 80.0.
+- Readout, run once as declared (three agents vs main stack):
+  - eval: 67.5 → 67.5, +0.0 [−2.0, +2.0], fixed 58 / broken 58, McNemar p = 1.0; within-1 97.3%. DeBERTa alone 66.5.
+  - natural_test: 75.7 → 78.0, +2.3 [+0.95, +3.75], fixed 115 / broken 69, McNemar p = 8.6e-4; within-1 97.4%. DeBERTa alone 75.75.
+- Reading: the gain on dev2 and natural_dev did not carry to balanced eval; on natural test it is significant. DeBERTa alone is about level with the two-agent main stack (−1.0 eval, +0.05 natural_test), which qualifies the claim that stacking is what lifts accuracy over a single fine-tuned encoder. Other agent combinations (for example DeBERTa + Evidence) were not declared and were not read.
+- No table, deck slide or downstream result changed. The declaration says the three-agent stack would become the main stack only after this readout; adopting it means rerunning the Router, Hand-off, star ranges, Explainer + Critic and everything downstream. Decision is with the user.
+- `deb3_*_probs.jsonl` are gitignored and kept in the backup tarball.
