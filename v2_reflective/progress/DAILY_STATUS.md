@@ -67,3 +67,4 @@
 - Pending (user): human check of 50 explanations (`human_check.py score` after marking). Next dates: freeze 1 Nov 1, freeze 2 Nov 5, paper draft Nov 8.
 - 2026-11-02 Round R: O1 kappa .888 / .881 vs Phase 1 .824 / .779; G1 gradient-boosted Reflector FAIL; N1 NB-SVM FAIL. Main stack unchanged (67.5 / 75.7). D1 with the user on Colab. Freeze 1 (due Nov 1) not done yet.
 - 2026-11-05 D1 DeBERTa: gate PASS; eval +0.0, natural_test +2.3 (78.0); alone 66.5 / 75.75. Adoption pending the user. Freeze 2 due today; Freeze 1 still not done.
+- 2026-11-05 D2 DeBERTa seeds 0, 1, 2: gain eval +0.1 ± 0.3 (not stable), natural_test +2.2 ± 0.2 (stable). Selects nothing; adoption pending the user. 14 GB of unused local models copied to Drive `PES_backups/local_models/` (MD5 matched Drive metadata), then the local copies deleted at the user's OK.

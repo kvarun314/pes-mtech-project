@@ -1288,3 +1288,14 @@ Review agenda for Oct 22 written: progress/REVIEW_2026-10-22.md
 - Reading rule, fixed now: the gain is called stable on a test set if all three seeds have the same sign and the mean is at least twice the SD.
 - D2 prep check (2026-11-05): in a clean environment outside iCloud, `SMOKE=1` on CPU with seed 1 and with no seed both complete and write separate files. `d2_seeds.py` on stand-ins (seed 0 copied as seeds 1 and 2) reproduces D1 exactly (+2.0, +2.0, +0.0, +2.3; 58/58 and 115/69). The script is on Drive as `colab_deberta_seeded.py` (`cp -n`, verified with `cmp`); the older `colab_deberta.py` on Drive stays.
 - Machine note: local Python runs appeared to hang because `~/Documents` is in iCloud and macOS had evicted about 29,000 `.venv` files (dataless; disk 95% full), so imports wait on downloads. This is likely also why the Nov 4 notebook test timed out. Not a code problem. It can slow any local job.
+
+### 2026-11-05 — D2 RESULT: DeBERTa seed variance — natural_test gain stable, eval gain absent. Nothing selected or adopted
+- Run: browser Colab, NVIDIA L4, seeds 1 and 2 with the D1 settings (`e23/deb3_train_log_s1.txt`, `_s2.txt`). Each seed took about 56 min. Dev exact: seed 1 .682 / .672, seed 2 .690 / .678, so epoch 1 is the model scored for both, as for seed 0. Ten probability files copied with `cp -n` and compared with `cmp`; row counts and probabilities valid; review ids match the other agents (asserted by the script). D1's seed 0 files were not touched.
+- Report (`e23/d2_seeds.out`, `.json`). Gain of main stack + DeBERTa over the main stack, per seed 0, 1, 2, then mean ± SD:
+  - dev2 out-of-fold: +2.0, +3.05, +2.15; +2.4 ± 0.6; stable.
+  - natural_dev: +2.0, +0.6, +0.4; +1.0 ± 0.9; not stable (all positive, mean under 2 SD).
+  - eval: +0.0, +0.4, −0.1; +0.1 ± 0.3; not stable. Fixed / broken 58/58, 64/60, 54/55.
+  - natural_test: +2.3, +1.95, +2.4; +2.2 ± 0.2; stable. Fixed / broken 115/69, 111/72, 112/64.
+- Three-agent accuracy, mean ± SD: eval 67.6 ± 0.3, natural_test 77.9 ± 0.2. DeBERTa alone: dev2 65.1 ± 0.6, natural_dev 77.7 ± 2.1, eval 66.7 ± 1.0, natural_test 76.3 ± 1.0.
+- Reading, using the rule fixed at declaration: D1's natural_test gain is not a one-seed accident, and no gain appears on balanced eval. Seed 0 was the highest of the three on natural_dev, so D1's +2.0 there was optimistic. Limits: only DeBERTa's seed varies; the main stack is held at its declared 67.5 / 75.7, whose own 5-seed means are lower (65.8 ± 0.6, 75.4 ± 0.8). Three seeds give a rough SD.
+- D2 has no gate and selects nothing. D1's seed 0 stays the declared result. Adoption stays with the user.

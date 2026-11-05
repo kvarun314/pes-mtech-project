@@ -1,0 +1,21 @@
+start Thu Nov  5 14:51:15 2026 | device NVIDIA L4 | smoke False | bf16 True | train 100000 dev 500 | state {'epoch': 0, 'dev_acc': [], 'best': None}
+epoch 1 step 500 loss 1.1577 264s
+epoch 1 step 1000 loss 1.0147 529s
+epoch 1 step 1500 loss 0.9560 794s
+epoch 1 step 2000 loss 0.9257 1057s
+epoch 1 step 2500 loss 0.9041 1322s
+epoch 1 step 3000 loss 0.8885 1587s
+epoch 1 done: train loss 0.8855, dev exact 0.690, 1668s; best epoch 1
+epoch 2 step 500 loss 0.7543 263s
+epoch 2 step 1000 loss 0.7517 528s
+epoch 2 step 1500 loss 0.7507 793s
+epoch 2 step 2000 loss 0.7461 1058s
+epoch 2 step 2500 loss 0.7411 1322s
+epoch 2 step 3000 loss 0.7388 1585s
+epoch 2 done: train loss 0.7376, dev exact 0.678, 1661s; best epoch 1
+dev: 500 rows scored (DeBERTa alone exact 0.690)
+dev2: 2000 rows scored (DeBERTa alone exact 0.648)
+natural_dev: 500 rows scored (DeBERTa alone exact 0.758)
+eval: 1000 rows scored
+natural_test: 2000 rows scored
+done Thu Nov  5 15:47:32 2026

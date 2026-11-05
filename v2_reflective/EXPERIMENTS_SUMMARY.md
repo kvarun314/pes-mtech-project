@@ -104,6 +104,7 @@ Numbers freeze on Nov 1. The paper is due Nov 21–22.
 | Year and product popularity (Q5) | Gain over Phase 1 positive in every band, all CIs > 0: eval +8.7 to +17.5, natural +20.8 to +23.7 |
 | Ordinal metrics (O1) | Quadratic weighted kappa .888 / .881 vs Phase 1 .824 / .779 (CIs of the difference exclude 0); MAE .363 / .288 vs .529 / .539 |
 | DeBERTa-v3 third agent (D1, 100K, Colab) | Gate PASS: dev2 +2.0 [+0.6, +3.35], natural_dev +2.0. Readout: eval 67.5 → 67.5 (58 fixed / 58 broken), natural_test 75.7 → 78.0, +2.3 [+0.95, +3.75], p 8.6e-4. Alone 66.5 / 75.75. Adoption not decided |
+| DeBERTa seed variance (D2, seeds 0, 1, 2; reporting only) | Gain over the main stack, mean ± SD: dev2 +2.4 ± 0.6 (stable), natural_dev +1.0 ± 0.9 (not stable), eval +0.1 ± 0.3 (not stable), natural_test +2.2 ± 0.2 (stable). Alone: eval 66.7 ± 1.0, natural_test 76.3 ± 1.0. Selects nothing. `e23/d2_seeds.out` |
 
 ## 5. Historical results (superseded, kept for the record)
 
