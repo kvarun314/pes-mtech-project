@@ -10,20 +10,22 @@ from agentic_sentiment.v3.perturb import typos, flat
 V = {"original": lambda t, x: (t, x), "typos": lambda t, x: (t, typos(x)), "flat": lambda t, x: (flat(t), flat(x)), "no_title": lambda t, x: ("", x)}
 rows = [json.loads(l) for l in open(PT.D + "eval.jsonl")]
 sample = [r for k in range(1, 6) for r in [r for r in rows if r["gt_rating"] == k][:60]]
-os.makedirs(PT.D + "q4", exist_ok=True); out = PT.D + "q4/robustness.jsonl"
+os.makedirs(PT.D + "q4", exist_ok=True); out = PT.D + "q4/robustness_sh3.jsonl"   # SH3 rerun (LOG.md 2026-11-10); P1 copied from q4/robustness.jsonl
+OLD = {(d["review_id"], d["variant"]): d["P1"] for d in map(json.loads, open(PT.D + "q4/robustness.jsonl"))}
 done = {(d["review_id"], d["variant"]) for d in map(json.loads, open(out))} if os.path.exists(out) else set()
 if len(done) < len(sample) * len(V):
-    from agentic_sentiment.v3.llama import SharedLlama, load_probe, phase1_probs
+    from agentic_sentiment.v3.llama import SharedLlama, load_probe
+    from agentic_sentiment.v3.deberta import DebertaAgent
     e, r = joblib.load(PT.EVIDENCE_JOBLIB), joblib.load(PT.REFLECTOR_JOBLIB)
     ev, rf = EvidenceAgent(e["vectorizer"], e["model"]), Reflector(r["full"], r["fallback"])
-    llama = SharedLlama(); probe = load_probe(llama); t0 = time.time()
+    llama = SharedLlama(adapter=None); probe = load_probe(llama); deb = DebertaAgent(); t0 = time.time()
     with open(out, "a") as f:
         for k, row in enumerate(sample):
             for v, fn in V.items():
                 if (row["review_id"], v) in done: continue
                 title, text = fn(row["title"], row["review_text"])
-                sh, _, _ = rf.combine(probe.probs(text), ev.probs(title, text))
-                p1 = int(np.argmax(phase1_probs(llama, text))) + 1
+                sh, _, _ = rf.combine(probe.probs(text), ev.probs(title, text), deb.probs(title, text))
+                p1 = OLD[row["review_id"], v]
                 f.write(json.dumps({"review_id": row["review_id"], "variant": v, "gt": row["gt_rating"], "SH": int(sh), "P1": p1}) + "\n"); f.flush()
             if (k + 1) % 25 == 0: print(f"{k + 1}/{len(sample)} {time.time() - t0:.0f}s", flush=True)
 D = {(d["review_id"], d["variant"]): d for d in map(json.loads, open(out))}; ids = [r["review_id"] for r in sample]; res = {}

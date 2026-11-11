@@ -30,7 +30,7 @@ st7 = G("evid7", "eval"); He = ld("hid2", "eval")[:, 4096:8192]
 diff = np.abs(clf.predict_proba(sc.transform(He)) - np.array([st7[i] for i in i2["eval"]])).max(); print("P3 max |diff| vs evid7_eval_probs:", float(diff), flush=True); assert diff < 1e-6
 # Reflector on dev2 (row order as freeze_tables.py: p1/probs_R_dev2.jsonl)
 ids = [json.loads(l)["review_id"] for l in open(D + "p1/probs_R_dev2.jsonl")]; P7, E6 = G(PT.PROBE_PREFIX, "dev2"), G("evid6b", "dev2")
-r = fit_reflector(np.array([P7[i] for i in ids]), np.array([E6[i] for i in ids]), np.array([lab[i] + 1 for i in ids])); joblib.dump({"full": r.full, "fallback": r.fallback}, PT.REFLECTOR_JOBLIB)
+r = fit_reflector(np.array([P7[i] for i in ids]), np.array([E6[i] for i in ids]), np.array([lab[i] + 1 for i in ids])); joblib.dump({"full": r.full, "fallback": r.fallback}, PT.REFLECTOR2_JOBLIB)
 ie = [json.loads(l)["review_id"] for l in open(D + "p1/probs_R_eval.jsonl")]; P7e, E6e = G(PT.PROBE_PREFIX, "eval"), G("evid6b", "eval")
 pred = r.full.predict(np.c_[logp([P7e[i] for i in ie]), logp([E6e[i] for i in ie])]) + 1; gt = np.array([lab[i] + 1 for i in ie])
 acc = (pred == gt).mean(); print("Reflector eval exact (must equal main stack 0.675):", round(float(acc), 3)); assert round(float(acc), 3) == 0.675 or PT.PROBE_PREFIX != "evid7"

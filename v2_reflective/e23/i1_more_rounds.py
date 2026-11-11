@@ -14,7 +14,7 @@ split = sys.argv[1]; out = f"{PT.B2}i1_{split}.jsonl"
 B = [json.loads(l) for l in open(f"{PT.B2}{split}.jsonl")]; todo = [b for b in B if not b["faithful"]]
 done = {json.loads(l)["review_id"] for l in open(out)} if os.path.exists(out) else set()
 if len(done) < len(todo):
-    e, r = joblib.load(PT.EVIDENCE_JOBLIB), joblib.load(PT.REFLECTOR_JOBLIB)
+    e, r = joblib.load(PT.EVIDENCE_JOBLIB), joblib.load(PT.REFLECTOR2_JOBLIB)
     probe = {x["review_id"]: x["probs"] for x in map(json.loads, open(f"{PT.D}{PT.PROBE_PREFIX}_{split}_probs.jsonl"))}
     T = {x["review_id"]: x for x in map(json.loads, open(f"{PT.D}{split}.jsonl"))}
     model, tok = load_instruct(); chat = make_chat_fn(model, tok)

@@ -74,6 +74,8 @@ R = [
     ("02_gates", "seed_variance_deberta_D2.json", E + "d2_seeds.json", "Numbers for the above", "—"),
     ("02_gates", "training_log_deberta_D2_seed1.txt", E + "deb3_train_log_s1.txt", "D2: Colab training log, seed 1 (L4)", "—"),
     ("02_gates", "training_log_deberta_D2_seed2.txt", E + "deb3_train_log_s2.txt", "D2: Colab training log, seed 2 (L4)", "—"),
+    ("02_gates", "deberta_local_check_SH3.out", E + "deb_local_check.out", "SH3 prep: local DeBERTa reproduces the Colab probabilities", "pass rule: top star >= 99%, mean diff <= 0.01"),
+    ("02_gates", "reflector_SH3.out", E + "persist_sh3.out", "SH3: three-agent Reflector fit on dev2, reproduces D1", "eval 0.675, natural_test 0.780"),
  ("07_phase2_v3", "ordinal_metrics_O1.out", E + "o1_ordinal.out", "O1: quadratic weighted kappa and MAE, main stack vs Phase 1", "kappa .888 / .881 vs .824 / .779"),
  ("07_phase2_v3", "ordinal_metrics_O1.json", E + "o1_ordinal.json", "Numbers for the above", "—"),
  ("02_gates", "gate_gradient_boosted_reflector_G1.out", E + "gn_gate_g1.out", "G1: gradient-boosted Reflector", "FAIL: dev2 -2.15"),

@@ -5,12 +5,13 @@ import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import confusion_matrix
 D = "v2_reflective/e23/"; FIG = "paper/figures/e23/"; S = ("eval", "natural_test"); NAME = {"eval": "Balanced eval (1,000)", "natural_test": "Natural test (2,000)"}
-G = lambda p, s: {x["review_id"]: x for x in map(json.loads, open(f"{D}{p}_{s}_probs.jsonl" if p.startswith("evid") else f"{D}p1/probs_{p}_{s}.jsonl"))}
+G = lambda p, s: {x["review_id"]: x for x in map(json.loads, open(f"{D}{p}_{s}_probs.jsonl" if p.startswith(("evid", "deb")) else f"{D}p1/probs_{p}_{s}.jsonl"))}
 ids = {s: list(G("R", s)) for s in ("dev2",) + S}
 lg = lambda p, s: np.log(np.clip([G(p, s)[i]["probs"] for i in ids[s]], 1e-6, 1))
 y = {s: np.array([G("R", s)[i]["gt_rating"] - 1 for i in ids[s]]) for s in ids}
-m = LogisticRegression(C=1, max_iter=3000).fit(np.hstack([lg("evid7", "dev2"), lg("evid6b", "dev2")]), y["dev2"])
-pred = {s: {"main": m.predict(np.hstack([lg("evid7", s), lg("evid6b", s)])), "probe": lg("evid7", s).argmax(1), "evid": lg("evid6b", s).argmax(1), "p1": lg("R", s).argmax(1)} for s in S}
+MAIN = ("evid7", "evid6b", "deb3")                                                  # SH3 (LOG.md 2026-11-10)
+m = LogisticRegression(C=1, max_iter=3000).fit(np.hstack([lg(a, "dev2") for a in MAIN]), y["dev2"])
+pred = {s: {"main": m.predict(np.hstack([lg(a, s) for a in MAIN])), "deb": lg("deb3", s).argmax(1), "probe": lg("evid7", s).argmax(1), "evid": lg("evid6b", s).argmax(1), "p1": lg("R", s).argmax(1)} for s in S}
 stars = ["1★", "2★", "3★", "4★", "5★"]
 # 1. confusion matrices of the main stack (row-normalised, counts annotated)
 for s in S:

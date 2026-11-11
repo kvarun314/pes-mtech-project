@@ -41,11 +41,13 @@ code("""
 from agentic_sentiment.v3.evidence import EvidenceAgent
 from agentic_sentiment.v3.reflector import Reflector
 from agentic_sentiment.v3.graph import build_graph_v3
+from agentic_sentiment.v3.deberta import DebertaAgent
 e, rj = joblib.load(PT.EVIDENCE_JOBLIB), joblib.load(PT.REFLECTOR_JOBLIB); ev, rf = EvidenceAgent(e["vectorizer"], e["model"]), Reflector(rj["full"], rj["fallback"])
+deb = DebertaAgent()                                                                     # third agent (SH3)
 tau = json.load(open(PT.D + "gate_B1b.json"))["tau"]                                    # Router attempt 2 (passed)
 htau = [x for x in json.load(open(PT.D + "s1_selective.json"))["SH"]["eval"] if x["target"] == 0.4][0]["threshold"]   # Hand-off, dev2 quantile
-probe = load_probe(llama) if llama else None; g = build_graph_v3(ev, rf, probe.probs if probe else None, tau=tau, handoff_tau=htau)
-p2 = cached("phase2_states", lambda: [{k: v for k, v in g.invoke({"review_id": r["review_id"], "title": r["title"], "review_text": r["review_text"]}).items() if k in ("route", "star", "probs", "shares", "agreed", "handoff")} for r in R])
+probe = load_probe(llama) if llama else None; g = build_graph_v3(ev, rf, probe.probs if probe else None, tau=tau, handoff_tau=htau, deberta=deb)
+p2 = cached("phase2_states", lambda: [{k: v for k, v in g.invoke({"review_id": r["review_id"], "title": r["title"], "review_text": r["review_text"]}).items() if k in ("route", "star", "probs", "shares", "agreed", "handoff", "evidence_probs", "deberta_probs", "probe_probs")} for r in R])
 for r, s in zip(R, p2): print(f"true {r['gt_rating']}★  Phase 2 → {s['star']}★  route={s['route']}  shares={ {k: round(float(v), 2) for k, v in s['shares'].items()} }  agents agree={s['agreed']}  hand-off={s['handoff']}")
 llama = probe = None; import gc, mlx.core as mx; gc.collect(); mx.clear_cache()   # free ~5 GB before loading the Instruct model
 """)
@@ -53,10 +55,10 @@ md("## 4. Phase 2 — explanation, checked by the Critic")
 code("""
 from agentic_sentiment.v3.explainer import load_instruct, make_chat_fn
 def explain():
-    m, t = load_instruct(); chat = make_chat_fn(m, t); gx = build_graph_v3(ev, rf, None, explain_fn=chat, judge_fn=chat)
+    m, t = load_instruct(); chat = make_chat_fn(m, t); gx = build_graph_v3(ev, rf, None, explain_fn=chat, judge_fn=chat, deberta=deb)
     out = []
     for r, s in list(zip(R, p2))[:2]:
-        o = gx.invoke({"review_id": r["review_id"], "title": r["title"], "review_text": r["review_text"], "probe_probs": s["probs"]})
+        o = gx.invoke({"review_id": r["review_id"], "title": r["title"], "review_text": r["review_text"], "probe_probs": s.get("probe_probs") or s["probs"], "deberta_probs": s["deberta_probs"]})
         out.append({k: o[k] for k in ("pack", "drafts", "feedback", "faithful")})
     return out
 for o in cached("explanations", explain):

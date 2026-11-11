@@ -12,7 +12,7 @@ sys.path.insert(0, "src")
 import joblib
 from agentic_sentiment.v3 import paths as PT
 from agentic_sentiment.v3.reflector import logp
-full = joblib.load(PT.REFLECTOR_JOBLIB)["full"]
+full = joblib.load(PT.REFLECTOR2_JOBLIB)["full"]
 L = lambda f: {x["review_id"]: x for x in map(json.loads, open(PT.D + f))}
 def load(s):
     P, E, T = L(f"evid7_{s}_probs.jsonl"), L(f"evid6b_{s}_probs.jsonl"), L(f"{s}.jsonl"); ids = list(P)

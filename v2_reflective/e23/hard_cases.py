@@ -5,7 +5,7 @@ from scipy.stats import binomtest
 from textblob import TextBlob
 sys.path.insert(0, "src")
 from agentic_sentiment.v3 import paths as PT
-from agentic_sentiment.v3.reflector import Reflector
+from agentic_sentiment.v3.reflector import Reflector, load_agents
 r = joblib.load(PT.REFLECTOR_JOBLIB); rf = Reflector(r["full"], r["fallback"])
 L = lambda f: {x["review_id"]: x for x in map(json.loads, open(PT.D + f))}
 CONTRAST = re.compile(r"\b(but|however|although|though|except|yet)\b", re.I)
@@ -15,9 +15,9 @@ SUBSETS = {"surface_positive_negatives": lambda pol, t, y: pol >= 0.2 and y <= 2
            "all": lambda pol, t, y: True}
 res = {}
 for s in ("eval", "natural_test"):
-    T, P, E, Q = L(f"{s}.jsonl"), L(f"evid7_{s}_probs.jsonl"), L(f"evid6b_{s}_probs.jsonl"), L(f"p1/probs_R_{s}.jsonl")
+    T, Q = L(f"{s}.jsonl"), L(f"p1/probs_R_{s}.jsonl"); ai, AP, AE, AB, _ = load_agents(s); k_ = {i: k for k, i in enumerate(ai)}
     ids = list(T); y = np.array([T[i]["gt_rating"] for i in ids]); pol = [TextBlob(T[i]["review_text"]).sentiment.polarity for i in ids]
-    sh = np.array([rf.combine(np.array(P[i]["probs"]), np.array(E[i]["probs"]))[0] for i in ids]); p1 = np.array([int(np.argmax(Q[i]["probs"])) + 1 for i in ids])
+    sh = np.array([rf.combine(AP[k_[i]], AE[k_[i]], AB[k_[i]])[0] for i in ids]); p1 = np.array([int(np.argmax(Q[i]["probs"])) + 1 for i in ids])
     res[s] = {}
     for name, f in SUBSETS.items():
         m = np.array([f(pol[k], T[i]["review_text"], y[k]) for k, i in enumerate(ids)])

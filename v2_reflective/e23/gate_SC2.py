@@ -10,7 +10,7 @@ from agentic_sentiment.v3.reflector import Reflector, logp
 from agentic_sentiment.v3.explainer import load_instruct, make_chat_fn
 from agentic_sentiment.v3.sc import reflect_pick
 D, M = PT.D, 0.20
-e = joblib.load(PT.EVIDENCE_JOBLIB); ev = EvidenceAgent(e["vectorizer"], e["model"]); rj = joblib.load(PT.REFLECTOR_JOBLIB); rf = Reflector(rj["full"], rj["fallback"])
+e = joblib.load(PT.EVIDENCE_JOBLIB); ev = EvidenceAgent(e["vectorizer"], e["model"]); rj = joblib.load(PT.REFLECTOR2_JOBLIB); rf = Reflector(rj["full"], rj["fallback"])
 model, tok = load_instruct(); chat = make_chat_fn(model, tok, max_tokens=4)
 def load(s):
     G = lambda p: {x["review_id"]: x["probs"] for x in map(json.loads, open(f"{D}{p}_{s}_probs.jsonl"))}

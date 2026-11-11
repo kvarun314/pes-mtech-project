@@ -6,12 +6,14 @@ from agentic_sentiment.v3 import paths as PT
 from agentic_sentiment.v3.evidence import EvidenceAgent
 from agentic_sentiment.v3.reflector import Reflector
 from agentic_sentiment.v3.llama import SharedLlama, load_probe
+from agentic_sentiment.v3.deberta import DebertaAgent
 from agentic_sentiment.v3.text import quoted, phrase_token_idx, drop_tokens, token_spans, tokens, contains
 split = sys.argv[1]; out = f"{PT.B2}deletion_{split}.jsonl"
 done = {json.loads(l)["review_id"] for l in open(out)} if os.path.exists(out) else set()
 e, r = joblib.load(PT.EVIDENCE_JOBLIB), joblib.load(PT.REFLECTOR_JOBLIB); ev, rf = EvidenceAgent(e["vectorizer"], e["model"]), Reflector(r["full"], r["fallback"])
 probe = load_probe(SharedLlama(adapter=None)); text = {x["review_id"]: x["review_text"] for x in map(json.loads, open(f"{PT.D}{split}.jsonl"))}
-def p_star(t, star): return float(rf.combine(probe.probs(t), ev.probs("", t))[1][star - 1])
+deb = DebertaAgent()                                                                  # SH3: DeBERTa re-scores the altered text too (LOG.md 2026-11-10)
+def p_star(t, star): return float(rf.combine(probe.probs(t), ev.probs("", t), deb.probs("", t))[1][star - 1])
 t0 = time.time(); n = 0
 with open(out, "a") as f:
     for b in map(json.loads, open(f"{PT.B2}{split}.jsonl")):

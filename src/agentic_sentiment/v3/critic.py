@@ -1,6 +1,7 @@
 """Critic for explanations: 4 rule checks + 1 LLM check, each failure turned into specific feedback for the Explainer."""
 import re
 from agentic_sentiment.v3.text import tokens, contains, quoted
+from agentic_sentiment.v3.explainer import DISAGREE_SENTENCE
 
 STAR = re.compile(r"\b([1-5])(?:\s*|-)(?:stars?|★)", re.I)
 DISAGREE = ("disagree", "differ", "split", "conflict")
@@ -39,7 +40,7 @@ def rule_checks(rationale: str, pack: dict, title: str, text: str) -> list[str]:
     if sum(contains(rt, p["phrase"]) for p in top) < need:
         fb.append(f"Quote at least {need} of these phrases: " + ", ".join(f'"{p["display"]}"' for p in top))
     if pack["agreed"] is False and not any(w in rationale.lower() for w in DISAGREE):    # 4: disagreement mentioned
-        fb.append("The agents disagreed; add the sentence \"The two agents disagreed on this review.\"")
+        fb.append(f"The agents disagreed; add the sentence \"{DISAGREE_SENTENCE(pack['shares'])}\"")
     return fb
 
 

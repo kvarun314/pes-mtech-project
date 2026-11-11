@@ -5,12 +5,12 @@ import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
 from sklearn.metrics import f1_score
 sys.path.insert(0, "src")
 from agentic_sentiment.v3 import paths as PT
-from agentic_sentiment.v3.reflector import Reflector
+from agentic_sentiment.v3.reflector import Reflector, load_agents
 r = joblib.load(PT.REFLECTOR_JOBLIB); rf = Reflector(r["full"], r["fallback"])
 L = lambda f: {x["review_id"]: x for x in map(json.loads, open(PT.D + f))}
-def sh(s):
-    P, E = L(f"evid7_{s}_probs.jsonl"), L(f"evid6b_{s}_probs.jsonl")
-    out = [(rf.combine(np.array(P[i]["probs"]), np.array(E[i]["probs"])), P[i]["gt_rating"]) for i in P]
+def sh(s):                                                                       # "SH" = the main stack, now SH3 (LOG.md 2026-11-10)
+    ids, P, E, B, y = load_agents(s)
+    out = [(rf.combine(P[k], E[k], B[k]), y[k]) for k in range(len(ids))]
     return np.array([o[1].max() for o, g in out]), np.array([o[0] for o, g in out]), np.array([g for o, g in out])
 def p1(s):
     R = list(L(f"p1/probs_R_{s}.jsonl").values()); P = np.array([x["probs"] for x in R])

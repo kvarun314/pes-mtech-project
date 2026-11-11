@@ -3,7 +3,7 @@ usage: q5_breakdown.py   (tee to q5_breakdown.out; writes q5_breakdown.json)"""
 import collections, datetime as dt, json, sys, numpy as np, joblib
 sys.path.insert(0, "src")
 from agentic_sentiment.v3 import paths as PT
-from agentic_sentiment.v3.reflector import logp
+from agentic_sentiment.v3.reflector import feats, load_agents
 full = joblib.load(PT.REFLECTOR_JOBLIB)["full"]
 L = lambda f: {x["review_id"]: x for x in map(json.loads, open(PT.D + f))}
 pool = {r["id"]: r for r in map(json.loads, open(PT.D + "pool.jsonl"))}
@@ -14,9 +14,8 @@ BANDS = {"year": (lambda i: "<=2014" if year(i) <= 2014 else "2015-2017" if year
          "product_reviews": (lambda i: "1" if per_asin[pool[i]["asin"]] == 1 else "2-5" if per_asin[pool[i]["asin"]] <= 5 else "6+", ["1", "2-5", "6+"])}
 rng = np.random.default_rng(0); res = {}
 for s in ("eval", "natural_test"):
-    P, E, R = L(f"evid7_{s}_probs.jsonl"), L(f"evid6b_{s}_probs.jsonl"), L(f"p1/probs_R_{s}.jsonl"); ids = list(P)
-    y = np.array([P[i]["gt_rating"] for i in ids])
-    sh = full.predict(np.c_[logp([P[i]["probs"] for i in ids]), logp([E[i]["probs"] for i in ids])]) + 1 == y
+    ids, P, E, B, y = load_agents(s); R = L(f"p1/probs_R_{s}.jsonl")
+    sh = full.predict(feats(P, E, B)) + 1 == y
     p1 = np.array([R[i]["probs"] for i in ids]).argmax(1) + 1 == y
     res[s] = {}; print(f"== {s} (n {len(ids)}; SH {sh.mean():.3f}, P1 {p1.mean():.3f})")
     for dim, (f, order) in BANDS.items():

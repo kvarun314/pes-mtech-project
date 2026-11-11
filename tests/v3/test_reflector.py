@@ -27,3 +27,16 @@ def test_choose_tau_returns_threshold_within_tolerance():
 
 def test_logp_clips():
     assert np.isfinite(logp([0.0, 1.0])).all()
+
+
+def test_three_agent_reflector():
+    P, E, y = _data(); B = _data(seed=1)[1]; r = fit_reflector(P, E, y, B)
+    assert r.full.n_features_in_ == 15 and r.fallback.n_features_in_ == 10
+    star, probs, sh = r.combine(P[0], E[0], B[0])
+    assert 1 <= star <= 5 and set(sh) == {"probe", "evidence", "deberta"} and abs(sum(sh.values()) - 1) < 1e-9
+    _, _, sh2 = r.combine(None, E[0], B[0])
+    assert sh2["probe"] == 0.0 and abs(sh2["evidence"] + sh2["deberta"] - 1) < 1e-9
+    tau, base, rows = choose_tau(P, E, y, B=B)
+    assert tau is None or any(t == tau for t, _, _ in rows)
+    import pytest
+    with pytest.raises(AssertionError): r.combine(P[0], E[0])         # three-agent Reflector needs DeBERTa probabilities

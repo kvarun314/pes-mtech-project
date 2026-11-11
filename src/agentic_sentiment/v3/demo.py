@@ -29,10 +29,10 @@ def pick_demo_ids(path="v2_reflective/e23/eval.jsonl", max_words=60):
     import joblib
     from agentic_sentiment.v3 import paths as PT
     G = lambda p: {x["review_id"]: x["probs"] for x in map(json.loads, open(f"{PT.D}{p}_eval_probs.jsonl"))}
-    r = joblib.load(PT.REFLECTOR_JOBLIB)["full"]; P7, E6 = G(PT.PROBE_PREFIX), G("evid6b"); out = {}
+    r = joblib.load(PT.REFLECTOR_JOBLIB)["full"]; P7, E6, DB = G(PT.PROBE_PREFIX), G("evid6b"), G(PT.DEB_PREFIX); out = {}
     for row in map(json.loads, open(path)):
         s, n = row["gt_rating"], len(row["review_text"].split())
         if s in out or not 15 <= n <= max_words: continue
-        x = np.r_[np.log(np.clip(P7[row["review_id"]], 1e-6, 1)), np.log(np.clip(E6[row["review_id"]], 1e-6, 1))][None]
+        x = np.r_[tuple(np.log(np.clip(A[row["review_id"]], 1e-6, 1)) for A in (P7, E6, DB))][None]   # SH3 features
         if r.predict(x)[0] + 1 == s: out[s] = row["review_id"]
     return [out[s] for s in range(1, 6)]

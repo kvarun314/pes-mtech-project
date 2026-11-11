@@ -5,7 +5,7 @@ from sklearn.base import clone
 from sklearn.model_selection import StratifiedKFold
 sys.path.insert(0, "src")
 from agentic_sentiment.v3 import paths as PT
-from agentic_sentiment.v3.reflector import logp
+from agentic_sentiment.v3.reflector import feats, load_agents
 from agentic_sentiment.v3.conformal import qhat, star_range, evaluate
 full = joblib.load(PT.REFLECTOR_JOBLIB)["full"]
 L = lambda f: {x["review_id"]: x for x in map(json.loads, open(PT.D + f))}
@@ -13,9 +13,8 @@ htau = [x for x in json.load(open(PT.D + "s1_selective.json"))["SH"]["eval"] if 
 
 
 def load(s):
-    P, E, R = L(f"evid7_{s}_probs.jsonl"), L(f"evid6b_{s}_probs.jsonl"), L(f"p1/probs_R_{s}.jsonl"); ids = list(P)
-    X = np.c_[logp([P[i]["probs"] for i in ids]), logp([E[i]["probs"] for i in ids])]
-    return X, np.array([R[i]["probs"] for i in ids]), np.array([P[i]["gt_rating"] for i in ids])
+    ids, P, E, B, y = load_agents(s); R = L(f"p1/probs_R_{s}.jsonl")
+    return feats(P, E, B), np.array([R[i]["probs"] for i in ids]), y
 
 
 def cv(S, y):

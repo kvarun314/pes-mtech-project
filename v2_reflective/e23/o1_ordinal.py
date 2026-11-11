@@ -4,16 +4,15 @@ import json, sys, numpy as np, joblib
 from sklearn.metrics import cohen_kappa_score
 sys.path.insert(0, "src")
 from agentic_sentiment.v3 import paths as PT
-from agentic_sentiment.v3.reflector import logp
+from agentic_sentiment.v3.reflector import feats, load_agents
 full = joblib.load(PT.REFLECTOR_JOBLIB)["full"]
 L = lambda f: {x["review_id"]: x for x in map(json.loads, open(PT.D + f))}
 qwk = lambda y, p: cohen_kappa_score(y, p, weights="quadratic")
 mae = lambda y, p: float(np.abs(y - p).mean())
 rng = np.random.default_rng(0); res = {}
 for s in ("eval", "natural_test"):
-    P, E, R = L(f"evid7_{s}_probs.jsonl"), L(f"evid6b_{s}_probs.jsonl"), L(f"p1/probs_R_{s}.jsonl"); ids = list(P)
-    y = np.array([P[i]["gt_rating"] for i in ids])
-    sh = full.predict(np.c_[logp([P[i]["probs"] for i in ids]), logp([E[i]["probs"] for i in ids])]) + 1
+    ids, P, E, B, y = load_agents(s); R = L(f"p1/probs_R_{s}.jsonl")
+    sh = full.predict(feats(P, E, B)) + 1
     p1 = np.array([R[i]["probs"] for i in ids]).argmax(1) + 1
     B = [rng.integers(0, len(y), len(y)) for _ in range(1000)]
     ci = lambda f: [float(x) for x in np.percentile([f(y[b], sh[b]) - f(y[b], p1[b]) for b in B], [2.5, 97.5])]

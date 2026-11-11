@@ -11,7 +11,7 @@ class Ev:
 
 
 class Rf:
-    def combine(self, probe_p, evid_p):
+    def combine(self, probe_p, evid_p, deb_p=None):
         p = evid_p if probe_p is None else (np.asarray(probe_p) + evid_p) / 2
         return int(np.argmax(p)) + 1, p, {"probe": 0.0 if probe_p is None else .5, "evidence": 1.0 if probe_p is None else .5}
 
@@ -52,3 +52,20 @@ def test_handoff_agent_routes_unsure_reviews_to_human():
     assert run(g)["handoff"] == "human"
     g = build_graph_v3(Ev([0, 0, 0, .1, .9]), Rf(), lambda t: [0, 0, 0, .1, .9], handoff_tau=0.7)
     assert run(g)["handoff"] == "auto"
+
+
+class Db:
+    def __init__(self, p): self.p = np.array(p); self.calls = 0
+    def probs(self, title, text): self.calls += 1; return self.p
+
+
+def test_deberta_probs_reach_reflector_and_agreement_uses_all_agents():
+    seen = []
+    class Rf3(Rf):
+        def combine(self, probe_p, evid_p, deb_p=None):
+            seen.append(deb_p); return super().combine(probe_p, evid_p)
+    db = Db([0, 1, 0, 0, 0]); g = build_graph_v3(Ev([0, 0, 0, .1, .9]), Rf3(), lambda t: [0, 0, 0, .1, .9], deberta=db)
+    out = run(g)
+    assert db.calls == 1 and list(seen[0]) == [0, 1, 0, 0, 0] and out["agreed"] is False
+    out = run(g, deberta_probs=[0, 0, 0, 0, 1])                       # stored probabilities are used as given
+    assert db.calls == 1 and out["agreed"] is True
