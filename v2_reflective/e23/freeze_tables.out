@@ -17,27 +17,31 @@ Exact = 5-class exact match; 95% CI = bootstrap (3,000) on exact. dev is selecti
 | LLaMA probe (frozen, layer 20) | 61.2 [58.1, 64.2] | 0.610 | 94.6 | 0.455 |
 | Evidence model (TF-IDF, ~497K) | 62.5 [59.5, 65.4] | 0.624 | 93.4 | 0.452 |
 | LoRA + Evidence stack (dev2 fit) | 65.5 [62.5, 68.5] | 0.653 | 96.2 | 0.386 |
-| Probe + Evidence stack (main) | 67.5 [64.6, 70.3] | 0.675 | 96.7 | 0.363 |
-| Phase 1 LoRA, seed 2 | 53.7 [50.7, 56.7] | 0.516 | 90.6 | 0.581 |
-| LoRA seed 2 + Evidence stack | 64.6 [61.6, 67.7] | 0.645 | 96.0 | 0.398 |
+| Probe + Evidence stack (previous main) | 67.5 [64.6, 70.3] | 0.675 | 96.7 | 0.363 |
+| DeBERTa-v3 (fine-tuned, 100K) | 66.5 [63.6, 69.4] | 0.667 | 97.7 | 0.359 |
+| Probe + Evidence + DeBERTa stack (main) | 67.5 [64.5, 70.5] | 0.675 | 97.3 | 0.353 |
+| Phase 1 LoRA, seed 2 | 53.7 [50.6, 56.7] | 0.516 | 90.6 | 0.581 |
+| LoRA seed 2 + Evidence stack | 64.6 [61.6, 67.5] | 0.645 | 96.0 | 0.398 |
 
 ## natural_test (n=2000)
 
 | Model | Exact % [95% CI] | macro-F1 | within-1 % | MAE |
 |---|---|---|---|---|
 | Base LLaMA (no LoRA) | 16.8 [15.2, 18.4] | 0.212 | 70.5 | 1.129 |
-| DistilBERT 2K | 62.5 [60.4, 64.6] | 0.462 | 90.5 | 0.512 |
-| Phase 1: LLaMA + LoRA | 53.4 [51.3, 55.6] | 0.488 | 94.3 | 0.539 |
+| DistilBERT 2K | 62.5 [60.4, 64.7] | 0.462 | 90.5 | 0.512 |
+| Phase 1: LLaMA + LoRA | 53.4 [51.2, 55.6] | 0.488 | 94.3 | 0.539 |
 | Evidence model (TF-IDF, 100K) | 69.3 [67.3, 71.4] | 0.541 | 93.7 | 0.400 |
 | Base LLaMA + Evidence stack | 72.7 [70.8, 74.7] | 0.574 | 95.9 | 0.335 |
-| DistilBERT + Evidence stack | 70.2 [68.1, 72.2] | 0.536 | 94.7 | 0.377 |
-| LoRA + Evidence stack (dev fit) | 73.4 [71.4, 75.3] | 0.577 | 96.2 | 0.320 |
-| LLaMA probe (frozen, layer 20) | 74.3 [72.4, 76.2] | 0.606 | 96.3 | 0.307 |
+| DistilBERT + Evidence stack | 70.2 [68.2, 72.2] | 0.536 | 94.7 | 0.377 |
+| LoRA + Evidence stack (dev fit) | 73.4 [71.5, 75.3] | 0.577 | 96.2 | 0.320 |
+| LLaMA probe (frozen, layer 20) | 74.3 [72.4, 76.1] | 0.606 | 96.3 | 0.307 |
 | Evidence model (TF-IDF, ~497K) | 70.2 [68.3, 72.2] | 0.550 | 94.5 | 0.372 |
-| LoRA + Evidence stack (dev2 fit) | 74.2 [72.4, 76.1] | 0.587 | 96.6 | 0.307 |
-| Probe + Evidence stack (main) | 75.7 [73.8, 77.6] | 0.612 | 96.7 | 0.288 |
-| Phase 1 LoRA, seed 2 | 74.8 [72.8, 76.7] | 0.545 | 95.3 | 0.321 |
-| LoRA seed 2 + Evidence stack | 72.7 [70.7, 74.7] | 0.576 | 96.2 | 0.327 |
+| LoRA + Evidence stack (dev2 fit) | 74.2 [72.4, 76.2] | 0.587 | 96.6 | 0.307 |
+| Probe + Evidence stack (previous main) | 75.7 [73.8, 77.5] | 0.612 | 96.7 | 0.288 |
+| DeBERTa-v3 (fine-tuned, 100K) | 75.8 [73.8, 77.6] | 0.614 | 98.0 | 0.267 |
+| Probe + Evidence + DeBERTa stack (main) | 78.0 [76.2, 79.8] | 0.634 | 97.4 | 0.253 |
+| Phase 1 LoRA, seed 2 | 74.8 [73.0, 76.7] | 0.545 | 95.3 | 0.321 |
+| LoRA seed 2 + Evidence stack | 72.7 [70.8, 74.6] | 0.576 | 96.2 | 0.327 |
 
 Prior-corrected natural_test rows, paired comparisons, variance and Gate 0 are in `LOG.md` (2026-10-18, 10-20, 10-21) with outputs `stack_week1.out`, `prior_baseline.out`, `base_vs_lora.out`, `variance.out`, `gate0_e23.out`, `encoder_2k.out`. Phase H (SH main config): `readout_H.out` (paired tests), `variance_H.out` (5 seeds, E6b fixed), `gate_H.out`.
 
@@ -45,22 +49,14 @@ Prior-corrected natural_test rows, paired comparisons, variance and Gate 0 are i
 
 | Split | Faithful first draft | Faithful after Critic loop | McNemar p | Rewrite rate | Mean rounds | Comprehensiveness cited / random | Sufficiency cited / random | LLM calls / review |
 |---|---|---|---|---|---|---|---|---|
-| eval | 0.605 | 0.889 | 6.4e-86 | 0.395 | 0.55 | 0.158 / 0.089 | 0.556 / 0.308 | 2.64 |
-| natural_test | 0.633 | 0.888 | 1.2e-153 | 0.366 | 0.54 | 0.212 / 0.124 | 0.641 / 0.353 | 2.67 |
-
-Router (eval, tau 0.7): SH 0.675, routed 0.674, probe skipped on 39.3%, McNemar p 1
-
-Router (natural_test, tau 0.7): SH 0.757, routed 0.755, probe skipped on 48.2%, McNemar p 0.68
+| eval | 0.623 | 0.905 | 2.6e-85 | 0.377 | 0.75 | 0.156 / 0.077 | 0.521 / 0.301 | 2.93 |
+| natural_test | 0.636 | 0.916 | 1.1e-168 | 0.363 | 0.73 | 0.209 / 0.119 | 0.616 / 0.349 | 2.96 |
 
 ## Self-correction (three levels)
 
 | Level | Split | Corrected reviews | Fixed | Broken | Net | p |
 |---|---|---|---|---|---|---|
-| SC1 escalation (rating) | eval | 607 escalated | 92 | 50 | +42 | 0.00053 |
-| SC1 escalation (rating) | natural_test | 1035 escalated | 152 | 78 | +74 | 1.2e-06 |
 | SC2 LLM re-rating (rating) | dev2 | 644 uncertain, 159 abstained | 76 | 89 | -13 | 0.35 |
 | SC2 LLM re-rating (rating) | natural_dev | 100 uncertain, 40 abstained | 4 | 10 | -6 | 0.18 |
-| SC3 Critic loop (explanation) | eval | faithful 0.605 -> 0.889 | 284 | 0 | +284 | 6.4e-86 |
-| SC3 Critic loop, max 4 rewrites (I1) | eval | faithful 0.605 -> 0.906 | 301 | 0 | +301 | 4.9e-91 |
-| SC3 Critic loop (explanation) | natural_test | faithful 0.633 -> 0.888 | 509 | 0 | +509 | 1.2e-153 |
-| SC3 Critic loop, max 4 rewrites (I1) | natural_test | faithful 0.633 -> 0.911 | 555 | 0 | +555 | 1.7e-167 |
+| SC3 Critic loop (explanation) | eval | faithful 0.623 -> 0.905 | 282 | 0 | +282 | 2.6e-85 |
+| SC3 Critic loop (explanation) | natural_test | faithful 0.636 -> 0.916 | 559 | 0 | +559 | 1.1e-168 |

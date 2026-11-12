@@ -1,11 +1,12 @@
-100 rows, 372s
-200 rows, 772s
-300 rows, 1210s
-400 rows, 1622s
-500 rows, 2005s
-600 rows, 2401s
-700 rows, 2821s
-800 rows, 3201s
-900 rows, 3629s
-1000 rows, 4042s
+Loading weights:   0%|          | 0/202 [00:00<?, ?it/s]Loading weights: 100%|██████████| 202/202 [00:00<00:00, 7077.52it/s]
+100 rows, 454s
+200 rows, 939s
+300 rows, 1457s
+400 rows, 1963s
+500 rows, 2431s
+600 rows, 2911s
+700 rows, 3420s
+800 rows, 3891s
+900 rows, 4424s
+1000 rows, 4925s
 done v2_reflective/e23/b2/deletion_eval.jsonl

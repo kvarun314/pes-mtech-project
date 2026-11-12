@@ -1,70 +1,66 @@
 eval {
  "n": 1000,
- "faithful_first": 0.605,
- "faithful_final": 0.889,
- "mcnemar_p": 6.434446986835036e-86,
- "rewrite_rate": 0.395,
- "mean_rounds": 0.55,
+ "faithful_first": 0.623,
+ "faithful_final": 0.905,
+ "mcnemar_p": 2.5737787947340145e-85,
+ "rewrite_rate": 0.377,
+ "mean_rounds": 0.747,
  "first_draft_failures_by_check": {
   "1": 7,
-  "2": 196,
-  "3": 181,
+  "2": 194,
+  "3": 183,
   "4": 0,
-  "5": 76
+  "5": 71
  },
  "judge_unparsed": 0,
- "llm_calls": 2.638,
- "explain_s": 9.16993328166008,
- "critic_s": 1.9845763421058655,
- "comp_cited": 0.15826522651196723,
- "comp_random": 0.08851996340290086,
+ "llm_calls": 2.934,
+ "explain_s": 10.792864286422729,
+ "critic_s": 2.2053495597839357,
+ "comp_cited": 0.155690733012703,
+ "comp_random": 0.07696879329004634,
  "comp_diff_ci": [
-  0.060984124905820544,
-  0.07863526076104642
+  0.06942336259819164,
+  0.08779881334248563
  ],
- "comp_wilcoxon_p": 1.5057535718300597e-47,
- "suff_cited": 0.5557385707535208,
- "suff_random": 0.30803619049739783,
+ "comp_wilcoxon_p": 4.878994419938891e-55,
+ "suff_cited": 0.5211545495787223,
+ "suff_random": 0.30100964045908746,
  "suff_diff_ci": [
-  0.2331049035778653,
-  0.2628187813832847
+  0.205745489637455,
+  0.23415245023529072
  ],
- "suff_wilcoxon_p": 3.204756047309733e-122
+ "suff_wilcoxon_p": 1.1908345053045278e-115
 }
 natural_test {
  "n": 2000,
- "faithful_first": 0.6335,
- "faithful_final": 0.888,
- "mcnemar_p": 1.1933345169920331e-153,
- "rewrite_rate": 0.3665,
- "mean_rounds": 0.535,
+ "faithful_first": 0.6365,
+ "faithful_final": 0.916,
+ "mcnemar_p": 1.0598939654755962e-168,
+ "rewrite_rate": 0.3635,
+ "mean_rounds": 0.7255,
  "first_draft_failures_by_check": {
-  "1": 10,
-  "2": 345,
-  "3": 294,
+  "1": 9,
+  "2": 367,
+  "3": 289,
   "4": 0,
-  "5": 206
+  "5": 180
  },
  "judge_unparsed": 0,
- "llm_calls": 2.668,
- "explain_s": 20.627373436927794,
- "critic_s": 2.026209143280983,
- "comp_cited": 0.21215412595020655,
- "comp_random": 0.12350299213394043,
+ "llm_calls": 2.9635,
+ "explain_s": 9.89298327434063,
+ "critic_s": 2.163264235138893,
+ "comp_cited": 0.20915731583310165,
+ "comp_random": 0.11853600800183821,
  "comp_diff_ci": [
-  0.08179731572152742,
-  0.09600007529338632
+  0.08416708211152059,
+  0.09770241006630609
  ],
- "comp_wilcoxon_p": 3.14864074242811e-116,
- "suff_cited": 0.6407279377001919,
- "suff_random": 0.35287773117589843,
+ "comp_wilcoxon_p": 1.596716003379129e-131,
+ "suff_cited": 0.6162151330925498,
+ "suff_random": 0.3492891103148296,
  "suff_diff_ci": [
-  0.27658785828843474,
-  0.29953195384273634
+  0.2557774336677147,
+  0.2782969261500114
  ],
- "suff_wilcoxon_p": 6.751748546039512e-256
+ "suff_wilcoxon_p": 9.254518060708415e-252
 }
-
-# Supplement (added after the run): fixed/broken counts and median timings (mean natural_test explain_s is inflated by the 23:43-06:17 sleep)
-eval first 605/1000 final 889/1000 fixed 284 broken 0 | explain_s median 6.4 max 28 | critic_s median 1.6
-natural_test first 1267/2000 final 1776/2000 fixed 509 broken 0 | explain_s median 6.1 max 23642 | critic_s median 1.6

@@ -2,8 +2,8 @@
  "gate_dev2": {
   "SH": {
    "coverage": 0.9019999999999999,
-   "mean_size": 1.9505,
-   "single_star": 0.2245
+   "mean_size": 1.8184999999999998,
+   "single_star": 0.3175
   },
   "P1": {
    "coverage": 0.9020000000000001,
@@ -14,12 +14,12 @@
  },
  "readout": {
   "eval": {
-   "q_SH": 0.8434232648699869,
+   "q_SH": 0.8317764934647435,
    "q_P1": 0.8700747350565066,
    "SH": {
-    "coverage": 0.926,
-    "mean_size": 1.929,
-    "single_star": 0.241
+    "coverage": 0.916,
+    "mean_size": 1.772,
+    "single_star": 0.34
    },
    "P1": {
     "coverage": 0.918,
@@ -27,20 +27,20 @@
     "single_star": 0.047
    },
    "three_way": {
-    "auto_share": 0.42,
-    "auto_exact": 0.85,
-    "range_share": 0.417,
-    "range_coverage": 0.894484412470024,
-    "human_share": 0.163
+    "auto_share": 0.411,
+    "auto_exact": 0.8686131386861314,
+    "range_share": 0.477,
+    "range_coverage": 0.9077568134171907,
+    "human_share": 0.112
    }
   },
   "natural_test": {
-   "q_SH": 0.7724656753936129,
+   "q_SH": 0.7631459269361642,
    "q_P1": 0.8438303154087274,
    "SH": {
-    "coverage": 0.9045,
-    "mean_size": 1.5245,
-    "single_star": 0.5
+    "coverage": 0.9005,
+    "mean_size": 1.4385,
+    "single_star": 0.5775
    },
    "P1": {
     "coverage": 0.8795,
@@ -48,11 +48,11 @@
     "single_star": 0.111
    },
    "three_way": {
-    "auto_share": 0.5575,
-    "auto_exact": 0.9309417040358744,
-    "range_share": 0.419,
-    "range_coverage": 0.850835322195704,
-    "human_share": 0.0235
+    "auto_share": 0.5615,
+    "auto_exact": 0.9278717720391808,
+    "range_share": 0.4225,
+    "range_coverage": 0.8603550295857988,
+    "human_share": 0.016
    }
   }
  }

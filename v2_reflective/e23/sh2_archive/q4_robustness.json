@@ -1,0 +1,38 @@
+{
+ "original": {
+  "SH_exact": 0.6933333333333334,
+  "P1_exact": 0.5,
+  "SH_flip": 0.0,
+  "P1_flip": 0.0,
+  "only_SH_flips": 0,
+  "only_P1_flips": 0,
+  "p": 1.0
+ },
+ "typos": {
+  "SH_exact": 0.6966666666666667,
+  "P1_exact": 0.51,
+  "SH_flip": 0.0033333333333333335,
+  "P1_flip": 0.02,
+  "only_SH_flips": 0,
+  "only_P1_flips": 5,
+  "p": 0.0625
+ },
+ "flat": {
+  "SH_exact": 0.66,
+  "P1_exact": 0.43666666666666665,
+  "SH_flip": 0.11666666666666667,
+  "P1_flip": 0.2966666666666667,
+  "only_SH_flips": 20,
+  "only_P1_flips": 74,
+  "p": 1.8461183606763278e-08
+ },
+ "no_title": {
+  "SH_exact": 0.6366666666666667,
+  "P1_exact": 0.5,
+  "SH_flip": 0.08,
+  "P1_flip": 0.0,
+  "only_SH_flips": 24,
+  "only_P1_flips": 0,
+  "p": 1.1920928955078125e-07
+ }
+}
