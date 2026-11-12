@@ -1,7 +1,8 @@
-% Electronics-2023 leak-free results (frozen 2026-10-24). Shared by main.tex and conference/ConferencePaper.tex
+% Electronics-2023 leak-free results (frozen 2026-10-24; main stack updated to SH3 on 2026-11-12, LOG.md). Shared by main.tex and conference/ConferencePaper.tex
 % via \input, so both papers stay in sync. Define \efigdir (path to figures/e23/) before \input.
 % Every number comes from v2_reflective/e23/freeze_tables.out, readout_H.out, variance_H.out (LOG.md 2026-10-24).
-% NAMING (deck and paper use these neutral names; internal IDs stay in LOG.md): main stack / Probe + Evidence stack = SH;
+% NAMING (deck and paper use these neutral names; internal IDs stay in LOG.md): main stack / Probe + Evidence + DeBERTa stack = SH3;
+%   previous main / Probe + Evidence stack = SH (two agents); DeBERTa agent = deb3 (DeBERTa-v3-base fine-tuned on 100K, seed 0);
 %   LLaMA probe = P3 (evid7); Evidence model (~497K) = E6b (evid6b); Evidence model (100K) = E (evid);
 %   LoRA + Evidence stack = S0 / first stack; Phase 1 LoRA = Analyst arm R; LLaMA probe (120K) = P3b (A1).
 % AUTHOR: the prose is yours to write (AI-content limit). The facts to cover are listed in the comments marked "% FACT".
@@ -15,12 +16,16 @@
 % FACT: main config main stack = LLaMA probe (logistic probe on frozen base-LLaMA-3-8B layer-20 last-token hidden state, 40K fit rows, C=.001)
 %       + Evidence model (~497K) (TF-IDF 1-2-gram + LR on ~497K balanced rows), combined by an LR Reflector (C=1) fit on dev2.
 % FACT: main stack was chosen on dev2 among 5 candidate agent sets by a rule written before running (gate: dev2 +1.0 pt and paired CI > 0).
+% FACT (SH3, LOG.md 2026-11-10 / 11-12): third agent DeBERTa-v3-base fine-tuned on the same 100K evidence-train rows (title + text, 256 tokens, 2 epochs, Colab).
+%       Gate on dev2 passed (D1: +2.0, CI +0.6, +3.35). The user adopted it after D2 (3 seeds). Reflector = LR (C=1) on the three agents' log-probabilities, fit on dev2.
+%       Local DeBERTa (M1, MPS) reproduces the Colab probabilities: top-star agreement 100%, mean |diff| .0005, 86 ms per review (deb_local_check.out).
 
 \begin{table}[htbp]
 \centering
 \caption{Exact accuracy (\%, 95\% bootstrap CI), macro-F1, within-one-star accuracy and MAE on the two frozen test splits. Stackers marked dev are fit on 500 dev rows; dev2 on 2\,000.}
 \label{tab:e23main}
 \small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lcccc}
 \toprule
 \textbf{Model} & \textbf{Exact [CI]} & \textbf{Macro-F1} & \textbf{Within-1} & \textbf{MAE} \\
@@ -34,7 +39,9 @@ Evidence model, 100K                 & 62.4 [59.4, 65.4] & 0.622 & 93.1 & 0.457 
 Evidence model, $\sim$497K         & 62.5 [59.5, 65.4] & 0.624 & 93.4 & 0.452 \\
 LoRA + Evidence stack (dev)            & 63.9 [61.0, 66.9] & 0.638 & 95.5 & 0.411 \\
 LoRA + Evidence stack (dev2)           & 65.5 [62.5, 68.5] & 0.653 & 96.2 & 0.386 \\
-\textbf{Probe + Evidence stack (main)}       & \textbf{67.5 [64.6, 70.3]} & \textbf{0.675} & \textbf{96.7} & \textbf{0.363} \\
+Probe + Evidence stack (previous main) & 67.5 [64.6, 70.3] & 0.675 & 96.7 & 0.363 \\
+DeBERTa-v3, 100K                    & 66.5 [63.6, 69.4] & 0.667 & 97.7 & 0.359 \\
+\textbf{Probe + Evidence + DeBERTa (main)} & \textbf{67.5 [64.5, 70.5]} & \textbf{0.675} & \textbf{97.3} & \textbf{0.353} \\
 \midrule
 \multicolumn{5}{l}{\textit{natural\_test (2\,000, natural skew)}} \\
 Base LLaMA-3-8B, no LoRA        & 16.8 [15.2, 18.4] & 0.212 & 70.5 & 1.129 \\
@@ -45,14 +52,17 @@ Evidence model, 100K                 & 69.3 [67.3, 71.4] & 0.541 & 93.7 & 0.400 
 Evidence model, $\sim$497K         & 70.2 [68.3, 72.2] & 0.550 & 94.5 & 0.372 \\
 LoRA + Evidence stack (dev)            & 73.4 [71.4, 75.3] & 0.577 & 96.2 & 0.320 \\
 LoRA + Evidence stack (dev2)           & 74.2 [72.4, 76.1] & 0.587 & 96.6 & 0.307 \\
-\textbf{Probe + Evidence stack (main)}       & \textbf{75.7 [73.8, 77.6]} & \textbf{0.612} & \textbf{96.7} & \textbf{0.288} \\
+Probe + Evidence stack (previous main) & 75.7 [73.8, 77.6] & 0.612 & 96.7 & 0.288 \\
+DeBERTa-v3, 100K                    & 75.8 [73.8, 77.6] & 0.614 & 98.0 & 0.267 \\
+\textbf{Probe + Evidence + DeBERTa (main)} & \textbf{78.0 [76.2, 79.8]} & \textbf{0.634} & \textbf{97.4} & \textbf{0.253} \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table}
 
 \begin{table}[htbp]
 \centering
-\caption{Paired comparisons for the main stack (exact-accuracy difference in points, 95\% paired bootstrap CI, exact McNemar $p$, and Holm-adjusted $p$ over these 8 comparisons).}
+\caption{Paired comparisons for the main stack (exact-accuracy difference in points, exact McNemar $p$, and Holm-adjusted $p$ over these 12 comparisons).}
+% FACT: the two-agent version of this table (with paired bootstrap CIs, 8 comparisons) is in readout_H.out / e23/sh2_archive/analysis_C.out.
 \label{tab:e23paired}
 \small
 \resizebox{\linewidth}{!}{%
@@ -60,17 +70,20 @@ LoRA + Evidence stack (dev2)           & 74.2 [72.4, 76.1] & 0.587 & 96.6 & 0.30
 \toprule
 \textbf{Main stack vs} & \textbf{eval} & \textbf{natural\_test} \\
 \midrule
-LoRA + Evidence stack (dev), earlier headline & +3.6 [+0.9, +6.3], $p$=.011 (Holm .045) & +2.3 [+0.6, +4.0], $p$=.0086 (Holm .043) \\
-LoRA + Evidence stack (dev2), same fit set & +2.0 [$-$0.6, +4.7], $p$=.14 (Holm .22) & +1.5 [$-$0.1, +3.0], $p$=.081 (Holm .22) \\
-Evidence model alone & +5.0 [+2.4, +7.4], $p$=1.7e-4 (Holm .001) & +5.5 [+3.8, +7.1], $p$=1.3e-10 (Holm 1e-9) \\
-LLaMA probe alone & +6.3 [+3.8, +8.8], $p$=6.4e-7 (Holm 4.4e-6) & +1.4 [$-$0.1, +2.9], $p$=.074 (Holm .22) \\
+Probe + Evidence stack (previous main) & +0.0, $p$=1 (Holm 1) & +2.3, $p$=8.6e-4 (Holm .0043) \\
+DeBERTa alone & +1.0, $p$=.39 (Holm .77) & +2.3, $p$=4.5e-4 (Holm .0031) \\
+LoRA + Evidence stack (dev), earlier headline & +3.6, $p$=.018 (Holm .072) & +4.6, $p$=1.8e-7 (Holm 1.9e-6) \\
+LoRA + Evidence stack (dev2), same fit set & +2.0, $p$=.16 (Holm .48) & +3.7, $p$=1.2e-5 (Holm 1e-4) \\
+Evidence model alone & +5.0, $p$=6.8e-4 (Holm .0041) & +7.8, $p$=1.8e-16 (Holm 2.2e-15) \\
+LLaMA probe alone & +6.3, $p$=1.2e-5 (Holm 1e-4) & +3.7, $p$=9.9e-6 (Holm 9.9e-5) \\
 \bottomrule
 \end{tabular}}
 \end{table}
 
 \begin{table}[htbp]
 \centering
-\caption{Variance over 5 seeds (bootstrap of the probe fit set and of dev2; Evidence model held fixed). Mean $\pm$ sd.}
+\caption{Variance over 5 seeds for the two-agent Probe + Evidence stack (bootstrap of the probe fit set and of dev2; Evidence model held fixed). Mean $\pm$ sd.}
+% FACT (D2, d2_seeds.out): DeBERTa seed variance (seeds 0, 1, 2): gain of the three-agent stack over the two-agent stack eval +0.1 +/- 0.3, natural_test +2.2 +/- 0.2.
 % FACT (C1, variance_H2.out, LOG.md 2026-10-26): with the Evidence model also retrained on a bootstrap of its ~497K rows each seed,
 % SH = 66.1 +/- 0.6 (eval) and 75.4 +/- 0.7 (natural_test), macro-F1 .660 / .611; SH minus Evidence +4.4 +/- 1.4 / +6.7 +/- 0.7; SH minus probe +5.4 / +2.4;
 % SH minus S0 +0.9 +/- 1.4 / +1.0 +/- 1.0. Same conclusions as with the Evidence model fixed.
@@ -122,8 +135,8 @@ dev2 (2\,000) + probe on 40K (main stack) & +3.9 pts, paired CI [+2.4, +5.8] & P
 % FACT: disclosures: 5 candidates compared on dev2; Evidence model (~497K)-alone accuracy on eval/natural_test was printed before the gate (not used
 %       for any choice); Evidence model (~497K) not retrained across variance seeds (rerun C1 pending); Holm correction applied over the 8 main stack comparisons (Table 2).
 % FACT (framing the Phase 1 baseline honestly; agreed with the author 2026-10-25):
-%   - Lead with the gain: main stack vs Phase 1 LoRA = +13.5 pts eval (54.0 -> 67.5) and +22.3 pts natural_test (53.4 -> 75.7),
-%     i.e. 29.3% and 47.9% fewer errors (relative error reduction = gain / (100 - baseline)).
+%   - Lead with the gain: main stack (SH3) vs Phase 1 LoRA = +13.5 pts eval (54.0 -> 67.5) and +24.6 pts natural_test (53.4 -> 78.0),
+%     i.e. 29.3% and 52.8% fewer errors (relative error reduction = gain / (100 - baseline)). Previous two-agent main: +13.5 / +22.3 (29.3% / 47.9%).
 %   - What Phase 1 does well on Electronics (e23/metrics_extra.out): within-one-star 93.7 / 94.4; binary (3-star excluded) 91.2 / 92.9;
 %     so it gets the direction right, the exact star is the hard part.
 %   - Phase 1 natural_test 53.4 is low because the adapter was trained on balanced data and under-predicts 5-star (65% of natural_test): a class-mix effect.
@@ -144,15 +157,15 @@ dev2 (2\,000) + probe on 40K (main stack) & +3.9 pts, paired CI [+2.4, +5.8] & P
 \toprule
  & \textbf{eval} & \textbf{natural\_test} \\
 \midrule
-Errors (of 1\,000 / 2\,000) & 325 & 486 \\
-Errors one star off & 89.8\% & 86.4\% \\
-Errors two or more stars off & 33 & 66 \\
-Per-class recall 1$\star$ / 2$\star$ / 3$\star$ / 4$\star$ / 5$\star$ & .725 / .595 / .535 / .665 / .855 & .741 / .458 / .540 / .639 / .829 \\
-Agents agree (share of rows): stack exact & 64.2\%: 74.1 & 72.0\%: 83.5 \\
-Agents disagree: Stack / Evidence / Probe exact & 55.6 / 42.7 / 39.1 & 55.8 / 35.7 / 50.1 \\
-Shortest quartile: Stack / Evidence / Probe exact & 71.5 / 70.0 / 54.6 & 82.4 / 79.4 / 77.3 \\
-Longest quartile: Stack / Evidence / Probe exact & 64.7 / 55.8 / 64.3 & 68.4 / 60.6 / 70.0 \\
-Calibration: ECE; mean confidence vs accuracy & .047; .650 vs .675 & .062; .704 vs .757 \\
+Errors (of 1\,000 / 2\,000) & 325 & 440 \\
+Errors one star off & 91.7\% & 88.2\% \\
+Errors two or more stars off & 27 & 52 \\
+Per-class recall 1$\star$ / 2$\star$ / 3$\star$ / 4$\star$ / 5$\star$ & .720 / .575 / .570 / .630 / .880 & .730 / .506 / .560 / .664 / .855 \\
+Probe and Evidence agree (share of rows): stack exact & 64.2\%: 72.9 & 72.0\%: 84.2 \\
+Probe and Evidence disagree: Stack / Evidence / Probe exact & 57.8 / 42.7 / 39.1 & 62.0 / 35.7 / 50.1 \\
+Shortest quartile: Stack / Evidence / Probe exact & 71.2 / 70.0 / 54.6 & 86.5 / 79.4 / 77.3 \\
+Longest quartile: Stack / Evidence / Probe exact & 66.3 / 55.8 / 64.3 & 70.2 / 60.6 / 70.0 \\
+Calibration: ECE; mean confidence vs accuracy & .031; .679 vs .675 & .052; .733 vs .780 \\
 \bottomrule
 \end{tabular}}
 \end{table}
@@ -165,14 +178,15 @@ Calibration: ECE; mean confidence vs accuracy & .047; .650 vs .675 & .062; .704 
 \label{fig:e23reliability}
 \end{figure}
 
-% FACT: after Holm over 8 comparisons, 5 remain significant: main stack > Evidence model (~497K) (both splits), main stack > LLaMA probe (eval), main stack > old headline (both splits).
-%       Not significant: main stack vs LLaMA probe on natural_test; main stack vs the old stack refit on the same dev2 (both splits).
-% FACT: 86-90% of main stack errors are adjacent-star confusions; 2-star and 3-star are hardest (recall .46-.60).
+% FACT (SH3, analysis_C.out): after Holm over 12 comparisons, 8 remain significant: every natural_test comparison (vs Evidence, probe, DeBERTa alone,
+%       previous main, both LoRA + Evidence stacks) and eval vs probe and vs Evidence. Not significant on eval: vs DeBERTa alone (+1.0), previous main (+0.0),
+%       both LoRA + Evidence stacks (+3.6 Holm .072; +2.0). DeBERTa adds on the natural mix (+2.3) but not on balanced eval.
+% FACT: 88-92% of main stack errors are adjacent-star confusions; 2-star and 3-star are hardest (recall .51-.58).
 % FACT: the agents are complementary: TF-IDF Evidence model (~497K) is strong on short reviews (eval shortest quartile 70.0 vs LLaMA probe 54.6),
 %       the LLaMA probe on long ones (eval longest quartile 64.3 vs Evidence model (~497K) 55.8); main stack is best or near-best in every quartile.
-% FACT: when the agents disagree, the Reflector picks right 55.6% / 55.8% vs 42.7 / 35.7 (Evidence model (~497K)) and 39.1 / 50.1 (LLaMA probe).
-% FACT: main stack is slightly under-confident (ECE .047 / .062), so its probabilities can be used as confidence.
-% FACT: cost per review on an M1 16 GB: LLaMA probe forward to layer 20 ~0.67 s; TF-IDF transform and Reflector each well under 0.1 ms (0.04-0.06 ms across runs).
+% FACT: when the probe and Evidence disagree, the three-agent stack picks right 57.8% / 62.0% vs 42.7 / 35.7 (Evidence model (~497K)) and 39.1 / 50.1 (LLaMA probe).
+% FACT: main stack is well calibrated on eval (ECE .031, confidence .679 vs accuracy .675) and under-confident on natural_test (ECE .052, .733 vs .780).
+% FACT: cost per review on an M1 16 GB: LLaMA probe forward to layer 20 ~0.67 s; DeBERTa 86 ms (MPS); TF-IDF transform and Reflector each well under 0.1 ms (0.04-0.06 ms across runs).
 % FACT (Phase 2 v3, Router + self-correction 1; LOG.md 2026-10-25, e23/gate_B1.out, gate_B1b.out):
 %   - Router: skip the LLaMA probe when the Evidence model's max probability >= tau; otherwise escalate and let the Reflector revise the draft star.
 %   - Attempt 1 (tau 0.60, tolerance 0.5 pt) failed its natural_dev check by 0.3 pt; no test read. Attempt 2 (tau 0.70, tolerance 0) declared and passed.
@@ -180,12 +194,16 @@ Calibration: ECE; mean confidence vs accuracy & .047; .650 vs .675 & .062; .704 
 %   - Self-correction 1 (escalated reviews): eval 607 escalated, fixed 92 / broken 50, net +42, binomial p 5.3e-4;
 %     natural_test 1,035 escalated, fixed 152 / broken 78, net +74, p 1.2e-6. dev2 (CV): fixed 194 / broken 101, p 6.7e-8.
 %   - Disclose: two Router candidates tried; readout p-values join the Holm family at freeze.
+% FACT (SH3 Router, gate_B1b.out, LOG.md 2026-11-12): same rule re-chosen on dev2 for the three-agent stack (fallback when the probe is skipped:
+%   LR on Evidence + DeBERTa). dev2 picks tau .55 (routed .6625 vs full .662, skip 60%), but the gate FAILS: natural_dev routed .798 < full .804 - .005,
+%   and SC1 on dev2 is not significant (113 changed, 50 fixed, 37 broken, p .20). Per the declaration the Router is off: every review uses all three agents.
+%   Table below = two-agent system (previous main) only.
 % AUTHOR: write the robustness paragraph(s) here.
 
 % ---- Phase 2 v3 tables (Task 11; numbers typed from e23/b2_report.json and e23/gate_B1b.json) ----
 \begin{table}[htbp]
 \centering
-\caption{Router (attempt 2, $\tau = 0.70$): exact accuracy of the full stack vs the routed system, share of reviews where the LLaMA probe is skipped, and exact McNemar $p$.}
+\caption{Router for the two-agent previous main stack (attempt 2, $\tau = 0.70$; with three agents the Router gate fails and the Router is off): exact accuracy of the full stack vs the routed system, share of reviews where the LLaMA probe is skipped, and exact McNemar $p$.}
 \label{tab:e23router}
 \small
 \begin{tabular}{lcccc}
@@ -200,7 +218,11 @@ natural\_test & 75.7 & 75.5 & 48.2\% & .68 \\
 
 \begin{table}[htbp]
 \centering
-\caption{Explanations on all 3,000 test reviews: share faithful (all Critic checks pass) for the first draft and after the Critic loop with at most 2 and at most 4 rewrites (exact McNemar $p$, final vs first).}
+\caption{Explanations on all 3,000 test reviews: share faithful (all Critic checks pass) for the first draft and after the Critic loop with at most 4 rewrites (exact McNemar $p$, final vs first). Main = three-agent stack; previous main shown for reference (max 2 and max 4 rewrites).}
+% FACT (SH3 B2, b2_report.out, LOG.md 2026-11-12): fixed 282 / broken 0 (eval), 559 / 0 (natural_test); rewrite rate 37.7% / 36.35%; mean rounds .75 / .73;
+%   judge unparsed 0; LLM calls 2.93 / 2.96 per review; mean Explainer 10.8 / 9.9 s, Critic 2.2 s per review.
+% FACT (SH3): first-draft failures (eval / natural_test): star 7 / 9; quote not in review or pack 194 / 367; top phrases missing 183 / 289; disagreement 0 / 0; judge 71 / 180.
+% FACT (SH3): deletion diff 95% bootstrap CI: comprehensiveness +.069 to +.088 (eval), +.084 to +.098 (natural_test); sufficiency +.206 to +.234 (eval), +.256 to +.278 (natural_test).
 % FACT (B2, b2_report.out, LOG.md 2026-10-27): fixed 284 / broken 0 (eval), 509 / 0 (natural_test); rewrite rate 39.5% / 36.7%; mean rounds 0.55 / 0.54;
 %   judge unparsed 0; LLM calls 2.64 / 2.67 per review; median Explainer 6.4 / 6.1 s, Critic 1.6 s per review.
 % FACT: first-draft failures (eval / natural_test): star 7 / 10; quote not in review or pack 196 / 345; top phrases missing 181 / 294; disagreement 0 / 0; judge 76 / 206.
@@ -215,14 +237,17 @@ natural\_test & 75.7 & 75.5 & 48.2\% & .68 \\
 %   all 16 failures were the judge rejecting a sentence that only quotes the review.
 \label{tab:e23faith}
 \small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lccccc}
 \toprule
 \textbf{Split} & \textbf{First draft} & \textbf{Max 2 rewrites} & \textbf{$p$} & \textbf{Max 4 rewrites} & \textbf{$p$} \\
 \midrule
-eval & 60.5\% & 88.9\% & 6.4e-86 & 90.6\% & 4.9e-91 \\
-natural\_test & 63.4\% & 88.8\% & 1.2e-153 & 91.1\% & 1.7e-167 \\
+eval, main & 62.3\% & --- & --- & 90.5\% & 2.6e-85 \\
+natural\_test, main & 63.7\% & --- & --- & 91.6\% & 1.1e-168 \\
+eval, previous main & 60.5\% & 88.9\% & 6.4e-86 & 90.6\% & 4.9e-91 \\
+natural\_test, previous main & 63.4\% & 88.8\% & 1.2e-153 & 91.1\% & 1.7e-167 \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table}
 
 \begin{table}[htbp]
@@ -234,8 +259,8 @@ natural\_test & 63.4\% & 88.8\% & 1.2e-153 & 91.1\% & 1.7e-167 \\
 \toprule
 \textbf{Split} & \textbf{Compr. (cited / random)} & \textbf{Suff. (cited / random)} & \textbf{Wilcoxon $p$} \\
 \midrule
-eval & .158 / .089 & .556 / .308 & $<$1e-46 \\
-natural\_test & .212 / .124 & .641 / .353 & $<$1e-115 \\
+eval & .156 / .077 & .521 / .301 & $<$1e-54 \\
+natural\_test & .209 / .119 & .616 / .349 & $<$1e-130 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -260,47 +285,51 @@ Analyst (LoRA, one-shot) & One-shot leak ($\approx$8 pts); rationale is a repeat
 Visual Verifier & Constant output (always 3, then always 5) & Excluded \\
 RAG Prover & Weak vote (37.5\%) & Replaced by the Evidence agent \\
 Critic (dissonance) & Override on 0.4\% of rows; LLM adjudicator failed three times & Star moved to the Reflector; Critic checks explanations \\
-Router (new) & Probe skipped on 39--48\% at no accuracy cost & Kept \\
-Hand-off (new) & 93.1\% exact at 55.7\% coverage (natural\_test); 90\% star ranges 1.5--1.9 stars wide & Kept \\
-Explainer + Critic loop (new) & Faithful 60.5--63.4\% $\to$ 90.6--91.1\% (max 4 rewrites), 0 broken & Kept \\
+Router (new) & Two agents: probe skipped on 39--48\% at no accuracy cost. Three agents: gate fails & Off in the main system \\
+DeBERTa agent (new) & +2.3 on natural\_test (Holm .0043), +0.0 on eval & Kept \\
+Hand-off (new) & 92.8\% exact at 56.1\% coverage (natural\_test); 90\% star ranges 1.4--1.8 stars wide & Kept \\
+Explainer + Critic loop (new) & Faithful 62.3--63.7\% $\to$ 90.5--91.6\% (max 4 rewrites), 0 broken & Kept \\
 \bottomrule
 \end{tabular}
 \end{table}
 \begin{table}[htbp]
 \centering
 \caption{Star ranges with a 90\% coverage target (split conformal; calibrated on dev2 for eval and on natural\_dev for natural\_test). Coverage = share of reviews whose true star lies in the range.}
-% FACT (Q1, q1_conformal.out, LOG.md 2026-10-28): dev2 gate (5-fold, out-of-fold): main stack coverage .902, mean size 1.95 vs Phase 1 2.45: PASS.
-%   Three-way Hand-off (answer if confidence >= S1 threshold; else range if <= 2 stars; else person): eval answer 42.0% (85.0% exact), range 41.7% (89.4% covered),
-%   person 16.3%; natural_test answer 55.8% (93.1%), range 41.9% (85.1%), person 2.4%.
+% FACT (Q1, q1_conformal.out, rerun for SH3 2026-11-12): dev2 gate (5-fold, out-of-fold): main stack coverage .902, mean size 1.82 vs Phase 1 2.45: PASS.
+%   Three-way Hand-off (answer if confidence >= S1 threshold; else range if <= 2 stars; else person): eval answer 41.1% (86.9% exact), range 47.7% (90.8% covered),
+%   person 11.2%; natural_test answer 56.15% (92.8%), range 42.25% (86.0%), person 1.6%.
+% FACT (S1, s1_selective.out, SH3): 70% coverage target: eval auto exact 75.8 at 71.4% coverage, natural_test 84.4 at 82.6%.
 \label{tab:e23conformal}
 \small
 \begin{tabular}{llccc}
 \toprule
 \textbf{Split} & \textbf{System} & \textbf{Coverage} & \textbf{Mean range (stars)} & \textbf{Single star} \\
 \midrule
-eval & Main stack & 92.6\% & 1.93 & 24.1\% \\
+eval & Main stack & 91.6\% & 1.77 & 34.0\% \\
 eval & Phase 1 & 91.8\% & 2.40 & 4.7\% \\
-natural\_test & Main stack & 90.5\% & 1.52 & 50.0\% \\
+natural\_test & Main stack & 90.1\% & 1.44 & 57.8\% \\
 natural\_test & Phase 1 & 88.0\% & 2.08 & 11.1\% \\
 \bottomrule
 \end{tabular}
 \end{table}
-% FACT (Q4, q4_robustness.out, 300 eval reviews, 60 per star): star flips vs the same system's original: typos 0.3% (SH) vs 2.0% (P1), p .062;
-%   flat text 11.7% vs 29.7%, p 1.8e-8 (exact 66.0 vs 43.7; original 69.3 vs 50.0); no title: SH 8.0% flips, exact 63.7 (-5.6); P1 unaffected (never reads the title).
-% FACT (D1, deb_gate.out; not adopted unless the user decides): DeBERTa-v3 third agent. Gate: dev2 CV 64.2 to 66.2 (+2.0, CI +0.6, +3.35), natural_dev 78.4 to 80.4. Readout: eval 67.5 to 67.5 (58 fixed, 58 broken, p 1.0); natural_test 75.7 to 78.0 (+2.3, CI +0.95, +3.75, 115 fixed, 69 broken, p 8.6e-4). DeBERTa alone 66.5 / 75.75.
-% FACT (D2, d2_seeds.out; reporting only, not adopted): DeBERTa seeds 0, 1, 2, gain of main stack + DeBERTa over the main stack, mean and SD. dev2 CV +2.4, SD 0.6; natural_dev +1.0, SD 0.9; eval +0.1, SD 0.3 (per seed +0.0, +0.4, -0.1); natural_test +2.2, SD 0.2 (per seed +2.3, +1.95, +2.4). Stable (same sign, mean at least 2 SD): dev2 and natural_test; not eval or natural_dev. DeBERTa alone: eval 66.7, SD 1.0; natural_test 76.3, SD 1.0. Main stack held fixed at 67.5 / 75.7.
-% FACT (O1, o1_ordinal.out): quadratic weighted kappa main stack vs Phase 1: eval .888 vs .824 (diff CI +.045, +.082); natural_test .881 vs .779 (+.084, +.118). MAE eval .363 vs .529 (-.203, -.123); natural_test .288 vs .539 (-.278, -.224).
+% FACT (Q4, q4_robustness.out, SH3, 300 eval reviews, 60 per star): star flips vs the same system's original: typos 0.7% (SH3) vs 2.0% (P1), p .29;
+%   flat text 9.3% vs 29.7%, p 3e-11 (exact 68.7 vs 43.7; original 68.0 vs 50.0); no title: SH3 15.7% flips (two-agent SH 8.0%), exact 63.7 (-4.3), p 1.4e-14;
+%   P1 unaffected (never reads the title). LIMITATION: Evidence and DeBERTa both read the title, so a missing title moves the three-agent stack more.
+% FACT (D1, deb_gate.out; ADOPTED 2026-11-10 as SH3): DeBERTa-v3 third agent. Gate: dev2 CV 64.2 to 66.2 (+2.0, CI +0.6, +3.35), natural_dev 78.4 to 80.4. Readout: eval 67.5 to 67.5 (58 fixed, 58 broken, p 1.0); natural_test 75.7 to 78.0 (+2.3, CI +0.95, +3.75, 115 fixed, 69 broken, p 8.6e-4). DeBERTa alone 66.5 / 75.75.
+% FACT (D2, d2_seeds.out; reporting only, seed 0 kept as declared): DeBERTa seeds 0, 1, 2, gain of main stack + DeBERTa over the main stack, mean and SD. dev2 CV +2.4, SD 0.6; natural_dev +1.0, SD 0.9; eval +0.1, SD 0.3 (per seed +0.0, +0.4, -0.1); natural_test +2.2, SD 0.2 (per seed +2.3, +1.95, +2.4). Stable (same sign, mean at least 2 SD): dev2 and natural_test; not eval or natural_dev. DeBERTa alone: eval 66.7, SD 1.0; natural_test 76.3, SD 1.0. Main stack held fixed at 67.5 / 75.7.
+% FACT (O1, o1_ordinal.out, SH3): quadratic weighted kappa main stack vs Phase 1: eval .898 vs .824 (diff CI +.056, +.093); natural_test .902 vs .779 (+.106, +.140). MAE eval .353 vs .529 (-.216, -.135); natural_test .253 vs .539 (-.313, -.260).
 % FACT (G1, N1, gn_gate_g1.out, gn_gate_n1.out; both FAIL, no test read): gradient-boosted Reflector dev2 CV .6205 vs .642; NB-SVM agent replacing Evidence dev2 CV .647 vs .642 (+0.5, CI -0.8, +1.8), natural_dev .774 vs .784.
-% FACT (Q5, q5_breakdown.out): main stack - Phase 1 by review year: eval +14.1 / +14.6 / +8.7 / +17.5 (<=2014, 2015-17, 2018-20, 2021-23),
-%   natural_test +21.5 / +21.9 / +23.3 / +21.6; by product popularity (1 / 2-5 / 6+ reviews): eval +12.2 / +13.4 / +15.5, natural +23.7 / +21.6 / +20.8; all 95% CIs > 0.
+% FACT (Q5, q5_breakdown.out, SH3): main stack - Phase 1 by review year: eval +10.3 / +16.3 / +10.7 / +15.6 (<=2014, 2015-17, 2018-20, 2021-23),
+%   natural_test +21.5 / +24.0 / +26.5 / +24.3; by product popularity (1 / 2-5 / 6+ reviews): eval +10.8 / +16.2 / +14.8, natural +26.3 / +23.9 / +22.6; all 95% CIs > 0.
 % FACT (Q3 / Q3b, q3_second_judge_gate.out, q3b_second_judge_gate.out): Qwen2.5-7B-Instruct 4-bit as a second judge rejects every dev2 explanation
 %   (accepts 0 of 38 Llama-rejected, rejects 60 of 60 Llama-accepted) with the check-5 prompt and with a prompt excluding system statements: FAIL, no test read.
-% FACT (X1, x1_explain_compare.out, 150 balanced eval reviews, same Instruct judge as Critic check 5):
-%   distinct outputs Phase 1 3.3% (5 sentences) vs Phase 2 100%; grounded in the review 0.0% vs 78.7% (McNemar 118 vs 0, p 6.0e-36);
-%   judge finds no unsupported claim 85.3% vs 94.0% (18 vs 5, p .011; Phase 1's rubric sentence is vague, so it is seldom judged unsupported);
+% FACT (X1, x1_explain_compare.out, SH3, 150 balanced eval reviews, same Instruct judge as Critic check 5):
+%   distinct outputs Phase 1 3.3% (5 sentences) vs Phase 2 100%; grounded in the review 0.0% vs 75.3% (McNemar 113 vs 0, p 1.9e-34);
+%   judge finds no unsupported claim Phase 2 93.3% (17 vs 5 Phase 2-only vs Phase 1-only, p .017; Phase 1's rubric sentence is vague, so it is seldom judged unsupported);
+%   Phase 2 star stated consistently 99.3%;
 %   Phase 1 repeats its template in 54.7% of outputs; mean 12 vs 36 words.
-% FACT (H1, hard_cases.out; subsets by TextBlob polarity and contrast words, defined before reading):
-%   negative-sounding positives (polarity <= 0, 4-5 stars): main stack vs Phase 1 62.5 vs 35.0 (eval, n=40, p .0074), 71.0 vs 43.0 (natural_test, n=193, p 9e-11);
-%   positive-sounding negatives (polarity >= 0.2, 1-2 stars): 61.1 vs 54.2 (eval, n=72, p .36, n.s.), 60.3 vs 45.6 (natural_test, n=68, p .041);
-%   mixed with contrast (2-4 stars): 62.7 vs 55.6 (eval, n=311, p .041), 63.1 vs 63.8 (natural_test, n=282, p .91, no difference);
+% FACT (H1, hard_cases.out, SH3; subsets by TextBlob polarity and contrast words, defined before reading):
+%   negative-sounding positives (polarity <= 0, 4-5 stars): main stack vs Phase 1 67.5 vs 35.0 (eval, n=40, p .0023), 78.2 vs 43.0 (natural_test, n=193, p 5.4e-16);
+%   positive-sounding negatives (polarity >= 0.2, 1-2 stars): 65.3 vs 54.2 (eval, n=72, p .12, n.s.), 55.9 vs 45.6 (natural_test, n=68, p .17, n.s.; two-agent SH had p .041);
+%   mixed with contrast (2-4 stars): 65.6 vs 55.6 (eval, n=311, p .0032), 67.0 vs 63.8 (natural_test, n=282, p .41, no difference);
 %   sarcasm cue words: n=6 / 1, too few to report.

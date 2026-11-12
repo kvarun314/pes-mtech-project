@@ -44,7 +44,7 @@ from agentic_sentiment.v3.graph import build_graph_v3
 from agentic_sentiment.v3.deberta import DebertaAgent
 e, rj = joblib.load(PT.EVIDENCE_JOBLIB), joblib.load(PT.REFLECTOR_JOBLIB); ev, rf = EvidenceAgent(e["vectorizer"], e["model"]), Reflector(rj["full"], rj["fallback"])
 deb = DebertaAgent()                                                                     # third agent (SH3)
-tau = json.load(open(PT.D + "gate_B1b.json"))["tau"]                                    # Router attempt 2 (passed)
+G = json.load(open(PT.D + "gate_B1b.json")); tau = G["tau"] if G.get("pass") else None   # Router off: SH3 gate failed (LOG.md 2026-11-12)
 htau = [x for x in json.load(open(PT.D + "s1_selective.json"))["SH"]["eval"] if x["target"] == 0.4][0]["threshold"]   # Hand-off, dev2 quantile
 probe = load_probe(llama) if llama else None; g = build_graph_v3(ev, rf, probe.probs if probe else None, tau=tau, handoff_tau=htau, deberta=deb)
 p2 = cached("phase2_states", lambda: [{k: v for k, v in g.invoke({"review_id": r["review_id"], "title": r["title"], "review_text": r["review_text"]}).items() if k in ("route", "star", "probs", "shares", "agreed", "handoff", "evidence_probs", "deberta_probs", "probe_probs")} for r in R])
@@ -78,7 +78,7 @@ display(Markdown(open(PT.D + "agent_audit.md").read()))
 md("## 6. Phase 1 vs Phase 2 on the same reviews")
 code("""
 display(Markdown("| true | Phase 1 | Phase 2 |\\n|---|---|---|\\n" + "\\n".join(f"| {r['gt_rating']}★ | {int(np.argmax(a)) + 1}★ | {b['star']}★ |" for r, a, b in zip(R, p1, p2))))
-paper_line("hand-off natural_test exact at 55.7% coverage", "93.1"); paper_line("SH eval exact", "67.5"); paper_line("SH natural_test exact", "75.7")
+paper_line("hand-off natural_test exact at 56.1% coverage", "92.8"); paper_line("SH eval exact", "67.5"); paper_line("SH natural_test exact", "78.0")
 print(f"demo runtime {time.time() - T0:.0f}s")
 """)
 nb["metadata"] = {"kernelspec": {"name": "pes-mtech", "display_name": "PES MTech (.venv)", "language": "python"}}

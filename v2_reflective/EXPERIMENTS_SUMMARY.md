@@ -1,6 +1,6 @@
 # Experiments summary: everything tried, what worked, what is next
 
-Last updated: 2026-10-24. Covers the whole project history.
+Last updated: 2026-11-12 (SH3 adopted). Covers the whole project history.
 - Detailed record: `LOG.md` (dated entries; each rule was declared before its run).
 - Frozen numbers: `e23/results_frozen.md`.
 - Outputs: `e23/*.out`.
@@ -19,15 +19,17 @@ Terms used below:
 
 ## 1. Current state (one paragraph)
 
-Main system **SH** has two agents:
+Main system **SH3** (adopted 2026-11-10, results 2026-11-12) has three agents:
 - **P3**: a logistic probe on the frozen base LLaMA-3-8B, layer-20 hidden state, fit on 40K rows.
 - **E6b**: a TF-IDF + logistic regression Evidence model trained on about 497K rows.
+- **DeBERTa-v3-base** (seed 0), fine-tuned on 100K balanced rows (Colab, D1).
 
-An LR Reflector, fit on dev2, combines the two agents' log-probabilities. All data is Amazon Reviews 2023 Electronics.
+An LR Reflector, fit on dev2, combines the three agents' log-probabilities. All data is Amazon Reviews 2023 Electronics.
 
 Results:
-- **Single readout:** eval 67.5% exact (macro-F1 .675); natural_test 75.7% (.612).
-- **5 seeds:** eval 65.8 ± 0.6, natural_test 75.4 ± 0.8.
+- **Single readout:** eval 67.5% exact (macro-F1 .675); natural_test 78.0% (.634). MAE .353 / .253.
+- **Previous main SH (P3 + E6b):** 67.5 / 75.7. SH3 vs SH on natural_test: +2.3, Holm-adjusted p .0043. On eval: no change.
+- **5 seeds (SH, two agents):** eval 65.8 ± 0.6, natural_test 75.4 ± 0.8. DeBERTa seeds (D2): gain over SH +0.1 ± 0.3 eval, +2.2 ± 0.2 natural_test.
 - **Gain over each single agent:** positive in 5/5 seeds on both splits.
 - **Caveat:** the old LoRA + Evidence stack, refit on the same dev2, is only 2.0 / 1.5 points behind. That gap is not significant.
 
@@ -48,11 +50,11 @@ Numbers freeze on Nov 1. The paper is due Nov 21–22.
 | W7 | **Frozen LLaMA hidden-state probe on 40K rows (P3)** replaces the LoRA Analyst | Phase H gate PASS: dev2 +3.9 [+2.4, +5.8] | SH |
 | W8 | **Evidence on ~497K rows (E6b)** inside SH | Alone +1.9 dev CV; best stack partner for P3 | SH |
 | W9 | **Polarity / binary reporting** | Stack vs Evidence polarity +2.9 to +4.5, significant on both splits and both seeds (metric added post hoc, disclosed) | Paper metrics |
-| W11 | **Router with escalation (SC1, B1-b, tau .70)** | eval 92 fixed vs 50 broken (p 5e-4), natural_test 152 vs 78 (p 1e-6); LLaMA skipped on 39–48%, accuracy unchanged | Phase 2 v3 agentic layer |
-| W12 | **Explainer + Critic loop (SC3, B2)** on all 3,000 test reviews | Faithful 60.5 → 88.9% (eval), 63.4 → 88.8% (natural_test); 793 fixed, 0 broken; McNemar p 6e-86 / 1e-153 | Phase 2 v3 agentic layer |
-| W13 | **Cited phrases carry the decision (deletion test)** | Comprehensiveness .158 vs .089 / .212 vs .124; sufficiency .556 vs .308 / .641 vs .353 (cited vs random, p < 1e-46) | Explanations |
-| W14 | **Hand-off agent (selective prediction, S1)** | natural_test 93.1% exact at 55.7% coverage; eval 85.0% at 42% | Phase 2 v3 agentic layer |
-| W15 | **Two more Critic rounds (I1, max 2 → 4 rewrites)** | Faithful 88.9 → 90.6% (eval), 88.8 → 91.1% (natural_test); 17 + 46 more fixed, 0 broken; p 1.5e-5 / 2.8e-14; +0.34 LLM calls per review | Phase 2 v3 agentic layer (dev2 gate 19/62, PASS) |
+| W11 | **Router with escalation (SC1, B1-b, tau .70)** | Two-agent SH: eval 92 fixed vs 50 broken (p 5e-4), natural_test 152 vs 78 (p 1e-6); LLaMA skipped on 39–48%, accuracy unchanged. **With SH3 the gate fails (natural_dev .798 vs .804; SC1 p .20), so the Router is off** | Two-agent SH only |
+| W12 | **Explainer + Critic loop (SC3, B2)** on all 3,000 test reviews | SH3, max 4 rewrites: faithful 62.3 → 90.5% (eval), 63.65 → 91.6% (natural_test); 282 + 559 fixed, 0 broken; McNemar p 2.6e-85 / 1.1e-168; 2.93 / 2.96 LLM calls per review | Phase 2 v3 agentic layer |
+| W13 | **Cited phrases carry the decision (deletion test)** | SH3: comprehensiveness .156 vs .077 / .209 vs .119; sufficiency .521 vs .301 / .616 vs .349 (cited vs random, Wilcoxon p < 1e-54) | Explanations |
+| W14 | **Hand-off agent (selective prediction, S1)** | SH3: natural_test 92.8% exact at 56.1% coverage; eval 86.9% at 41.1% | Phase 2 v3 agentic layer |
+| W15 | **Two more Critic rounds (I1, max 2 → 4 rewrites)**; default in the SH3 rerun | Faithful 88.9 → 90.6% (eval), 88.8 → 91.1% (natural_test); 17 + 46 more fixed, 0 broken; p 1.5e-5 / 2.8e-14; +0.34 LLM calls per review | Phase 2 v3 agentic layer (dev2 gate 19/62, PASS) |
 | W10 | **Phase 2 audit fixes (Run 2, Oct 9)**: grounding floor removed, ties go to the Analyst, RAG prompt fixed, Visual Verifier excluded | Run 2 −91 net becomes +2 net on 96 rows | Historical pipeline |
 
 ## 3. What failed or was not adopted
@@ -97,13 +99,13 @@ Numbers freeze on Nov 1. The paper is due Nov 21–22.
 | Kaggle paper-protocol re-score (appendix) | 69.1% exact leak-free (was 70.7% leaky) |
 | Evidence learning curve (Phase G) | 11K .535 → 90K .568: still rising, which led to G2/E6b |
 | SH variance (5 seeds, E6b fixed) | SH − E6b +3.3 ± 0.6 / +5.2 ± 0.8; SH − P3 +5.2 ± 0.9 / +2.4 ± 1.2; SH − old stack on dev2 +0.7 ± 1.2 / +1.0 ± 0.6 |
-| Phase 1 vs Phase 2 explanations (X1, 150 eval) | Grounded in the review 0% vs 79% (p 6e-36); distinct outputs 3% vs 100%; judge pass 85% vs 94% (p .011) |
-| Hard cases (H1) | Negative-sounding positives: stack +27.5 / +28.0 over Phase 1 (p .007 / 9e-11); ironic-sounding negatives +6.9 (ns) / +14.7 (p .04); mixed reviews +7.1 (p .04) / −0.7 (ns); sarcasm cues too rare (n 6 / 1) |
-| Star ranges (Q1, conformal, 90% target) | Coverage 92.6 / 90.5%; mean range 1.93 / 1.52 stars vs Phase 1 2.40 / 2.08 (Phase 1 misses 90% on natural: 88.0%); with ranges, a person is needed for 16% / 2% of reviews |
-| Text changes (Q4, 300 eval) | Star flips: flat text 11.7% vs Phase 1 29.7% (p 2e-8); typos 0.3% vs 2.0%; no title: main stack −5.6 points (Evidence agent reads the title) |
-| Year and product popularity (Q5) | Gain over Phase 1 positive in every band, all CIs > 0: eval +8.7 to +17.5, natural +20.8 to +23.7 |
-| Ordinal metrics (O1) | Quadratic weighted kappa .888 / .881 vs Phase 1 .824 / .779 (CIs of the difference exclude 0); MAE .363 / .288 vs .529 / .539 |
-| DeBERTa-v3 third agent (D1, 100K, Colab) | Gate PASS: dev2 +2.0 [+0.6, +3.35], natural_dev +2.0. Readout: eval 67.5 → 67.5 (58 fixed / 58 broken), natural_test 75.7 → 78.0, +2.3 [+0.95, +3.75], p 8.6e-4. Alone 66.5 / 75.75. Adoption not decided |
+| Phase 1 vs Phase 2 explanations (X1, 150 eval) | SH3: grounded in the review 0% vs 75% (113 vs 0, p 1.9e-34); distinct outputs 100%; judge pass 17 vs 5 Phase 2-only (p .017) |
+| Hard cases (H1) | SH3: negative-sounding positives +32.5 / +35.2 over Phase 1 (p .0023 / 5e-16); positive-sounding negatives +11.1 / +10.3 (ns); mixed reviews +10.0 (p .003) / +3.2 (ns); sarcasm cues too rare (n 6 / 1) |
+| Star ranges (Q1, conformal, 90% target) | SH3: coverage 91.6 / 90.05%; mean range 1.77 / 1.44 stars vs Phase 1 2.40 / 2.08; single star 34% / 58% vs 5% / 11%; with ranges, a person is needed for 11% / 2% of reviews |
+| Text changes (Q4, 300 eval) | SH3 star flips: flat text 9.3% vs Phase 1 29.7% (p 3e-11); typos 0.7% vs 2.0% (ns); **no title 15.7% vs 0%** (two-agent SH 8.0%; Evidence and DeBERTa both read the title) |
+| Year and product popularity (Q5) | SH3 gain over Phase 1 positive in every band, all CIs > 0: eval +10.3 to +16.3, natural +21.5 to +26.5 |
+| Ordinal metrics (O1) | SH3 quadratic weighted kappa .898 / .902 vs Phase 1 .824 / .779 (CIs of the difference exclude 0); MAE .353 / .253 vs .529 / .539 |
+| DeBERTa-v3 third agent (D1, 100K, Colab) | Gate PASS: dev2 +2.0 [+0.6, +3.35], natural_dev +2.0. Readout: eval 67.5 → 67.5 (58 fixed / 58 broken), natural_test 75.7 → 78.0, +2.3 [+0.95, +3.75], p 8.6e-4. Alone 66.5 / 75.75. **Adopted 2026-11-10 (SH3)** |
 | DeBERTa seed variance (D2, seeds 0, 1, 2; reporting only) | Gain over the main stack, mean ± SD: dev2 +2.4 ± 0.6 (stable), natural_dev +1.0 ± 0.9 (not stable), eval +0.1 ± 0.3 (not stable), natural_test +2.2 ± 0.2 (stable). Alone: eval 66.7 ± 1.0, natural_test 76.3 ± 1.0. Selects nothing. `e23/d2_seeds.out` |
 
 ## 5. Historical results (superseded, kept for the record)

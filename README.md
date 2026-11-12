@@ -3,8 +3,8 @@
 **PES MTech project:** agentic sentiment analysis with LLaMA-3-8B on Amazon Reviews 2023 Electronics (1–5 stars).
 - **Phase 1:** reproduce the baseline paper (Wang et al. 2025, LLaMA-3-8B + LoRA).
 - **Phase 2 (current focus):** a multi-agent system with leak-free, pre-registered evaluation.
-- **Current main system (SH):** a frozen LLaMA-3-8B layer-20 probe plus a TF-IDF Evidence agent, combined by an LR Reflector.
-- **SH results:** eval 67.5%, natural_test 75.7% exact.
+- **Current main system (SH3):** a frozen LLaMA-3-8B layer-20 probe, a TF-IDF Evidence agent and a fine-tuned DeBERTa-v3 agent, combined by an LR Reflector.
+- **SH3 results:** eval 67.5%, natural_test 78.0% exact. Previous main SH (probe + Evidence): 67.5% / 75.7%.
 
 ## Where everything is
 

@@ -37,4 +37,5 @@ if ok:
         p = binomtest(a, a + b).pvalue if a + b else 1.0; sc1 = esc(bp, fp, y, ~sk)
         out["readout"][s] = {"full": float((fp == y).mean()), "routed": float((rp == y).mean()), "skip_share": float(sk.mean()), "mcnemar_p": float(p), "sc1": sc1}
         print(f"{s}: full {(fp == y).mean():.3f} routed {(rp == y).mean():.3f} skip {sk.mean():.2f} McNemar p {p:.2g} | SC1 {sc1}")
+out["pass"] = bool(ok)   # consumers use tau only when the gate passed (LOG.md 2026-11-12)
 json.dump(out, open(D + OUTN + ".json", "w"), indent=1)
