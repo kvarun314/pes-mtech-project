@@ -1,0 +1,11 @@
+dev rows 500; Phase 1 top-1 exact 59.4%
+margin<0.2: pairs 216  Phase1 picks right 55.6%  adjudicator picks right 51.9%
+   simulated Phase 2 exact (adjudicator replaces top-1 inside gate): 57.8%
+margin<0.3: pairs 287  Phase1 picks right 56.8%  adjudicator picks right 52.6%
+   simulated Phase 2 exact (adjudicator replaces top-1 inside gate): 57.0%
+margin<0.4: pairs 350  Phase1 picks right 60.3%  adjudicator picks right 53.7%
+   simulated Phase 2 exact (adjudicator replaces top-1 inside gate): 54.8%
+margin<0.5: pairs 381  Phase1 picks right 62.7%  adjudicator picks right 55.1%
+   simulated Phase 2 exact (adjudicator replaces top-1 inside gate): 53.6%
+margin<1.01: pairs 442  Phase1 picks right 67.2%  adjudicator picks right 57.5%
+   simulated Phase 2 exact (adjudicator replaces top-1 inside gate): 50.8%

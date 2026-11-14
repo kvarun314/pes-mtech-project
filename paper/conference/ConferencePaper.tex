@@ -148,6 +148,9 @@ D = \frac{\sqrt{\frac{1}{3}\sum_{i=1}^{3}(v_i-\bar v)^2}}{2}.
 If $D<0.4$ the majority vote is released. Otherwise the Critic generates a critique and the Analyst re-runs with this feedback, for at most two iterations.
 
 \textbf{Implementation.} Each sample carries an \texttt{AgentState} record (review, metadata, caption, the four agent ratings, dissonance, correction count, final rating and rationale). BLIP is run before LLaMA is loaded and is then deleted to save VRAM. Results are streamed to a JSONL checkpoint after every sample so that a Colab disconnect does not lose progress. The pipeline is implemented as plain Python functions over this state, with a manual dissonance-triggered retry loop.
+\newcommand{\efigdir}{../figures/e23/}
+\input{../e23_results}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Experiments and Results}

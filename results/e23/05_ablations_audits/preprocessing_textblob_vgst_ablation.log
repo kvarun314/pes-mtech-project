@@ -1,0 +1,10 @@
+TextBlob DQC kept 67974/90000 (75.5%) in 10s
+ kept per star [(1, 9675), (2, 6651), (3, 18019), (4, 16432), (5, 17197)]
+VGST 10K in 24s
+A raw balanced                     n= 90000 avg words  69.7  val exact 0.512 (+-0.010)  within1 0.886  star mix [(1, 17962), (2, 17990), (3, 18019), (4, 18028), (5, 18001)]
+B TextBlob-DQC                     n= 67974 avg words  64.0  val exact 0.477 (+-0.010)  within1 0.848  star mix [(1, 9675), (2, 6651), (3, 18019), (4, 16432), (5, 17197)]
+C random 10K (control)             n= 10000 avg words  70.0  val exact 0.476 (+-0.010)  within1 0.853  star mix [(1, 2048), (2, 2050), (3, 1985), (4, 1952), (5, 1965)]
+E TextBlob + random 10K (control)  n= 10000 avg words  64.4  val exact 0.443 (+-0.010)  within1 0.810  star mix [(1, 1364), (2, 943), (3, 2716), (4, 2431), (5, 2546)]
+D TextBlob + VGST 10K              n= 10000 avg words 156.1  val exact 0.445 (+-0.010)  within1 0.806  star mix [(1, 1250), (2, 805), (3, 2967), (4, 2813), (5, 2165)]
+F TextBlob then re-balance (6651/star) n= 33255 avg words  60.1  val exact 0.476 (+-0.010)  within1 0.856  star mix [(1, 6651), (2, 6651), (3, 6651), (4, 6651), (5, 6651)]
+G raw balanced same size (6651/star) n= 33255 avg words  70.4  val exact 0.501 (+-0.010)  within1 0.876  star mix [(1, 6651), (2, 6651), (3, 6651), (4, 6651), (5, 6651)]

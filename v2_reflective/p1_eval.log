@@ -1,0 +1,7 @@
+[committed adapter, llama.cpp] exact 59.67%
+[answer-only, 2,000 rows] exact 55.33%  within1 93.00%
+  1* recall 0.89 (n=57)
+  2* recall 0.24 (n=66)
+  3* recall 0.51 (n=57)
+  4* recall 0.29 (n=56)
+  5* recall 0.84 (n=64)

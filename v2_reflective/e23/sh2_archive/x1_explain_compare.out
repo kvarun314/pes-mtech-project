@@ -1,0 +1,32 @@
+{
+ "phase1": {
+  "n": 150.0,
+  "distinct_share": 0.03333333333333333,
+  "star_consistent": 1.0,
+  "grounded_in_review": 0.0,
+  "judge_no_unsupported": 0.8533333333333334,
+  "judge_unparsed": 0.0,
+  "mean_words": 12.0,
+  "template_repeats": 0.5466666666666666
+ },
+ "phase2": {
+  "n": 150.0,
+  "distinct_share": 1.0,
+  "star_consistent": 0.9866666666666667,
+  "grounded_in_review": 0.7866666666666666,
+  "judge_no_unsupported": 0.94,
+  "judge_unparsed": 0.0,
+  "mean_words": 35.986666666666665,
+  "template_repeats": 0.0
+ },
+ "mcnemar_grounded": {
+  "p2_only": 118,
+  "p1_only": 0,
+  "p": 6.018531076210112e-36
+ },
+ "mcnemar_judge_ok": {
+  "p2_only": 18,
+  "p1_only": 5,
+  "p": 0.010622024536132812
+ }
+}

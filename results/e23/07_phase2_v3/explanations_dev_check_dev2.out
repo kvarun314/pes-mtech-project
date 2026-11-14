@@ -1,0 +1,20 @@
+resume: 0 done of 500
+50 rows, 499s
+100 rows, 1066s
+150 rows, 1658s
+200 rows, 2182s
+250 rows, 2797s
+300 rows, 3335s
+350 rows, 3879s
+400 rows, 4420s
+450 rows, 4992s
+500 rows, 5531s
+done v2_reflective/e23/b2/dev2.jsonl
+=== dev check summary (dev2, first 500 rows; computed from b2/dev2.jsonl)
+first-draft faithful 320/500 = 0.640; final 438/500 = 0.876; fixed by rewrite 118, broken 0
+rewrite rate 0.36; mean rounds 0.528; judge unparsed 0; mean LLM calls 2.56; mean 11.05 s per review
+first-draft failed checks: 3 (top phrases) 94, 2 (quote not in review/pack) 89, 5 (judge) 31, 1 (star) 1
+final failed checks: 2: 24, 5: 24, 3: 18, 1: 3
+agents disagreed on 175/500; packs with < 2 supporting phrases: 2
+hand read of 20 random final rationales (seed 7): star stated correctly in all; no invented product facts seen; style issues only
+(some quote weights/confidence, "the evidence agents gave it"), left as is.

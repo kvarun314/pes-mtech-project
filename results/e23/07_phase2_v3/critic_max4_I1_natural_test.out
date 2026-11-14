@@ -1,0 +1,27 @@
+resume: 0 done of 224
+10/224 328s
+20/224 644s
+30/224 1006s
+40/224 1343s
+50/224 1671s
+60/224 1994s
+70/224 2354s
+80/224 2659s
+90/224 3009s
+100/224 3322s
+110/224 3680s
+120/224 3989s
+130/224 4329s
+140/224 4660s
+150/224 4982s
+160/224 5323s
+170/224 5638s
+180/224 5951s
+190/224 6260s
+200/224 6579s
+210/224 6886s
+220/224 7266s
+natural_test: still unfaithful after 2 rounds 224; fixed by rounds 3-4 46 (20.5%); rounds 0-2 reproduced exactly 224/224
+faithful: first 0.633  max-2 0.888  max-4 0.911  | max-4 vs max-2 McNemar fixed 46 broken 0 p 2.8e-14
+extra LLM calls per re-run review 3.02; per review over the split 0.34
+still failing after round 4, by check: {1: 11, 2: 43, 3: 27, 4: 2, 5: 110}

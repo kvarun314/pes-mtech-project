@@ -1,0 +1,10 @@
+eval         surface_positive_negatives   n=  72  SH 0.653  P1 0.542  diff +0.111 [-0.014, +0.236]  within1 0.972/0.903  rescued 14 lost 6  p 0.12
+eval         surface_negative_positives   n=  40  SH 0.675  P1 0.350  diff +0.325 [+0.150, +0.500]  within1 0.975/0.925  rescued 15 lost 2  p 0.0023
+eval         mixed_with_contrast          n= 311  SH 0.656  P1 0.556  diff +0.100 [+0.039, +0.164]  within1 0.990/0.955  rescued 68 lost 37  p 0.0032
+eval         sarcasm_cues                 n=   6  SH 0.333  P1 0.667  diff -0.333 [-0.833, +0.333]  within1 1.000/0.833  rescued 1 lost 3  p 0.62
+eval         all                          n=1000  SH 0.675  P1 0.540  diff +0.135 [+0.099, +0.168]  within1 0.973/0.937  rescued 232 lost 97  p 6.7e-14
+natural_test surface_positive_negatives   n=  68  SH 0.559  P1 0.456  diff +0.103 [-0.015, +0.235]  within1 0.941/0.882  rescued 13 lost 6  p 0.17
+natural_test surface_negative_positives   n= 193  SH 0.782  P1 0.430  diff +0.352 [+0.280, +0.430]  within1 0.943/0.881  rescued 74 lost 6  p 5.4e-16
+natural_test mixed_with_contrast          n= 282  SH 0.670  P1 0.638  diff +0.032 [-0.032, +0.096]  within1 0.979/0.936  rescued 51 lost 42  p 0.41
+natural_test sarcasm_cues                 n=   1  SH 0.000  P1 0.000  diff +0.000 [+0.000, +0.000]  within1 1.000/0.000  rescued 0 lost 0  p 1
+natural_test all                          n=2000  SH 0.780  P1 0.534  diff +0.246 [+0.222, +0.269]  within1 0.974/0.944  rescued 596 lost 105  p 3.7e-84

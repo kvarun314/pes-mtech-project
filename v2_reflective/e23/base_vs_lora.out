@@ -1,0 +1,36 @@
+dev n=500  base exact 36.2% macroF1 0.281 within1 85.6% recall [0.64, 0.01, 0.89, 0.25, 0.02]
+       arm R exact 55.2% macroF1 0.554 within1 94.2% recall [0.69, 0.37, 0.45, 0.69, 0.56]
+
+===== eval n=1000
+base (no LoRA): exact 34.3% macroF1 0.269 within1 83.3% recall [0.57, 0.03, 0.84, 0.26, 0.02]
+arm R (LoRA)  : exact 54.0% macroF1 0.543 within1 93.7% recall [0.64, 0.39, 0.48, 0.64, 0.56]
+Evidence      : exact 62.4% macroF1 0.622 within1 93.1% recall [0.73, 0.49, 0.52, 0.59, 0.78]
+  R vs base: +19.7 [+15.9,+23.3] fixed 288/regressed 91 p=6e-25
+[base+E]     exact 63.7% macroF1 0.636 within1 95.3% recall [0.72, 0.56, 0.5, 0.61, 0.8]
+            vs Evidence +1.3 [-1.0,+3.7] fixed 82/regressed 69 p=0.33
+            vs [R+E]    n/a (order)
+[R+E] (=C0)  exact 63.9% macroF1 0.638 within1 95.5% recall [0.69, 0.56, 0.51, 0.63, 0.81]
+            vs Evidence +1.5 [-1.2,+4.1] fixed 97/regressed 82 p=0.3
+[base+R+E]   exact 63.7% macroF1 0.636 within1 95.4% recall [0.7, 0.55, 0.49, 0.65, 0.8]
+            vs Evidence +1.3 [-1.3,+3.9] fixed 95/regressed 82 p=0.37
+            vs [R+E]    -0.2 [-1.3,+0.9] fixed 16/regressed 18 p=0.86
+
+===== natural_test n=2000
+base (no LoRA): exact 16.8% macroF1 0.212 within1 70.5% recall [0.59, 0.01, 0.88, 0.21, 0.03]
+arm R (LoRA)  : exact 53.4% macroF1 0.488 within1 94.3% recall [0.66, 0.42, 0.5, 0.71, 0.49]
+Evidence      : exact 69.3% macroF1 0.541 within1 93.7% recall [0.67, 0.43, 0.44, 0.56, 0.77]
+  R vs base: +36.7 [+34.2,+39.1] fixed 808/regressed 74 p=8.1e-157
+[base+E]     exact 72.7% macroF1 0.574 within1 95.9% recall [0.69, 0.42, 0.48, 0.65, 0.8]
+            vs Evidence +3.4 [+1.7,+5.0] fixed 174/regressed 107 p=7.7e-05
+            vs [R+E]    n/a (order)
+[R+E] (=C0)  exact 73.4% macroF1 0.577 within1 96.2% recall [0.67, 0.41, 0.49, 0.64, 0.81]
+            vs Evidence +4.0 [+2.2,+5.8] fixed 197/regressed 116 p=5.5e-06
+[base+R+E]   exact 73.6% macroF1 0.581 within1 96.2% recall [0.67, 0.42, 0.49, 0.66, 0.81]
+            vs Evidence +4.2 [+2.5,+5.9] fixed 202/regressed 118 p=3.1e-06
+            vs [R+E]    +0.1 [-0.5,+0.9] fixed 29/regressed 26 p=0.79
+
+C2 (R+E bal-dev reweighted): exact 79.0% macroF1 0.561 within1 95.2% recall [0.85, 0.13, 0.44, 0.42, 0.94]
+Evidence prior-adjusted    : exact 76.3% macroF1 0.517 within1 93.0% recall [0.72, 0.13, 0.31, 0.36, 0.95]
+  C2 vs Evidence prior-adjusted: +2.7 [+1.4,+4.0] fixed 119/regressed 65 p=8.4e-05
+
+figures in paper/figures/e23/

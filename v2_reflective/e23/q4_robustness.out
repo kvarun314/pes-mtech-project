@@ -1,0 +1,17 @@
+Loading weights:   0%|          | 0/202 [00:00<?, ?it/s]Loading weights: 100%|██████████| 202/202 [00:00<00:00, 7927.48it/s]
+25/300 70s
+50/300 150s
+75/300 231s
+100/300 314s
+125/300 420s
+150/300 502s
+175/300 582s
+200/300 666s
+225/300 751s
+250/300 816s
+275/300 880s
+300/300 938s
+original  exact SH 0.680 P1 0.500 | flips SH 0.000 P1 0.000 | only-SH 0 only-P1 0 p 1
+typos     exact SH 0.687 P1 0.510 | flips SH 0.007 P1 0.020 | only-SH 2 only-P1 6 p 0.29
+flat      exact SH 0.687 P1 0.437 | flips SH 0.093 P1 0.297 | only-SH 14 only-P1 75 p 3e-11
+no_title  exact SH 0.637 P1 0.500 | flips SH 0.157 P1 0.000 | only-SH 47 only-P1 0 p 1.4e-14

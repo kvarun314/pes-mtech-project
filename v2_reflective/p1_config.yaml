@@ -1,0 +1,21 @@
+model: v2_reflective/mlx_model
+train: true
+data: v2_reflective/p1_data
+adapter_path: v2_reflective/p1_answeronly_adapter
+num_layers: 3
+batch_size: 2
+iters: 1000
+val_batches: 25
+learning_rate: 5.0e-5
+steps_per_report: 50
+steps_per_eval: 250
+save_every: 250
+max_seq_length: 1024
+grad_checkpoint: true
+mask_prompt: true
+seed: 42
+lora_parameters:
+  rank: 4
+  alpha: 64
+  dropout: 0.0
+  scale: 16.0

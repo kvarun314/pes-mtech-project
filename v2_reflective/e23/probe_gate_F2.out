@@ -1,0 +1,24 @@
+L16 C=0.003: dev exact 0.622
+L16 C=0.01: dev exact 0.604
+L16 C=0.03: dev exact 0.560
+L20 C=0.003: dev exact 0.628
+L20 C=0.01: dev exact 0.602
+L20 C=0.03: dev exact 0.582
+L24 C=0.003: dev exact 0.584
+L24 C=0.01: dev exact 0.540
+L24 C=0.03: dev exact 0.508
+mean20 C=0.003: dev exact 0.628
+mean20 C=0.01: dev exact 0.612
+mean20 C=0.03: dev exact 0.608
+chosen on dev: L20 0.003
+=== dev 5-fold CV (3 repeats)
+S0 A+E     exact 0.640 macroF1 0.640
+SP A+E+P2  exact 0.645 macroF1 0.644
+P2 alone   exact 0.611 macroF1 0.609
+E+P2       exact 0.637 macroF1 0.636
+=== natural_dev 5-fold CV (3 repeats)
+S0 A+E     exact 0.804 macroF1 0.558
+SP A+E+P2  exact 0.813 macroF1 0.574
+P2 alone   exact 0.821 macroF1 0.577
+E+P2       exact 0.811 macroF1 0.568
+=== GATE (dev exact +.010, natural_dev exact >= S0, macroF1 >= S0 on both): FAIL

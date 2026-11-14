@@ -1,0 +1,17 @@
+GATE {
+ "dev2_cv_SH": 0.642,
+ "dev2_cv": {
+  "N1_replace": 0.647,
+  "N1_join": 0.641
+ },
+ "chosen": "N1_replace",
+ "dev2_cv_diff": 0.005,
+ "dev2_cv_ci": [
+  -0.008,
+  0.018
+ ],
+ "natural_dev_SH": 0.784,
+ "natural_dev_cand": 0.774,
+ "pass": false
+}
+FAIL: no test read

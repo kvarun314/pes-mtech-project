@@ -1,0 +1,2 @@
+embed_finished
+char_finished

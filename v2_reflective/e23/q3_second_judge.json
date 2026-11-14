@@ -1,0 +1,12 @@
+{
+ "gate_dev2": {
+  "n_rejected": 38,
+  "qwen_accepts_rejected": 0.0,
+  "n_accepted": 60,
+  "qwen_rejects_accepted": 1.0,
+  "unparsed": 0,
+  "qwen_accepts_A_fallbacks": 0,
+  "qwen_accepts_B_explanations": 0,
+  "pass": false
+ }
+}

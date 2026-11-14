@@ -1,0 +1,10 @@
+100 rows, 442s
+200 rows, 839s
+300 rows, 1269s
+400 rows, 1647s
+500 rows, 2046s
+done v2_reflective/e23/b2/deletion_dev2.jsonl
+=== dev2 deletion summary (n=500; dev preview, not the declared readout)
+mean cited tokens 6.2
+comprehensiveness cited 0.176 vs random 0.109; diff 0.067 CI [0.054, 0.080]; Wilcoxon p 2.6e-22
+sufficiency cited-only 0.552 vs random-only 0.326; diff 0.226 CI [0.205, 0.248]; Wilcoxon p 1.6e-57

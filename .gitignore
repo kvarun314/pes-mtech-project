@@ -3,3 +3,77 @@
 .venv/
 __pycache__/
 *.pyc
+
+# local-only: secrets, scratch, big or rebuildable data, intermediate checkpoints, backups
+kaggle_json.py
+.scratch/
+.ppt_assets/
+.claude/
+.superpowers/
+.pytest_cache/
+v2_reflective/mlx_model
+v2_reflective/llama-server.log
+v2_reflective/e23/pool.jsonl
+v2_reflective/e23/evid_train.jsonl
+v2_reflective/**/[0-9][0-9][0-9][0-9][0-9][0-9][0-9]_adapters.safetensors
+paper/main.aux
+paper/main.log
+paper/main.out
+paper/main.toc
+*.tar.gz
+
+# review text and training data (regenerable from scripts + public datasets), old/large adapters
+v2_reflective/e23/dev.jsonl
+v2_reflective/e23/eval.jsonl
+v2_reflective/e23/natural_test.jsonl
+v2_reflective/e23/natural_dev.jsonl
+v2_reflective/e23/p1/data_*/
+v2_reflective/e23/p1/[PR]_*.jsonl
+v2_reflective/e23/p1/halluc_R_generations.jsonl
+v2_reflective/p1final_*.jsonl
+v2_reflective/paper_protocol_rows.jsonl
+v2_reflective/p1_data/
+v2_reflective/pair_data/
+v2_reflective/pair_adapter/
+v2_reflective/p1_answeronly_adapter/
+v2_reflective/gate0_dev.json
+v2_reflective/phase2_trace*.json
+v2_reflective/e23/p1/*_train.jsonl
+v2_reflective/e23/p1/*_valid.jsonl
+
+v2_reflective/e23/p1/enc2k_model/
+v2_reflective/e23/emb/
+v2_reflective/e23/hid/
+v2_reflective/e23/p1/adapter_R10/
+v2_reflective/e23/p1/adapter_R2/
+v2_reflective/e23/hid2/
+v2_reflective/e23/evid_big_extra.jsonl
+v2_reflective/e23/hid3/
+v2_reflective/e23/evid_big_extra_nodev2.jsonl
+v2_reflective/e23/fit2.jsonl
+paper/conference/ConferencePaper.aux
+paper/conference/ConferencePaper.log
+paper/conference/ConferencePaper.out
+
+# added 2026-10-25: review text and large rebuildable outputs
+v2_reflective/e23/dev2.jsonl
+v2_reflective/e23/fit3.jsonl
+v2_reflective/e23/hid4/
+presentation/Presentation_Demo*.ipynb
+
+v2_reflective/e23/agents/
+v2_reflective/e23/b2/
+presentation/Final_Demo*.ipynb
+presentation/demo_cache.json
+# Q4 robustness rows (data .jsonl)
+v2_reflective/e23/q4/
+
+# Round R NB-SVM agent probabilities (gate failed; kept in the backup tarball)
+v2_reflective/e23/nb1_*_probs.jsonl
+
+# D1 DeBERTa probabilities (kept in the backup tarball and on Drive)
+v2_reflective/e23/deb3_*_probs.jsonl
+v2_reflective/e23/deb3s*_probs.jsonl
+# SH3 adoption (2026-11-10): explanation outputs of the previous two-agent main stack, archived
+v2_reflective/e23/b2_sh2/
+v2_reflective/e23/agents/deberta/

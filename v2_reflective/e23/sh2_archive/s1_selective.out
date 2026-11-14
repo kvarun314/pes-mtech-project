@@ -1,0 +1,32 @@
+=== SH eval
+target 100%  thr -1.00  coverage 1.000  acc_auto 0.675 [0.645, 0.703]  macroF1_auto 0.675  acc_handed_off —
+target 90%  thr 0.43  coverage 0.913  acc_auto 0.699 [0.671, 0.728]  macroF1_auto 0.692  acc_handed_off 0.425
+target 80%  thr 0.48  coverage 0.805  acc_auto 0.725 [0.693, 0.755]  macroF1_auto 0.712  acc_handed_off 0.467
+target 70%  thr 0.52  coverage 0.714  acc_auto 0.735 [0.703, 0.769]  macroF1_auto 0.714  acc_handed_off 0.524
+target 60%  thr 0.56  coverage 0.624  acc_auto 0.764 [0.728, 0.796]  macroF1_auto 0.740  acc_handed_off 0.527
+target 50%  thr 0.62  coverage 0.526  acc_auto 0.808 [0.774, 0.840]  macroF1_auto 0.780  acc_handed_off 0.527
+target 40%  thr 0.67  coverage 0.420  acc_auto 0.850 [0.814, 0.883]  macroF1_auto 0.821  acc_handed_off 0.548
+=== SH natural_test
+target 100%  thr -1.00  coverage 1.000  acc_auto 0.757 [0.739, 0.775]  macroF1_auto 0.612  acc_handed_off —
+target 90%  thr 0.43  coverage 0.951  acc_auto 0.778 [0.760, 0.797]  macroF1_auto 0.632  acc_handed_off 0.347
+target 80%  thr 0.48  coverage 0.892  acc_auto 0.799 [0.781, 0.818]  macroF1_auto 0.652  acc_handed_off 0.407
+target 70%  thr 0.52  coverage 0.822  acc_auto 0.829 [0.811, 0.847]  macroF1_auto 0.675  acc_handed_off 0.424
+target 60%  thr 0.56  coverage 0.749  acc_auto 0.854 [0.835, 0.872]  macroF1_auto 0.694  acc_handed_off 0.469
+target 50%  thr 0.62  coverage 0.649  acc_auto 0.894 [0.878, 0.911]  macroF1_auto 0.735  acc_handed_off 0.503
+target 40%  thr 0.67  coverage 0.557  acc_auto 0.931 [0.916, 0.945]  macroF1_auto 0.760  acc_handed_off 0.538
+=== Phase1_LoRA eval
+target 100%  thr -1.00  coverage 1.000  acc_auto 0.540 [0.509, 0.572]  macroF1_auto 0.543  acc_handed_off —
+target 90%  thr 0.37  coverage 0.922  acc_auto 0.553 [0.520, 0.586]  macroF1_auto 0.551  acc_handed_off 0.385
+target 80%  thr 0.40  coverage 0.832  acc_auto 0.570 [0.536, 0.602]  macroF1_auto 0.559  acc_handed_off 0.393
+target 70%  thr 0.43  coverage 0.747  acc_auto 0.586 [0.552, 0.621]  macroF1_auto 0.564  acc_handed_off 0.403
+target 60%  thr 0.47  coverage 0.641  acc_auto 0.602 [0.563, 0.640]  macroF1_auto 0.561  acc_handed_off 0.429
+target 50%  thr 0.50  coverage 0.534  acc_auto 0.631 [0.590, 0.670]  macroF1_auto 0.564  acc_handed_off 0.436
+target 40%  thr 0.55  coverage 0.423  acc_auto 0.669 [0.626, 0.714]  macroF1_auto 0.560  acc_handed_off 0.445
+=== Phase1_LoRA natural_test
+target 100%  thr -1.00  coverage 1.000  acc_auto 0.534 [0.512, 0.557]  macroF1_auto 0.488  acc_handed_off —
+target 90%  thr 0.37  coverage 0.946  acc_auto 0.552 [0.530, 0.574]  macroF1_auto 0.509  acc_handed_off 0.231
+target 80%  thr 0.40  coverage 0.900  acc_auto 0.563 [0.542, 0.586]  macroF1_auto 0.521  acc_handed_off 0.275
+target 70%  thr 0.43  coverage 0.852  acc_auto 0.573 [0.550, 0.597]  macroF1_auto 0.522  acc_handed_off 0.313
+target 60%  thr 0.47  coverage 0.778  acc_auto 0.601 [0.577, 0.625]  macroF1_auto 0.534  acc_handed_off 0.302
+target 50%  thr 0.50  coverage 0.675  acc_auto 0.644 [0.618, 0.668]  macroF1_auto 0.560  acc_handed_off 0.308
+target 40%  thr 0.55  coverage 0.550  acc_auto 0.679 [0.653, 0.706]  macroF1_auto 0.580  acc_handed_off 0.357

@@ -1,0 +1,18 @@
+n=150 unparseable 0  wrong rating 80 (53%)  description doesn't match own rating 0  runs on into invented 'Review:/Example:' 0
+severe misses (>=2 stars): 20
+ gt=3 pred=1 | 'Looks nice and I like it, but broke before a month of use'
+   -> '1. Comments show a high level of dissatisfaction and negativity (rating 1).! 1. Comments show a high level of dissatisfaction and negativity (rating 1).! 1. Comments show a high level of dissatisfacti'
+ gt=5 pred=2 | 'Used to distribute a booklet. Did not need a full 4 GB drive commonly available at most stores.'
+   -> "2. Although still negative, the user's sentiment may be slightly softened (rating 2).! 2. Although still negative, the user's sentiment may be slightly softened (rating 2).! 2. Although still negative"
+ gt=4 pred=2 | 'I was expecting this HDMI adapter to also transmit the audio from my mac to my HDTV, but it does not. It only transfers the image so I have to hook up my speake'
+   -> "2. Although still negative, the user's sentiment may be slightly softened (rating 2).! 2. Although still negative, the user's sentiment may be slightly softened (rating 2).! 2. Although still negative"
+ gt=3 pred=1 | "Didn't want it; my wife agreed to this."
+   -> '1. Comments show a high level of dissatisfaction and negativity (rating 1).! 1. Comments show a high level of dissatisfaction and negativity (rating 1).! 1. Comments show a high level of dissatisfacti'
+ gt=3 pred=1 | 'So i received the item as stated and it is the perfect size but unfortunately it is only comparable with 2.4 internet and i guess i have 5 which i would imagine'
+   -> '1. Comments show a high level of dissatisfaction and negativity (rating 1).! 1. Comments show a high level of dissatisfaction and negativity (rating 1).! 1. Comments show a high level of dissatisfacti'
+
+sample raw outputs:
+  '5. High level of satisfaction and positive emotions (rating 5).! 5. High level of satisfaction and positive emotions (rating 5).! 5. High level of satisfaction and positive emotions (rating 5).! 5. High level of satisfac'
+  '1. Comments show a high level of dissatisfaction and negativity (rating 1).!  Comments show a high level of dissatisfaction and negativity (rating 1).!  Comments show a high level of dissatisfaction and negativity (ratin'
+  '4. Users have a positive experience overall, with room for improvement (rating 4).! 4. Users have a positive experience overall, with room for improvement (rating 4).! 4. Users have a positive experience overall, with ro'
+  '4. Users have a positive experience overall, with room for improvement (rating 4).! 4. Users have a positive experience overall, with room for improvement (rating 4).! 4. Users have a positive experience overall, with ro'

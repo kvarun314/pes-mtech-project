@@ -1,0 +1,44 @@
+dev-CV exact by gate margin: {0.2: 0.646, 0.3: 0.64, 0.5: 0.642, 0.8: 0.642, 1.01: 0.642}
+chosen gate 0.2
+
+Phase 1: exact 60.2% within1 92.1% MAE 0.503
+Phase 2: exact 65.2% within1 93.6% MAE 0.425
+delta +5.0 pts, 95% CI [+2.5, +7.4], fixed 105, regressed 55, McNemar p=9.5e-05
+reflected on 51% rows, changed 19%
+
+per star (n, P1 recall -> P2 recall, P2 precision):
+ 1*  n=200  0.86 -> 0.79  prec 0.69 (P1 0.58)
+ 2*  n=200  0.34 -> 0.48  prec 0.64 (P1 0.52)
+ 3*  n=200  0.59 -> 0.61  prec 0.57 (P1 0.55)
+ 4*  n=200  0.47 -> 0.61  prec 0.61 (P1 0.66)
+ 5*  n=200  0.75 -> 0.76  prec 0.73 (P1 0.69)
+
+3-class polarity: P1 79.3% -> P2 81.1%
+binary (3* dropped): P1 90.8% -> P2 93.8%
+
+adjacent-star confusion (|err|==1 share of errors): P1 80% P2 82%
+
+P2 confusion (rows=true, cols=pred):
+  1 [157, 19, 19, 2, 3]
+  2 [53, 97, 43, 7, 0]
+  3 [14, 29, 123, 29, 5]
+  4 [1, 5, 24, 123, 47]
+  5 [1, 2, 5, 40, 152]
+
+by Phase-1 margin bucket (n, P1 exact, P2 exact):
+ margin 0-0.2: n=509 0.49 -> 0.59
+ margin 0.2-0.5: n=367 0.68 -> 0.68
+ margin 0.5-0.8: n=119 0.84 -> 0.84
+ margin 0.8-1.01: n=5 1.00 -> 1.00
+
+REGRESSED examples
+ gt=3 P1=3 P2=4 margin=0.06 | 'I have to give the coffee itself a good rating.  Although I do like the Folgers better.  As for the price, each bag is $1.00 (one dollar) cheaper in my local supermarket.  Why should I go through Amaz'
+ gt=1 P1=1 P2=3 margin=0.15 | "I bought these locally.  The price was high and I don't like the licorice taste!  I couldn't even finish the box...  I prefer the Schar brand vanilla wafers."
+ gt=2 P1=2 P2=3 margin=0.01 | 'These taste great and arrived well packaged.  However, be prepared to eat these in a hurry - the expiration date was only 2 weeks away when they arrived. Eat quickly or throw away.  Amazon really need'
+ gt=2 P1=2 P2=4 margin=0.15 | 'The price was comparable to Walmart for same size product.  However these nuts were not as crunchy; and they needed a little more salt.'
+
+FIXED examples
+ gt=2 P1=1 P2=2 margin=0.04 | 'These coffee pods smell very strong when you first open them. however; preparing them as instructed (8 oz. water per pod) it comes out so translucent and weak. Maybe the company just has not gotten th'
+ gt=3 P1=2 P2=3 margin=0.01 | 'I do love this brand of soup very much but be aware of the packaging when you get it mine was crappy :('
+ gt=4 P1=5 P2=4 margin=0.01 | "kind bar satisfy's the chocolate craving and also has antioxidants.  Great as a breakfast bar and also tastes good.  My kids like it too."
+ gt=2 P1=1 P2=2 margin=0.09 | "Like other reviewers I found these to be way to salty. They do not need to add extra salt when cheese already has enough on it's own. If they change the recipe I will be more than happy to try again b"

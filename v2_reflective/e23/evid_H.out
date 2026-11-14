@@ -1,0 +1,10 @@
+E fit 118s
+evid dev2 alone exact 0.554
+evidchk dev alone exact 0.586
+E6b fit 1063s
+evid6b dev2 alone exact 0.579
+evid6b dev alone exact 0.600
+evid6b natural_dev alone exact 0.712
+evid6b eval alone exact 0.625
+evid6b natural_test alone exact 0.703
+determinism max |diff| vs evid_dev: 0.0

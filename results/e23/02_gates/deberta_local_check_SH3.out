@@ -1,0 +1,5 @@
+Loading weights:   0%|          | 0/202 [00:00<?, ?it/s]Loading weights: 100%|██████████| 202/202 [00:00<00:00, 6285.56it/s]
+device mps
+rows 500 | top-star agreement 1.0000 | mean |diff| 0.00049 | max |diff| 0.0067 | exact local 0.682 vs stored 0.682
+cost: 78.3 ms per review (batch 32, mps)
+=== CHECK: PASS

@@ -18,21 +18,29 @@ from typing import Optional
 
 @dataclass
 class ModelConfig:
-    """Base model and LoRA settings. Defaults match the proven, paper-closer
-    config in colab/llama_sentiment_baseline_train.ipynb cell 9/13 (not the
-    Table 1 literal baseline r=4/alpha=64/3-layers below it in that paper's
-    own Table 1 text) -- this is the config that actually produced Run 1's
-    Phase 1 numbers."""
+    """Base model and LoRA settings. Defaults match the paper's literal
+    Table 1 config (r=4, alpha=64, 3 trainable layers) -- confirmed via git
+    archaeology (docs/PROGRESS.md 2026-10-09) to be what actually trained
+    the adapter committed at output/final/ (6f159ce, 2026-10-01), which
+    predates this package (29966f6, 2026-10-02) by a day and is the adapter
+    behind every real Phase 1 number reported so far (Run 1 16.1%, Run 2
+    text_only 50.95%). A prior version of this docstring claimed a
+    stronger r=16/alpha=128/8-layer "paper-closer" config produced those
+    numbers -- that was never true; that config was only ever a plan
+    (documented in colab/llama_sentiment_baseline_train.ipynb cell 9/13) for
+    a retrain that hasn't happened. If that stronger retrain does happen,
+    update both this docstring and the adapter's provenance note together so
+    they can't drift apart again."""
 
     model_name_or_path: str = "meta-llama/Meta-Llama-3-8B"
     use_fast_tokenizer: bool = True
     trust_remote_code: bool = True
 
-    lora_r: int = 16
-    lora_alpha: int = 128
+    lora_r: int = 4
+    lora_alpha: int = 64
     lora_dropout: float = 0.0
     lora_target_modules: list | None = None
-    trainable_layers: int = 8
+    trainable_layers: int = 3
 
     use_rslora: bool = False
     use_dora: bool = False
@@ -47,14 +55,23 @@ class ModelConfig:
 
 @dataclass
 class TrainingConfig:
-    """Training hyperparameters. Defaults match
-    colab/llama_sentiment_baseline_train.ipynb cell 9/16 exactly (the proven
-    config), not Table 1's literal baseline values."""
+    """Training hyperparameters. Defaults match Table 1 of the paper, and
+    are independently confirmed against output/final/training_args.bin
+    (the actual TrainingArguments used for the committed adapter) for every
+    field that object stores: epochs, learning_rate, max_grad_norm, batch
+    size, grad_accum, fp16, warmup_steps, save_steps, logging_steps,
+    lr_scheduler_type, optim all match exactly. `max_samples` matches
+    Table 1's explicit value (2000) -- the paper's own §3 prose
+    contradicts this elsewhere ("4,000 reviews for training", separately
+    "5,000 dataset rows" for a timing aside), but isn't itself a stored
+    TrainingArguments field so it can't be independently verified the same
+    way; Table 1 is treated as authoritative since it's the paper's own
+    dedicated hyperparameter table."""
 
     output_dir: str = "./output"
     overwrite_output_dir: bool = True
 
-    num_train_epochs: int = 5
+    num_train_epochs: int = 3
     learning_rate: float = 5e-5
     weight_decay: float = 0.01
     max_grad_norm: float = 1.0
@@ -68,10 +85,10 @@ class TrainingConfig:
 
     optim: str = "adamw_torch"
     lr_scheduler_type: str = "cosine"
-    warmup_steps: int = 200
+    warmup_steps: int = 0
 
     logging_steps: int = 5
-    save_steps: int = 50
+    save_steps: int = 100
     save_total_limit: int | None = 3
     evaluation_strategy: str = "steps"
     eval_steps: int | None = 50
@@ -79,7 +96,7 @@ class TrainingConfig:
     metric_for_best_model: str = "eval_loss"
     val_ratio: float = 0.2
 
-    max_samples: int | None = 4000
+    max_samples: int | None = 2000
     max_eval_samples: int | None = None
 
     # Needed at this LoRA size (r=16, 8 layers) to avoid OOM on a T4 -- the

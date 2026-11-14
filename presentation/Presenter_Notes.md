@@ -1,0 +1,669 @@
+# Presenter Notes — Agentic Self-Correction in LLaMA-3
+
+## Part 0 — Current deck (25 slides). READ THIS FIRST
+
+Deck: `PES_Project_Phase1/Agentic_LLaMA3_Presentation.pptx`, the only current deck, built by `v2_reflective/build_deck_e23.py`. Google Slides (always current): https://docs.google.com/presentation/d/1V08iho4p7gdllKPxRVroaPhj6oo8Km1_/edit
+**Flow (as agreed 2026-10-25):** Intro → Phase 1, the reference paper (what it does) → its shortcomings → Phase 2 intro → in depth → how it solves the problem → results of Phase 1 → results of Phase 2 → in depth → conclusions. At most 25 slides.
+**Slide numbers and short scripts:** `deck_slide_map.md`, next to this file. It is regenerated on every build from the speaker notes, so it always matches the deck. This part gives the longer scripts in the same order.
+Slides no longer in the deck (Run 1 historical, Kaggle baseline, dissonance Critic, first stack, nine-lines summary, code map, workflow) are still in `PES_Project_Phase1/old_decks/` and stay defined in the builder. Parts 1–6 below are for the older v3 deck; use them only for the glossary and metric explanations. Full history: `Project_Journey.md`. Code: `V2_Reflective_Guide.md`.
+
+**Timing (about 22 minutes):**
+- Intro: 2 min
+- Phase 1 paper and why it falls short: 4 min
+- Evidence for the shortcomings: 3 min
+- Phase 2 intro, system, and how it answers each shortcoming: 4 min
+- Phase 1 results (with the data line): 1 min
+- Phase 2 results (main result, gain, Hand-off agent): 3 min
+- In depth (errors, why it works, tried/dropped, kept, robustness, self-correction 1 and 3): 6 min
+- Schedule and conclusions: 2 min
+
+### 1. Intro: title and problem (slides 1–2)
+Problem: one LLM pass gives a star with no second opinion, no evidence, and nothing checking its explanation. Sarcasm, mixed reviews and neighbouring stars trip it up. One minute; the rest of the talk shows how Phase 2 fixes each point.
+
+### Key terms (for you; not on the slides)
+Use these when explaining or when someone asks what a word means.
+
+| Term | Meaning |
+|---|---|
+| LLaMA-3-8B | Meta's open large language model (8 billion parameters); the base model in both phases |
+| LoRA | Small add-on weights trained on top of a frozen model, so fine-tuning is cheap (Phase 1) |
+| Phase 1 LoRA | LLaMA-3-8B + LoRA trained to output the star: the reference paper's method |
+| Frozen model | Used as-is, never retrained |
+| Hidden state (layer 20) | LLaMA's internal numeric summary of the review, halfway through the network |
+| LLaMA probe | Small classifier that reads the layer-20 hidden state and outputs 1–5★ probabilities |
+| TF-IDF | Scores each word / word pair by how distinctive it is in a review |
+| Evidence model | TF-IDF + logistic regression on ~497K reviews; its top phrases become the explanation evidence |
+| Logistic regression (LR) | Simple, fast classifier that outputs a probability for each star |
+| Agent | A component with one job (rate, combine, route, explain, check) that passes results to the next |
+| Stack / stacking | Several models predict; a small learned model combines their predictions |
+| DeBERTa-v3 | A smaller language model (encoder) fine-tuned on our 100K training reviews; the third agent |
+| Reflector | The learned combiner: weighs the probe, the Evidence model and DeBERTa, outputs the final star |
+| Main stack | LLaMA probe + Evidence model + DeBERTa + Reflector: the system behind the headline results |
+| Router | Decides whether the slow LLaMA probe is needed for a review (worked with two agents; off with three) |
+| Hand-off agent | Answers automatically when the stack is confident; sends unsure reviews to a person |
+| Explainer / Critic | Explainer (instruction-tuned LLM) writes the rationale; Critic checks it and asks for rewrites |
+| Self-correction | System revises its own output: escalation, LLM re-rating (rating) and the Critic loop (explanation) |
+| Balanced eval | 1,000 test reviews, 200 per star: every star counts equally |
+| Natural test | 2,000 test reviews with the real star mix (65% are 5★) |
+| dev / dev2 | Separate development reviews (500 / 2,000) used for every choice; test sets are read once |
+| Exact accuracy | Share of reviews whose star is predicted exactly |
+| Within one star | Share predicted exactly or one star off |
+| Macro-F1 | Average quality over the five stars, so rare stars count as much as 5★ |
+| Polarity / binary | Negative vs neutral vs positive / negative vs positive only |
+| Zero-shot / one-shot | Prompt with no example / with one worked example |
+| Label leak | Example picked using the true answer, which inflated old scores by ~8 points |
+| Gate | Pass/fail rule written in the lab log before an experiment runs, checked on dev data only |
+| 95% CI (bootstrap) | Range the true value likely falls in, from resampling the test reviews |
+| McNemar / paired test | Tests whether two systems differ on the same reviews |
+| Holm correction | Adjusts p-values when many comparisons are made, to avoid lucky wins |
+| ECE (calibration) | Gap between the model's confidence and its real accuracy; lower is better |
+| Faithfulness | Explanation states the right star and only uses evidence that is really in the review |
+| Deletion test | Remove the cited phrases vs random words: if confidence drops more, the explanation points at what mattered |
+
+### 2. Phase 1, the reference paper: what it does and why it falls short (slides 3–6)
+- **Framing (say it this way):** "We chose this paper as our reference. Phase 1 is our reproduction of it and our exploration of where it holds and where it does not. Phase 2 is what we built from what we learned." Call it the reference paper, not "the baseline".
+- **The paper we chose:** Wang et al. (2025). Walk the four cards:
+  - **Task:** one model rates a review 1–5★ and justifies it.
+  - **Data:** TextBlob cleaning, equal reviews per star, varied wording (VGST), extra neutral reviews.
+  - **Model:** LLaMA-3-8B with a small LoRA add-on, using the exact Table 1 settings.
+  - **Prompt:** a rubric, one worked example, and "step by step".
+  - Then the reported 92.6%. Say: "We rebuilt exactly this as Phase 1."
+- **Why it falls short**, four plain reasons:
+  - One pass, with nothing to catch a mistake.
+  - The score depends heavily on the set-up: a leaked example in our first run, and a skewed test where always guessing 5★ gets 63.8%. Leak-free and balanced, it's 54%.
+  - The data cleaning removes most negative reviews.
+  - The justifications are a template.
+  - Be fair: the leak came from our first reproduction's example choice; it isn't a claim about the authors.
+- **Pipeline and LoRA slides:** how the method works in detail. Keep each to a minute.
+
+### 3. Evidence for the shortcomings (slides 7–9)
+- **Leak:** the one-shot example was chosen using the true star, worth about 8 points. Every later number is leak-free.
+- **Hallucination study:** the LoRA's explanations are one canned sentence per star, wrong 53% of the time. The probabilities are usable; the explanations are not.
+- **Preprocessing:** TextBlob filtering deletes most negative reviews and costs 2.5–3.5 points. VGST adds nothing.
+
+### 4. Phase 2: intro, system, and how it answers each shortcoming (slides 10–12)
+- **Where Phase 2 started:** the original four-agent design (Analyst, Visual Verifier, RAG Prover, dissonance Critic). The audits showed the Visual Verifier gave constant output, RAG was weak, and the Critic barely acted.
+- **System slide:** walk the five boxes. Evidence model + DeBERTa → Router → LLaMA probe → Reflector → Explainer + Critic.
+  - The decision core (main stack) has three agents: the LLaMA probe, the Evidence model and DeBERTa. It is built and frozen.
+  - The agentic layer (Router, Hand-off agent, Explainer, Critic) is built in LangGraph and measured on all 3,000 test reviews.
+  - The Router worked for the two-agent stack. With three agents it failed its check, so it is off and every review goes to all three agents.
+  - Self-correction: the explanation loop (faithful 62–64% → 91–92% with max 4 rewrites, 0 broken). Escalation worked with two agents (92 vs 50 and 152 vs 78 fixed vs broken). An Instruct LLM re-rating unsure reviews was tested and failed: 76 fixed vs 89 broken on dev2.
+- **"How Phase 2 answers each shortcoming"** (the table): read it as problem → fix → the number that checks it. Spend time on three rows:
+  - Three agents instead of one pass.
+  - LLMs explain and check instead of judging, because the judge failed twice.
+  - Template justifications replaced by evidence-based explanations that a Critic checks.
+  - The last row is new: unsure reviews go to the Hand-off agent.
+
+### 5. Results of Phase 1 (slide 13)
+Start with the data line in the subtitle. It answers any leakage question:
+- One dataset (Amazon Reviews 2023 Electronics).
+- Splits drawn once and disjoint by review id and exact text.
+- Every choice made on dev; test sets read once.
+
+"This is the reference paper's method on our data, leak-free."
+- Exact star 54.0 / 53.4, but within one star about 94% and positive vs negative 91–93%. It gets the direction right.
+- On the paper's own Kaggle data with its protocol and no leak: 69.1% (always guessing 5★ gives 63.8%).
+- The paper's 92.6% used K=5 cross-validation and a 40K test set.
+
+### 6. Results of Phase 2: the headline (slides 14–16)
+**Main result:** "The main stack is three readers and a learned referee: the LLaMA probe reads meaning, the Evidence model reads key words, DeBERTa reads the wording." **Read the table top to bottom:** LoRA + Evidence stack refit on dev2 65.5 / 74.2; probe alone 61.2 / 74.3; Evidence alone 62.5 / 70.2; DeBERTa alone 66.5 / 75.8; previous two-agent main 67.5 / 75.7; **main stack 67.5 / 78.0**.
+**Paired tests (Holm over 12):** versus the previous main +0.0 eval (not significant) and +2.3 natural (adjusted p .004). Versus DeBERTa alone +1.0 eval (ns), +2.3 natural (adj. p .003). Versus Evidence alone +5.0 / +7.8; versus the probe alone +6.3 / +3.7.
+**Key message:** "Combining different kinds of signal beats any one alone. DeBERTa helps on the real star mix, not on balanced eval; the gain held over 3 DeBERTa seeds (+2.2 ± 0.2 natural, +0.1 ± 0.3 eval). The frozen LLaMA model already contains the useful information; fine-tuning it was not needed."
+
+**Phase 1 → Phase 2:** lead with the gain, +13.5 / +24.6 points (29% / 53% fewer errors), significant after Holm. Then why: the agents complement each other; the Evidence model is strong on short reviews, the probe on long ones, and DeBERTa adds on the natural mix. Say the caveat yourself: the LoRA + Evidence stack refit on the same dev reviews is only 2.0 behind on eval (not significant). Never quote 70.7 / 60.1 (leaky), 74.8 (one seed) or 79.9 (class-mix correction).
+
+**Hand-off agent (slide 16):**
+- **Say:** "Exact accuracy has plateaued at about 67 and 78. The agentic answer is for the system to know when it is unsure. The Hand-off agent answers automatically only when the stack is confident and sends the rest to a person."
+- The threshold was fixed on dev2 before the test sets were read.
+- **Numbers:** natural test, answers 56.1% of reviews and is right 92.8% [91.3, 94.3]; balanced eval, 86.9% on 41.1%. The handed-off reviews are only 54–59% right, so they are the hard ones. Phase 1 with the same rule: 67.9% / 66.9%.
+- **Star ranges (Q1):** when the system is unsure, it can answer with a range of stars instead of handing the review on. The range is calibrated (conformal prediction) to contain the true star 90% of the time: 91.6% on eval and 90.1% on natural test. Ranges are 1.8 stars wide on eval and 1.4 on natural test; Phase 1 needs 2.4 and 2.1 and still misses 90% on natural test (88.0%). The range is a single star for 34% / 58% of reviews (Phase 1: 5% / 11%). With three options (answer, range, person) only 11% (eval) and 2% (natural) still need a person. Be open: the range option on its own covers 86–91%, because it gets the harder reviews; the 90% holds over all reviews.
+- The "All models" bar chart is out of the deck (it is in `paper/figures/e23/main_bars.png` if asked).
+
+### 7. In depth (slides 17–23)
+**Where the main stack is right and where it errs:**
+- Left, the confusion matrix: mistakes hug the diagonal, and 92% of errors are one star off (88% on natural).
+- Right, the share of each star found, Phase 1 vs Phase 2.
+- Say the exception yourself: Phase 1 finds slightly more 4★ reviews (natural .715 vs .664; eval .635 vs .630) because it over-predicts 4★. Phase 2 is far better on 5★ (.855 vs .490), the most common star.
+
+**Why several agents beat one:**
+- Left: the Evidence model wins on short reviews (70.0 vs 54.6), the LLaMA probe on long ones (64.3 vs 55.8), and the stack is best or near-best in every length band.
+- Right: when the probe and the Evidence model disagree, the stack is still right 58% (eval) / 62% (natural) of the time, against 36–50% for either alone. DeBERTa is the third view the Reflector uses there.
+- **Hard cases (band):** reviews that sound negative but are rated 4–5★: stack 67.5 vs Phase 1 35.0 (eval, p .002), 78.2 vs 43.0 (natural, p 5e-16). Positive-sounding 1–2★ reviews: +11.1 (eval) and +10.3 (natural), both not significant. Mixed reviews with "but / however": +10.0 (eval, p .003), +3.2 on natural (not significant). Explicit sarcasm cue words: only 6 and 1 reviews, too few to measure; say so if asked about sarcasm.
+
+**Tried / dropped / kept:** **Don't read every row.** Pick three: the LLM judge (failed twice, which is why the LLM doesn't decide the star), the Visual Verifier (constant output) and the recalibration (the gain was the leak). The last two rows: the probe on 120K reviews added nothing (+0.3 on dev2), and the Instruct-LLM re-rating, the third LLM-judge failure (76 fixed vs 89 broken). On "What we kept", walk the eleven kept changes quickly; the new one is DeBERTa (+2.3 natural, Holm p .004; stable over 3 seeds).
+
+**Robustness:**
+**Say:** "I checked whether the result survives four questions."
+- **Multiple comparisons:** after Holm correction over 12 comparisons, 8 stay significant: all six on natural test (including vs the previous main and vs DeBERTa alone), and vs Evidence alone and vs probe alone on eval. On eval the main stack is not significantly better than DeBERTa alone, the previous main or the LoRA + Evidence stacks.
+- **Errors:** 92% (eval) and 88% (natural) of errors are one star off. 2★ and 3★ are hardest (recall .51–.58).
+- **Calibration:** ECE .031 and .052. On eval confidence .679 vs accuracy .675; on natural slightly under-confident. The Hand-off agent relies on this.
+- **Cost:** the LLaMA probe takes about 0.67 s per review; DeBERTa 86 ms; TF-IDF and the Reflector under 0.1 ms each.
+- **Text changes (Q4, 300 eval reviews):** lowercase text without punctuation changes the main stack's star for 9.3% of reviews and Phase 1's for 29.7% (p 3e-11); typos change 0.7% vs 2.0% (not significant). **Be open:** with the title removed, the star changes for 15.7% of reviews (the two-agent stack: 8.0%), exact 68.0 → 63.7, because the Evidence model and DeBERTa both read the title; Phase 1 never reads it.
+- **Years and products (Q5):** the gain over Phase 1 is positive in every review-year band (2001–2023) and every product-popularity band, all confidence intervals above 0: eval +10.3 to +16.3, natural +21.5 to +26.5. This is not a future-data test; all agents saw reviews from every year.
+
+**Self-correction 1, measured on the two-agent stack (slide 22):**
+- **Say:** "When the quick Evidence-model draft is unsure, the system calls the LLaMA probe and the Reflector revises the star."
+- **Numbers (two-agent stack):**
+  - Balanced eval: 607 reviews escalated, 92 fixed vs 50 broken, p = 0.0005.
+  - Natural test: 1,035 escalated, 152 fixed vs 78 broken, p = 0.000001.
+  - LLaMA was skipped on 39% / 48% of reviews, with no significant accuracy change (67.4 vs 67.5; 75.5 vs 75.7).
+- **Three agents (band):** the same check was rerun on dev data for the three-agent stack and failed: 50 fixed vs 37 broken (p .20), and natural dev 0.6 points lower than using all agents. By the rule written beforehand, the Router is off: every review uses all three agents.
+- **Be open about it:** "For two agents this was our second threshold. The first (0.60) missed its natural-dev check by 0.3 points and was never tested on the test sets."
+
+**Self-correction 3, measured (slide 23):**
+- **Say:** "The Explainer writes a short explanation from the evidence only. The Critic checks five things: the star, that quotes really occur in the review, the key phrases, the disagreement, and no invented claims. If one fails, it sends specific feedback and the Explainer rewrites, at most four times."
+- **Numbers (three-agent stack):** faithful first drafts 62.3% (eval) / 63.7% (natural); after the loop 90.5% / 91.6%. 282 + 559 fixed, 0 broken; McNemar p < 1e-84. About 3.0 LLM calls per review. The previous two-agent stack reached 90.6% / 91.1%. A fixed-form fallback for the rest (I3) failed its dev2 check.
+- **Deletion test (right):** removing the cited phrases lowers the stack's confidence by .156 vs .077 for random words (eval) and .209 vs .119 (natural); keeping only the cited phrases holds .521 vs .301 and .616 vs .349. p < 1e-54 everywhere.
+- **Phase 1 comparison (left, small text):** same 150 reviews, same judge: Phase 1's justification never quotes the review (0% vs 75%), is one of 5 stock sentences (3% distinct vs 100%), and Phase 2 is judged free of unsupported claims 93% of the time (17 vs 5 cases where only one passes, p .017).
+- **Worked example (bottom strip, from the live demo):** a 2★ backpack review, rated 2★. Walk it left to right: the evidence pack (for: "disappointing", "Poor", "lacks"; against: "great", "easy"); draft 1 claims "Poor quality", which the review does not say, so the Critic asks to remove it; draft 2 drops it but quotes too few key phrases, so the Critic asks for at least 2; draft 3 quotes the review and passes. Say: "This is what the 62% to 91% means for one review." The demo (section 4) shows the same example live.
+- **Be open:** about 9% of final explanations still fail a check (mostly the LLM judge); they are labelled, not hidden. The judge is the same Llama-3-8B-Instruct model that writes the explanation; the deletion test and the Phase 1 comparison are the independent checks. A human check of 50 is under way (new sheet for the three-agent stack).
+
+### 8. Build schedule and conclusions (slides 24–25)
+**Say:** "Every row had its rule written first and is logged. The bigger probe failed its check (120K reviews gave +0.3 on dev2), so the 40K probe stays. Explanations and the Critic loop ran on all 3,000 test reviews, then the deletion test. The extra specialist became DeBERTa: it passed its dev2 check, was stable over 3 seeds, and was adopted. Every Phase 2 result was then rerun with three agents on Nov 11–12; the Router failed its check with three agents and is off."
+
+**Conclusions:** four cards.
+- Phase 1 was reproduced honestly, and two problems were found in the original protocol.
+- Phase 2's three-agent stack beats the single fine-tuned model, significantly (+13.5 / +24.6). DeBERTa adds +2.3 on the natural mix only.
+- The agentic layer is measured on 3,000 reviews: the Critic loop makes 91–92% of explanations faithful with none broken; the Hand-off agent is right 93% of the time on the 56% it answers; the Router helped with two agents but not with three. LLM re-rating was tested and dropped (third LLM-judge failure).
+- **Limits, said plainly:** one dataset (but the gain holds in every year band); the main stack needs the review title (16% of stars change without it); part of the gain comes from the larger Reflector fit set; explicit sarcasm is too rare in the data to measure.
+
+End with the dates: human check of 50 explanations, paper by Nov 20, final presentation in December with a live demo.
+
+### New questions to expect
+- **"Are these results good or bad?"** Good, and they hold up. Exact five-star rating is hard, because 4★ vs 5★ is often a judgement call.
+  - On the same balanced eval: random 20%, base LLaMA 34.3%, SVM / Naive Bayes ~47–48%, DistilBERT 52.8%, Phase 1 (the paper's method) 54.0%, **main stack 67.5%**.
+  - Within one star 97.3%; 92% of errors are one star off; macro-F1 .675. Natural test 78.0% (within one 97.4%).
+  - The paper's 92.6% came from skewed Kaggle data with a different protocol. On that kind of data our leak-free reproduction gets 69.1%, while always guessing 5★ gets 63.8%.
+- **"What is the natural test, and what other tests did you use?"**
+  - **Balanced eval:** 1,000 reviews, 200 per star. Skill on every star equally; random gets 20%.
+  - **Natural test:** 2,000 reviews with the real mix (65% 5★). What real use looks like; always guessing 5★ gets ~65%, so macro-F1 is reported too.
+  - **Development sets:** dev (500) and dev2 (2,000, balanced) plus natural_dev (500), used for every decision. Test sets are read once.
+  - **Kaggle paper-protocol test:** 4,000 reviews, used only to reproduce the paper.
+  - No review appears in two sets (checked by id and by exact text).
+- **"What is the main stack?"** Three readers and a referee (adopted Nov 10).
+  - The **LLaMA probe**: frozen LLaMA-3-8B whose layer-20 state goes to a small classifier; reads meaning.
+  - The **Evidence model**: TF-IDF on ~497K reviews; reads key words and supplies the phrases for the explanation.
+  - **DeBERTa-v3**: a smaller language model fine-tuned on our 100K training reviews (Colab); reads the wording.
+  - A **Reflector** (a learned referee) combines them into the final star.
+  - The readers make different mistakes: alone 61–67%, together 67.5% (eval) and 78.0% (natural).
+  - The earlier "Probe + Evidence stack" (67.5 / 75.7) is now called the previous main stack.
+- **"Did you try letting the LLM fix the star?"** Three times. Gate 0 on Kaggle and on Electronics, then on Oct 25 with Llama-3-8B-Instruct, evidence for both candidate stars and an order-swap consistency check. It fixed 76 and broke 89 on dev2, so it was dropped before any test read. LLMs are better at explaining and checking than at deciding.
+- **"Is the tried-and-dropped table final?"** For everything run so far, yes. A pending experiment that fails adds a row; one that passes moves to "What We Kept". This is updated at the Nov 1 / Nov 5 freezes.
+
+**Block diagram (draw it if asked):**
+```
+Review ─┬─► LLaMA probe (meaning)  ─► P(1..5★) ─┐
+        ├─► Evidence model (words) ─► P(1..5★) ─┼─► Reflector ─► final star ─► Hand-off (answer / range / person)
+        └─► DeBERTa (wording)      ─► P(1..5★) ─┘
+Phase 2 v3 around it: Router (two-agent stack only; off with three) ·
+LLM re-rating of uncertain reviews (gated) · Explainer ⇄ Critic loop (max 4 rewrites) → checked explanation
+```
+- **"Why did the gain over the old system shrink in the fair comparison?"** The old Reflector was fit on only 500 rows. Given 2,000 rows it improves too. The main stack is still ahead in 4 of 5 seeds on eval and 5 of 5 on natural, but the margin is small (+0.7 ± 1.2 and +1.0 ± 0.6).
+- **"You tried many things; isn't the winner luck?"** Every rule was written before running, and failures never touched the test sets. Five candidates were compared on dev2, and I disclose that. The test sets were read once.
+- **"Then what is the role of LoRA?"** Phase 1 is still our reproduction and exploration of the reference paper. Inside Phase 2 it is an ablation row: adding it to the main stack did not help (dev2 .633 versus .639).
+- **"Why is natural-test accuracy higher than balanced?"** About 65% of natural reviews are 5-star, which are easier. That is why macro-F1 (.634) is reported next to it.
+- **"Why does DeBERTa help on natural test but not on balanced eval?"** Its gain is on the common 4★ / 5★ reviews (natural test is 65% 5★). On balanced eval it fixes and breaks the same number (58 / 58). Three DeBERTa seeds give the same picture: +2.2 ± 0.2 natural, +0.1 ± 0.3 eval.
+- **"Why is the Router off?"** With three agents, skipping the probe lowered natural-dev accuracy by 0.6 points and its corrections were not significant (p .20). The rule written beforehand said: if the check fails, the Router is off.
+- **"Is this agentic?"** Today: three independent agents plus a learned Reflector that arbitrates between them. The LLM-as-judge version (Gate 0) was tested and failed, and that is reported. Phase 2 v3 (the "How it solves the problem" slide) adds agents for routing, hand-off, explanation and self-correction: escalation (worked with two agents, off with three), the Hand-off agent (93% right on the 56% it answers) and the Critic loop on explanations (62–64% → 91–92% faithful, 0 broken); LLM re-rating of the star was tested a third time and failed, so LLMs explain and check rather than decide.
+- **"One slip?"** Yes, disclosed: Evidence-alone test accuracy was printed once before the gate ran. It was not used for any choice.
+
+### Names to say out loud
+Say **"main stack"** (three agents), **"previous main stack"** (probe + Evidence), **"LLaMA probe"**, **"Evidence model"**, **"DeBERTa"**, **"earlier LoRA + Evidence stack"** and **"Phase 1 LoRA"**. The internal IDs (SH3, SH, P3, E6b, deb3, S0) live only in `LOG.md` and the code.
+
+### Numbers cheat sheet
+| | eval (1,000 balanced) | natural_test (2,000) |
+|---|---|---|
+| main stack (three agents) exact / macro-F1 | 67.5 / .675 | 78.0 / .634 |
+| previous main (probe + Evidence) | 67.5 / .675 | 75.7 / .612 |
+| DeBERTa alone | 66.5 / .667 | 75.8 / .614 |
+| DeBERTa gain over 3 seeds | +0.1 ± 0.3 | +2.2 ± 0.2 |
+| previous main 5-seed mean | 65.8 ± 0.6 | 75.4 ± 0.8 |
+| Earlier LoRA + Evidence stack (dev fit) | 63.9 / .638 | 73.4 / .577 |
+| LoRA + Evidence stack refit on dev2 | 65.5 / .653 | 74.2 / .587 |
+| LLaMA probe alone | 61.2 | 74.3 |
+| Evidence model alone | 62.5 | 70.2 |
+| LoRA Analyst alone | 54.0 | 53.4 |
+| Base LLaMA zero-shot | 34.3 | 16.8 |
+| main stack within-1 / polarity | 96.7 / 82.0 | 96.7 / 91.5 |
+| main stack errors one star off | 92% | 88% |
+| main stack ECE | .047 | .062 |
+
+Sources: `v2_reflective/e23/results_frozen.md`, `readout_H.out`, `variance_H.out`; full history in `v2_reflective/EXPERIMENTS_SUMMARY.md`.
+
+---
+
+
+(Parts 1–6, older v3 deck) Deck: `Agentic_LLaMA3_Presentation_FINAL_v3.pptx` (22 slides). The original `..._FINAL_FORMATTED_v2.pptx` is untouched.
+Speaking time: about 18–22 minutes plus questions. Slides 1–9 are the Phase 1 half (about 9 minutes), slides 10–17 are the earlier Phase 2 work (about 6 minutes), slides 18–21 are the audit and what comes next (about 5 minutes). Slide 22 is a backup slide.
+
+This file has six parts:
+1. The story in one minute (read this first)
+2. Plain-English glossary: every technique, what it is, why we used it
+3. Slide-by-slide script: what to say, what to explain, caveats, likely questions
+4. Question bank with answers
+5. Caveats checklist
+6. Numbers cheat sheet
+
+Wording note: everything below is written so you can read it out or paraphrase it. "Say" blocks are close to spoken language. "Explain" blocks are background you can use if someone asks.
+
+---
+
+## Part 1 — The story in one minute
+
+A fine-tuned LLaMA-3 model reads a product review and predicts a 1–5 star rating in a single pass. That works well for obvious reviews and badly for the in-between ones: it confuses neighbouring stars, it cannot check its own work, and it cannot use anything beyond the text.
+
+Phase 1 is our reproduction of a published paper (Wang et al., 2025) that fine-tunes LLaMA-3-8B with LoRA on Amazon reviews and reports 92.6% accuracy. We rebuilt its pipeline, trained its adapter with its exact hyperparameters, and tested it. We reproduce the method. We do not reproduce its headline number as stated, and we show why: the paper's numbers look like polarity accuracy on a skewed test set, and its baselines land where ours do when scored the same way.
+
+Phase 2 is the add-on that shows why a single pass is not enough. It wraps the same model in several agents (an analyst, a visual verifier, a retrieval agent, and a critic) and lets disagreement between them trigger a second look. We ran it, audited it honestly, found and fixed four real defects, and learned that the remaining errors are swaps between neighbouring star ratings. The next version (reflective orchestration) is aimed exactly at those errors. It is a design, and we do not yet claim results for it.
+
+The honest one-line summary for the end: **Phase 1 reproduces the method but not the headline, Phase 2 is hardened and slightly net-positive, and the next step targets the specific confusions that remain.**
+
+---
+
+## Part 2 — Plain-English glossary (what each piece is, and why we used it)
+
+### Star rating and polarity
+- **5-class exact accuracy:** the predicted star (1–5) equals the true star. Strict.
+- **Polarity:** group stars into three buckets, 1–2 = negative, 3 = neutral, 4–5 = positive, and ask whether the bucket matches. This forgives the most common mistake, a swap between neighbouring stars on the same side (4 vs 5, 1 vs 2). The paper itself defines these buckets (§2.2).
+- **Within ±1:** the prediction is at most one star away. Shows how "close" errors are.
+- **MAE:** mean absolute error in stars. 0.5 means the average miss is half a star.
+- **Precision / recall / F1:** for one star class, precision = of the reviews we called that star, how many really were; recall = of the reviews that really were that star, how many we caught; F1 combines them. **Macro-F1** averages F1 over the five stars equally (so rare stars count as much as common ones). **Weighted-F1** weights by how common each star is.
+- **Trivial baseline:** what a model gets by always guessing the most common answer. On our paper-style test set, 63.8% of reviews are 5-star, so "always 5" scores 63.8%, and "always positive" scores 78.6% on polarity. Any score only means something relative to these.
+
+### Data quality and sampling (Phase 1 pipeline, slide 5)
+- **Kaggle Amazon Product Reviews:** about 500,000 to 568,000 reviews with a 1–5 rating and text. Heavily skewed toward 5 stars (about 64%). Training on raw data would teach the model to say "5" for everything.
+- **TextBlob DQC (data quality control):** TextBlob is a small library that gives each text a polarity score from -1 (negative) to +1 (positive). The paper uses it to throw away reviews whose rating contradicts their text. Rule we implemented: drop a review if polarity is negative but the rating is above 3, or polarity is positive but the rating is below 3. Keep it if polarity is exactly zero or TextBlob fails. **Why:** star ratings are noisy (someone clicks 5 stars but writes a complaint). Removing the clearest contradictions gives cleaner labels. **Limit:** TextBlob is crude (a dictionary-based scorer), so it is a rough filter, not truth. It also removes sarcasm cases, which is exactly the hard data, so it makes the training set a little easier than reality.
+- **Stratified sampling:** after filtering, take an equal number of reviews per star (1 to 5), up to a cap of 10,000 in our pipeline. **Why:** removes the 5-star skew so the model has to learn all five classes. **Consequence:** the model is trained balanced but real data is skewed. That mismatch is why a simple class-balance correction raises scores on the skewed test set (see slide 8).
+- **VGST (Variant Greedy Search Technique):** the paper's way of choosing which reviews to keep when you cannot train on everything. The idea is diversity. Instead of random sampling, keep the reviews that add the most new vocabulary. The paper's description: randomly pick a batch of candidates, find the one that adds the most new word-pieces (tokens) to what has already been selected, add it to a "wishlist", repeat until the wishlist is the target length, then choose the best from it. Parameters in our implementation: batch size 32, wishlist length 10. If no candidate adds anything new, fall back to random. **Why the paper used it:** reviews are repetitive ("great product, works well"), so random sampling wastes training rows on near-duplicates; VGST spends them on varied language. **Why "variant":** plain greedy search scans the entire dataset every step, which is slow; looking only at small random batches is a cheap approximation. **A known side effect:** because it counts new token ids, it favours long reviews. In the demo notebook, VGST-selected reviews average about 139 words against about 63 for a random sample, and cover about twice the vocabulary. So part of the "diversity" is just length. **Our honest position:** we implemented it as described and ran the pipeline, but we did not run an experiment comparing training with and without VGST, so we cannot claim it improves accuracy. We only claim we followed the paper's method.
+- **Oversampling the neutral class:** the paper deliberately increases 3-star reviews because neutral is hardest to tell apart. We duplicate them (roughly doubled). **Why:** more examples of the hardest class. **Limit:** duplicates add no new information; they just weight the class more.
+- **Cap at max_samples:** shuffle and keep the first N rows. The paper's Table 1 says 2,000, its text also mentions 4,000 and 5,000, and our pipeline default is 4,000. We say "capped (paper Table 1: 2,000)" to stay safe.
+
+### The model and training (slide 6)
+- **LLaMA-3-8B:** an open-source language model with 8 billion parameters. It generates text, so we frame classification as writing the answer "Sentiment (1-5): 4".
+- **Fine-tuning:** continue training the model on our labelled reviews so it gets better at this one task.
+- **LoRA (Low-Rank Adaptation):** training all 8 billion weights is expensive. LoRA freezes the original weights W and learns a small correction added on top: h = Wx + BAx, where B and A are two thin matrices. If a weight matrix is d × d, a full update has d² numbers; LoRA uses two matrices of size d × r and r × d with r tiny, so only 2·r·d numbers. A starts as random noise and B starts at zero, so at the start the model behaves exactly like the original. **Our setting (the paper's Table 1):** rank r = 4, alpha = 64 (the correction is scaled by alpha/r = 16), applied only to the query and value projections (q_proj, v_proj) in the last three transformer layers (29–31). That works out to roughly 160,000 trainable numbers, about 0.002% of the model, and the adapter file is only about 640 KB.
+- **Epochs / batch / gradient accumulation:** 3 passes over the data, 3 reviews per step, accumulating 4 steps before updating (effective batch 12). **Learning rate 5e-5**, cosine schedule (the rate decays smoothly to zero), fp16 (half-precision numbers to save memory).
+- **Quantisation (4-bit):** storing the frozen base weights in 4 bits instead of 16 so an 8-billion-parameter model fits on a modest GPU. Slight accuracy cost.
+
+### Prompting
+- **System instruction + rubric:** the model is told to evaluate the sentiment and is given a plain-language description of what 1, 2, 3, 4, 5 stars mean (paper §2.2).
+- **One-shot example:** one worked example (a review with its answer) placed in the prompt so the model sees the format. **Caveat in our code:** the example is chosen using the true rating of the row being tested (we pick one with a different rating), a mild label leak inherited from the earlier notebook.
+- **Zero-shot chain of thought (CoT):** adding the phrase "Let's take it one step at a time" nudges the model to reason briefly before answering.
+- **Greedy decoding:** always pick the single most likely next word (temperature 0), so results are repeatable.
+
+### Phase 2 pieces (slides 10–11)
+- **Analyst:** the Phase 1 model produces a draft rating.
+- **Visual Verifier:** downloads the product image, a captioning model (BLIP) writes a short description, and the LLM re-rates using that caption. **Later finding:** its answers were nearly constant, so it is excluded from the final vote (slide 18).
+- **RAG Prover (retrieval-augmented generation):** looks up three similar past reviews (or product spec text) in a vector database (LanceDB, embeddings from all-MiniLM-L6-v2) and rates using that evidence.
+- **Critic and dissonance:** collects the votes and measures how much they disagree: D = standard deviation of the votes divided by 2. If D ≥ 0.4, the Critic writes targeted feedback and the Analyst reruns, at most two times.
+- **Vector database:** stores text as numbers (embeddings) so similar texts can be found by distance. We have one with about 7,300 product-spec snippets for 489 Electronics products.
+
+---
+
+## Part 2b — The Phase 1 data pipeline, step by step (what the code does and what to say)
+
+Source: `src/agentic_sentiment/phase1/data/{dataset,sampling,preprocessing}.py`, defaults in `phase1/config/settings.py`. The whole point of the pipeline is to turn a huge, skewed, noisy review file into a small, clean, balanced training set. Run order: load, TextBlob filter, stratified sample, VGST, neutral oversample, cap, split, prompt, tokenise and mask.
+
+**Code defaults to quote if asked:** read the first 250,000 CSV rows; stratified pool capped at 10,000; final cap `max_samples` = 2,000 in the code default (the paper's Table 1 says 2,000, its text also mentions 4,000 and 5,000); 80/20 train/validation split; max sequence length 1,024 tokens.
+
+### Step 0 — Load
+Reads the first 250,000 rows of the Kaggle CSV, finds the text and rating columns by name, forces the rating to an integer between 1 and 5 (an unreadable rating becomes 3), and stores each row as `{text, rating}`.
+- *Why:* one clean format, and the row cap keeps memory within what Colab allows.
+- *Caveat:* it takes the first N rows in file order, not a random draw, so it inherits any ordering in the file.
+
+### Step 1 — TextBlob data-quality filter (DQC)
+TextBlob scores each review's polarity from -1 to +1 by counting words from a built-in sentiment dictionary ("great" is positive, "terrible" is negative).
+- *Rule:* drop the row if polarity is below 0 and the rating is above 3 (negative words, high stars), or if polarity is above 0 and the rating is below 3 (positive words, low stars). Polarity exactly 0 is kept with any rating, and rows where TextBlob fails are kept.
+- *Why:* when words and stars contradict, the label is probably a mis-click or a mislabel. Removing the clearest cases gives cleaner labels.
+- *Caveat:* TextBlob is a word counter. It cannot read sarcasm, negation ("not good") or mixed reviews ("lovely but it broke"). So the filter also deletes genuinely hard, mixed reviews. The result is a training set that is easier than real data, which is one reason the paper's headline number looks optimistic.
+- *Likely question:* "Is TextBlob's polarity the same thing as your polarity metric?" No. The TextBlob polarity is a dictionary score of the text. The polarity metric (negative, neutral, positive buckets of the star rating) is an evaluation view. They only share a name.
+
+### Step 2 — Stratified sampling
+Groups rows by star, shuffles each group, and takes the same number from each. With a cap of 10,000 that is 2,000 rows per star.
+- *Why:* about 64% of Amazon reviews are 5-star. A model trained on that learns to say "5" and still looks accurate. Equal classes force it to learn all five.
+- *Caveat:* the model is now trained on balanced data but will be used on skewed data. That is a prior mismatch. It is why a simple class-balance correction changes our scores on the skewed test set (slide 8).
+
+### Step 3 — VGST (Variant Greedy Search Technique)
+Chooses a diverse subset instead of a random one.
+1. Keep a running set of every token id already in the chosen sample.
+2. Build a wishlist of 10 candidates. For each, draw a random batch of 32 reviews and keep the one that adds the most new token ids.
+3. From the wishlist add the review with the most new tokens to the sample, and update the running set.
+4. Repeat until the target size is reached. Target size is the larger of `max_samples` and 1% of the post-filter pool, capped at the current row count. If the target is not smaller than the pool, VGST is skipped.
+- *Why "variant":* a true greedy search would scan the whole dataset at every step, which is far too slow. Sampling small random batches approximates it cheaply.
+- *Why diversity:* reviews are repetitive ("great product, works well"). Random sampling spends training rows on near-duplicates. VGST spends them on varied language.
+- *Caveat 1:* "most new token ids" favours long reviews, because a long text simply contains more distinct tokens. In the demo, VGST picks average about 139 words against about 63 for random picks. Part of the "diversity" is length.
+- *Caveat 2:* the running set only grows, so late picks must be increasingly unusual, which drifts toward rare words and odd text.
+- *Caveat 3:* it measures vocabulary variety, not difficulty or meaning. We did not run training with and without VGST, so we cannot say it improves accuracy.
+
+### Step 4 — Oversample the neutral class
+Adds extra 3-star rows, drawn with replacement, so the 3-star count doubles (ratio 2.0).
+- *Why:* the paper says neutral is subtle and deliberately boosts it.
+- *Caveat:* the extras are exact duplicates. They add weight, not information, and can encourage memorising those reviews. They also nudge the model toward answering 3.
+
+### Step 5 — Cap
+If more than `max_samples` rows remain, shuffle and keep that many.
+- *Caveat:* a random cut after oversampling, so the final star mix is close to, but not exactly, equal. The exact rows used to train the committed adapter were not recorded.
+
+### Step 6 — Split and build the prompt
+Shuffle, split 80/20 into train and validation, and build a one-shot pool from the training part only (one random example per star where possible). Each row becomes a prompt and an answer.
+- *Prompt:* the task instruction ("1-2 negative, 3 neutral, 4-5 positive"), the line "Let's take it one step at a time.", one worked example, "Review to classify:" plus the review, and a request to end with a line starting "Sentiment (1-5):".
+- *Answer:* the rating and its description, for example "4. Users have a positive experience overall, with room for improvement (rating 4)."
+- *Why the full sentence and not a bare digit:* so training matches the format used at inference.
+
+### Step 7 — Tokenise and mask the prompt
+Prompt and answer are tokenised together, cut at 1,024 tokens. Every prompt token gets label -100, which means "ignore in the loss". So the model is graded only on the answer line, not on copying the prompt. Each batch is padded to its own longest example, which changes speed only, not the maths.
+- *Caveat:* the one-shot example comes from the training pool, so a training row can be shown its own review as the example.
+
+### One-sentence summary for the room
+"About 250 thousand raw reviews become about 2,000 that are label-clean by TextBlob, equal across stars, varied in vocabulary and boosted in neutral, and the model is then tested on raw, skewed reviews, which is a harder and more realistic job than the one it practised."
+
+### Is Phase 2 preprocessed the same way?
+No. Phase 2 does not train anything, so it skips TextBlob, VGST and oversampling. Its test rows are class-balanced, need product metadata and at least 20 characters of text, and are not filtered for sarcasm or mixed sentiment. Its Reflector is fit on 500 separate labelled dev rows and tested on 1,000 held-out rows. State this because it is a fair question: "why is the training data filtered but the test data not?" Answer: filtering the test set would remove exactly the hard cases we want to measure.
+
+---
+
+## Part 2c — Every metric explained, with one worked example
+
+### A toy example (10 reviews) you can put on the board
+| Review | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| True stars | 5 | 5 | 4 | 4 | 3 | 3 | 2 | 2 | 1 | 1 |
+| Predicted | 5 | 4 | 4 | 5 | 3 | 4 | 1 | 2 | 1 | 2 |
+
+Walk through every metric on this one table:
+
+**1. 5-class exact accuracy = 5 / 10 = 50%.** The prediction equals the true star in reviews 1, 3, 5, 8, 9. This is the strictest metric: predicting 4 when the truth is 5 is simply wrong. It answers "did the model pick the exact star?"
+
+**2. Within ±1 star = 10 / 10 = 100%.** Every miss was one star off. This answers "when it is wrong, is it nearly right?" For us it is about 92%, which shows nearly all of the errors are neighbouring-star swaps.
+
+**3. MAE (mean absolute error) = 0.5 stars.** Five misses of one star each, divided by 10. Lower is better. It treats a 1-versus-5 blunder (4 stars off) as eight times worse than a 4-versus-5 slip, which exact accuracy cannot see.
+
+**4. Polarity (3-class) = 9 / 10 = 90%.** Fold stars into three buckets: 1-2 negative, 3 neutral, 4-5 positive. Only review 6 (true 3, predicted 4) crosses a bucket. Swaps inside a bucket (5 versus 4, 2 versus 1) are forgiven. This is the paper's own bucket definition (§2.2). It answers "did we get the overall feeling right?"
+
+**5. Binary (3-star dropped) = 8 / 8 = 100%.** Remove neutral reviews, then ask positive versus negative only. This is the easiest framing and gives the highest numbers. Reviews 5 and 6 are removed here.
+
+**6. Precision, recall and F1 for one star.** Take 4-star:
+- Reviews predicted 4: numbers 2, 3, 6. Only review 3 really is 4, so *precision* = 1/3 (when it says 4, it is right a third of the time).
+- Reviews that really are 4: numbers 3 and 4. Only review 3 was caught, so *recall* = 1/2 (it finds half of the real 4-star reviews).
+- *F1* = 2 x (1/3 x 1/2) / (1/3 + 1/2) = 0.40. It is the harmonic mean, so it is low unless both precision and recall are decent.
+- **Macro-F1** averages F1 over the five stars with equal weight, so a weak rare class drags it down. **Weighted-F1** weights each star by how many reviews it has, so it follows the common stars.
+
+**7. Trivial baseline.** The score from always guessing the most common answer. In the toy table "always 5" would score 20%. On our paper-style test set 63.8% of reviews are 5-star, so always-5 scores 63.8% exact, and always-positive scores 78.6% polarity. A number only means something next to its baseline.
+
+### How the same model gives very different numbers
+Same predictions, different ruler. This is the central message of slide 8.
+
+| Metric | What counts as correct | Our LLaMA on the paper-style 4,000-row set | On our balanced 1,000-row set |
+|---|---|---|---|
+| 5-class exact | exact star | 70.7% | 60.1% (Phase 2: 65.2%) |
+| Within ±1 | off by at most 1 | 91.7% | 92.0% (Phase 2: 93.6%) |
+| Polarity (3-class) | right bucket | 85.0% | 79.2% (Phase 2: 81.1%) |
+| Binary | positive versus negative, 3-star dropped | not the paper-style headline | 90.8% (Phase 2: 93.8%) |
+| Trivial "always positive" | | 78.6% | 40% (4 and 5 stars are 2 of the 5 equal classes) |
+
+Two reasons the numbers move:
+1. **Coarser metric = higher number.** Exact, then polarity, then binary, are progressively more forgiving. The paper reports 92.6%, which our results suggest is a polarity-style number on a skewed test set, not a 5-class exact number.
+2. **Test set mix.** On a skewed set (64% 5-star) an easy majority class lifts every score. On a balanced set each star counts equally, so the hard middle stars show up. Balanced numbers are lower and more honest about weakness.
+
+**What to say:** "Our model's 85.0% polarity on the paper-style set is about the same as an SVM's 84.5%, so we did not reproduce the claim that LLaMA clearly beats classical models. On the harder balanced test the 5-class exact accuracy is 60%."
+
+### Which metric answers which question
+- *Is it basically right?* Polarity or binary.
+- *Is it exactly right?* 5-class exact.
+- *When wrong, how wrong?* Within ±1 and MAE.
+- *Is it fair to every star?* Per-star recall, and macro-F1.
+- *Is the score impressive?* Compare with the trivial baseline.
+
+### Likely questions on metrics
+- **"Why report so many?"** Because one number hides things. Exact accuracy alone makes a model that is nearly always one star off look bad. Polarity alone hides all star confusion.
+- **"Which is the real accuracy?"** For a 5-star task, 5-class exact on a balanced set. The others are supporting views.
+- **"Is 65% good?"** Against 20% chance on balanced classes, yes. Against 80% polarity-style claims in the literature, it is a different, harder measurement. Say which ruler you are using each time.
+- **"How do you know Phase 2's gain is real?"** Paired bootstrap on the same 1,000 held-out rows: +5.0 points, 95% confidence interval +2.5 to +7.4. It fixed 105 rows and broke 55 (McNemar p = 0.0001).
+
+---
+
+## Part 3 — Slide-by-slide script
+
+### Slide 1 — Title
+**Say:** "This project asks whether an LLM sentiment classifier can check itself the way a careful reviewer would. I'll show a faithful reproduction of a published baseline, what an agentic wrapper does to it, what we found when we audited our own system, and where we go next."
+**Explain:** The subtitle bar at the bottom is the roadmap of the talk: problem, baseline, agentic system, results, what we learned, reflective v2.
+**Caveat:** none yet.
+
+### Slide 2 — The problem: why single-pass LLMs fail
+**Say:** "A single pass has no second look. Three things go wrong: it can't check claims against evidence, it ignores context like images and product details, and it trips on sarcasm and mixed reviews."
+**Explain:** Example for each. *Claims:* "this watch isn't waterproof" could be a defect or a user mistake, and nothing in the prompt can settle it. *Context:* a one-line review next to a photo of a shattered screen. *Language:* "Amazing, it broke in two days" is negative but contains a positive word.
+**Transition:** "So the gap is a system that adds evidence and a review loop."
+**Likely question:** "Is that really a problem with 5-star ratings?" Answer: partly; the real measurable failure turns out to be neighbouring-star confusion (slides 19), which is what we target.
+
+### Slide 3 — Research question and gap
+**Say:** "The baseline is Wang et al. 2025: LLaMA-3-8B with LoRA on Amazon reviews, reporting 92.6% accuracy. It stops at a single pass, text only, no retrieval. We call those three gaps: gullibility (no evidence), critic (no auditing), and modality (text only)."
+**Explain:** The left panel is what the paper establishes: LoRA fine-tuning, TextBlob quality filtering, VGST sampling, one-shot plus chain-of-thought prompting. The right panel is what it leaves open.
+**Caveat:** "I'll show later that the 92.6% is hard to compare directly with our numbers."
+
+### Slide 4 — Data and experimental protocol
+**Say:** "Phase 1 trains and tests on the Kaggle reviews, around half a million rows, heavily skewed to 5-star. Phase 2 needs product metadata and images, which Kaggle does not have, so it uses Amazon Reviews 2023: All Beauty in Run 1 and Electronics in Run 2."
+**Explain:** The challenge on the Kaggle side is bias and noisy labels; the fix is the five-step pipeline on the next slide.
+**Caveat (important):** The Phase 1 adapter never saw Amazon 2023 data. So Phase 1 versus Phase 2 on that data is a transfer test, not a same-distribution test. Say this out loud.
+
+### Slide 5 — Phase 1 data preprocessing pipeline
+**Say:** "Five steps turn the raw corpus into a clean, balanced, diverse training pool."
+**Walk the steps:**
+1. *TextBlob DQC:* drop reviews whose polarity contradicts the rating. Cleaner labels. (Limit: it's a crude word-list scorer.)
+2. *Stratified sampling:* equal reviews per star. Removes the 5-star skew.
+3. *VGST:* greedy diversity selection. Keep the reviews that add the most new vocabulary, so the training set isn't full of repeats. (Explain batch 32, wishlist 10 if asked.)
+4. *Oversample neutral:* double 3-star reviews because neutral is the hardest class.
+5. *Cap:* shuffle and keep the first N rows.
+**Caveat:** "We implemented each step as the paper describes it. We did not run an ablation on any single step, so I'm claiming faithfulness, not that each step improves accuracy."
+**Likely question:** "Why does balancing matter?" Because trained on skewed data, the model learns to say 5 for everything and still looks accurate (64% of the data is 5-star).
+
+### Slide 6 — Phase 1: LLaMA-3-8B + LoRA fine-tuning
+**Say:** "We freeze the 8-billion-parameter model and learn a tiny correction, called LoRA. The formula h = Wx + BAx says the output equals the original layer plus a small low-rank update."
+**Explain with numbers:** With rank 4 applied to the query and value projections in the last three layers, about 160 thousand numbers are trained, roughly 0.002% of the model, and the saved adapter is about 640 KB. At the start B is zero, so the model begins identical to the base model.
+**Hyperparameters (right table):** learning rate 5e-5 with a cosine schedule, 3 epochs, batch 3 with gradient accumulation 4, rank 4, alpha 64, last 3 layers (29–31) on q_proj and v_proj, sequence length 1,024, 4-bit base weights.
+**Caveat:** "An earlier version of this slide listed a stronger configuration (rank 16, 8 layers). The audit showed that configuration was only ever a plan; the adapter we actually use matches the paper's Table 1, so the slide now says that." Also: "which rows the adapter trained on, and the exact count, were not recorded."
+
+### Slide 7 — Phase 1 baseline results (balanced evaluation)
+**Say:** "On a class-balanced set of 1,000 reviews, 200 per star, the model gets 60.1% exact, 92% within one star, and a mean error of half a star. Guessing would score 20%."
+**Explain:** Exact accuracy is a strict five-way test. Coarser views are much higher: 79.2% on three classes and 90.8% on binary (neutral dropped). The model reads direction well; what it struggles with is telling neighbouring stars apart.
+**Caveats:**
+- The paper's 92.6% used a different protocol (K=5 cross-validation, 128K training rows per fold, a separate 40K test set), so it is not a like-for-like comparison.
+- An earlier figure of 66.6% came from a skewed test set where always guessing 5-star already scores about 63%, so we don't use it.
+**Likely question:** "Why is this lower than the paper?" See slide 8.
+
+### Slide 8 — Reproducing the paper's claims
+**Say:** "Here are four models scored on the same 4,000 random held-out reviews, with the natural 64% five-star mix, using the paper's polarity buckets."
+**Walk the table:**
+- Always guessing the majority: 63.8% five-class, 78.6% polarity. Everything is judged against this.
+- Decision Tree 58.5 / 75.3, SVM 70.0 / 84.5, Naive Bayes 67.4 / 83.1 (the paper reports 78.6, 87.2, 87.6).
+- XLNet: not re-run; the paper's 91.6% is shown for reference.
+- Our LLaMA: 70.7% five-class, 85.0% polarity, against the paper's 92.6%.
+- Last row: with a class-balance correction, 79.9% and 92.0%.
+**The key insight:** the paper's classical baselines land close to our polarity numbers, not our five-class ones. That is the evidence that the paper's headline is a polarity-style number on a skewed test set. The remaining gap comes from training scale (the paper used up to 128K training rows per fold; our classical runs used 16K).
+**Explain the last row:** the adapter was trained on balanced data but the test set is 64% five-star, so a small correction shifts predictions toward 5-star. It is a class-balance fix, not better understanding of language. On the balanced set the same correction lowers accuracy (60.2% to 57.9%), which is how we know. Don't headline it.
+**Caveats (read from the slide):** training scale differs; community 4-bit base versus fp16 training weights; one-shot example chosen using the true rating; training rows not recorded; the correction row's definition.
+**Honest claim to make:** "LLaMA is level with SVM here. The paper's claim that it beats the classical models by four or five points does not reproduce at our scale."
+**Likely question:** "So did you reproduce the paper?" Answer: the method, yes, down to the hyperparameters. The headline number, no, and here is the evidence for why.
+
+### Slide 9 — Data scale: why the paper's numbers are higher
+**Say:** "We trained simple classifiers on 1,000 up to 128,000 reviews and scored them on the same 4,000 test rows."
+**Explain:** Each four-times increase in data adds about three to four points, and the curve is still rising at 128K. At the paper's scale a plain TF-IDF logistic regression reaches 90.4% polarity, close to the paper's 92.6%. Our LLaMA, trained on only 2–4K rows, beats the classical models at the same size.
+**Caveat:** classical models trained on the natural distribution, so part of their gain is learning the 64% five-star prior; our adapter was trained balanced.
+**What it means:** more training data is a real lever, which is why we plan a larger run. LLMs usually gain less per extra row than classical models, so expect a modest gain. We have not measured it for LLaMA.
+
+### Slide 10 — Phase 2: the multi-agent pipeline
+**Say:** "Phase 2 wraps the same model in three additional agents. The Analyst is the Phase 1 model giving a draft rating. The Visual Verifier looks at the product photo through a caption. The RAG Prover retrieves similar reviews or product specs. The Critic compares the votes."
+**Explain:** If the votes disagree enough (a score called dissonance reaches 0.4), the Critic writes specific feedback and the Analyst reruns, up to two more times.
+**Caveat:** "The Visual Verifier still runs but its vote is no longer used in the final decision; I'll explain why on the audit slide."
+**Run 1 fact:** 922 correction events across 669 high-disagreement samples.
+
+### Slide 11 — How disagreement triggers reflection
+**Say:** "The Critic turns three votes into a number. D is the standard deviation of the votes divided by two. If all agree, release. Low disagreement, majority vote. D at or above 0.4, the correction loop, at most twice."
+**Explain Run 1 numbers:** 922 events, 669 samples (33.5% of 2,000), mean dissonance 0.211, maximum 0.471.
+**Why a threshold:** correcting every sample would triple cost and risk changing correct answers.
+
+### Slide 12 — The comparison: does the agentic system improve? (Run 1)
+**Say:** "On 2,000 All Beauty reviews, accuracy went from 16.1% to 38.7%, macro-F1 from 0.095 to 0.273, and the average miss from 1.52 stars to 0.96, at 3.7 times the latency."
+**Caveat (must say):** This is a transfer setting: a Kaggle-trained model applied to a new category. The Phase 1 baseline collapsed (it heavily under-predicted), so the gain reads as "context and agents rescue a collapsed baseline", not a general twenty-point improvement.
+**Also true:** 491 errors recovered and 39 regressed.
+**Likely question:** "Why was the baseline so low here?" Different product category and vocabulary; the adapter had only ever seen Kaggle reviews.
+
+### Slide 13 — Where the improvement appears (confusion matrices)
+**Say:** "On the left, the baseline collapses onto a few ratings; four-star recall is only 6.6%. On the right, Phase 2 puts more weight on the diagonal."
+**Explain how to read a confusion matrix:** rows are the true star, columns are the predicted star; a perfect model has numbers only on the diagonal.
+**Note:** four-star remains hard in both. This foreshadows slide 19.
+
+### Slide 14 — Which ratings improve, and which remain difficult
+**Say:** "The biggest gain is on 3-star, from 45.8% to 97.9%. One-star and five-star also improve. Two-star and four-star barely move."
+**Explain:** per-class F1 on the left, gain per class on the right. n values: 147, 105, 190, 377, 1,181.
+**Caveat:** the 3-star jump is partly the system defaulting to 3 when unsure, so it is not purely better reading.
+
+### Slide 15 — Agent dissonance: where does reflection matter?
+**Say:** "Dissonance is a proxy for how hard a sample is. Gains show up at every level, not just where correction fired."
+**Numbers:** +23.9 points when agents agree, +36.0 at moderate disagreement, +11.7 where correction triggered.
+**Caveat (read the footer box):** the overall gain is not mainly from the correction loop; adding context (metadata and the caption) is the dominant observed mechanism, and no component-level ablation was run. Say this plainly.
+
+### Slide 16 — Why Phase 2 improves: three observed mechanisms
+**Say:** "Three mechanisms, stated as observations and not proven causes."
+1. *Context breaks rating collapse:* 90.2% of Phase 1 errors were under-predictions, and 288 of the 491 recoveries were a 3-star guess corrected to 5-star.
+2. *Multiple evidence sources reduce Analyst bias:* the Analyst alone was right on 64.9% of the samples Phase 2 got right; the RAG context lined up on 91.2%.
+3. *Self-correction targets ambiguity:* 922 events across 669 samples; +16.6 points on corrected samples versus +27.7 on uncorrected; 12.6 recoveries per regression.
+**Caveat:** the Visual Verifier's earlier 97.7% alignment figure is no longer shown because the later audit found its output nearly constant.
+
+### Slide 17 — Evaluation framework and latency trade-off
+**Say:** "Phase 2 costs 2.83 seconds per sample against 0.77, about 3.7 times, because it makes three to five model calls."
+**Explain:** the right panel lists the metrics: accuracy, F1 and MAE for both phases; dissonance, per-agent votes and error recovery for Phase 2 only.
+**Honest point:** latency is a cost of Phase 2. The next design reduces it by only reflecting on uncertain rows.
+
+### Slide 18 — What the audit found and fixed
+**Say:** "We then audited our own system on a second dataset (Electronics) and found it had regressed: 46.4% versus the baseline's 50.95%. We traced four real defects."
+1. *Over-triggered correction:* a rule meant to flag poor grounding forced reflection whenever retrieval looked weak, even when the agents agreed. It fired on 78.6% of rows. Now only real vote disagreement triggers it.
+2. *Tie-break favoured the weak vote:* when two agents disagreed, the weaker retrieval vote overruled a correct Analyst about half the time (retrieval alone 37.5% versus Analyst 54.2%). Ties now go to the Analyst.
+3. *Prompt missing framing:* the retrieval agent lacked the one-shot and chain-of-thought framing; adding it raised its standalone accuracy from 37.5% to 46.9%.
+4. *Visual Verifier constant:* it returned 3 stars on all 96 real test rows. A caption describes what the product is, not whether the buyer is happy. We tried three different vision models; all failed the same way, so its vote is excluded (still logged).
+**Result:** before the fixes, net minus 91 on rows that triggered correction. After the fixes, on a 96-row real check: 52.08% to 54.17%, nine fixed, seven regressed, net plus two.
+**Caveat:** 96 rows is small; treat it as directional.
+
+### Slide 19 — Where the remaining errors live
+**Say:** "Exact accuracy is 60.1%, but three-class is 79.2%, binary 90.8%, and within one star 92%. The errors are swaps between neighbours."
+**Walk the per-star table (balanced eval):**
+- 2-star is weakest: recall 0.34, and 46% of 2-star reviews get called 1-star.
+- 3-star drifts to 2-star (22%), 4-star to 5-star (28%).
+- 1-star and 5-star are fine (F1 0.70 and 0.72).
+- Macro-F1 0.588. Same pattern on the 4,000-row set (2-star recall 0.36, macro-F1 0.548).
+**Why it matters:** in the first Phase 2 design the Critic override reached only 0.4% of rows, so reflection barely touched these cases. That is the headroom.
+**Also true:** the model is not overconfident; on 4,000 rows no prediction reached 0.9 probability, so the issue is not confident hallucination.
+
+### Slide 20 — Reflective orchestration v2
+**Say:** "The redesign makes self-reflection the core mechanism and aims it where the errors are."
+1. *Analyst:* rating plus the full probability over 1–5.
+2. *Uncertainty gate:* if the top two ratings are close, reflect; if confident, release.
+3. *Reflector:* critiques the draft against the star rubric and weighs evidence for the two neighbouring ratings.
+4. *Adjudicator:* a binary decision between the two candidates (for example 3 versus 4). We are training a small specialised model for this.
+5. *Loop control:* at most two rounds.
+Plus *reflection memory:* lessons from corrected mistakes stored and retrieved as guidance.
+**Why it should work:** the correct star is in the model's top two on 88–89% of rows, so the headroom is almost entirely a choice between two neighbours.
+**The honest bar:** inside the gate the baseline already picks the right one of two about 60% of the time. The adjudicator must beat that clearly (about 68–70%) or it adds nothing.
+**Status (say this):** design locked; training of the adjudicator is in progress; no results claimed yet.
+
+### Slide 21 — Conclusion and future work
+**Say:** "Phase 1 is a faithful, paper-aligned baseline; the method reproduces but the headline does not, and we know why. Phase 2 is hardened and slightly net-positive after the audit. The next step is reflection aimed at neighbouring-star confusion."
+**Future work:** reflective orchestration v2; more Phase 1 training data; ordinal metrics alongside exact accuracy; latency optimisation.
+**Close:** "The main lesson is that how you measure matters as much as the model: the same predictions score 60%, 70%, 85% or 92% depending on the test set and the metric."
+
+### Slide 22 — Appendix: run card (backup)
+Use only if asked how a number was produced. It lists the model, inference setup, test set and caveats. Full detail in `v2_reflective/PHASE1_RUN_CARD.md`.
+
+---
+
+## Part 4 — Question bank
+
+**Why isn't your accuracy 92.6% like the paper?**
+Different protocol. The paper's accuracy appears to be polarity-style on a skewed test set, trained on much more data. Under the same polarity scoring on the same rows we get 85.0%, and the classical baselines also land below the paper's values. The remaining gap is mostly training scale.
+
+**Is the 79.9% / 92.0% result just cheating?**
+It is a class-balance correction fit by cross-validation. It is legitimate for a skewed deployment distribution, and we disclose it. It is not better language understanding; on the balanced set it lowers accuracy.
+
+**What is VGST and did it help?**
+A greedy method to choose diverse training reviews: from small random batches it picks the review that adds the most new vocabulary, repeated to fill a wishlist. We implemented it as the paper describes. We did not test it against random sampling, so we do not claim it helps accuracy.
+
+**Why does TextBlob filtering make sense when it is so crude?**
+It is a cheap consistency check: it removes the clearest cases where the star rating contradicts the words. It also removes sarcasm, so the training data is somewhat easier than real data.
+
+**Why LoRA instead of full fine-tuning?**
+Full fine-tuning needs to update eight billion numbers. LoRA trains about 160 thousand, fits on a small GPU, and saves a 640 KB file. The paper uses it.
+
+**Why only the last three layers and only q and v?**
+That is the paper's Table 1 configuration. We kept it to reproduce the method. A stronger configuration exists as a plan but was never trained.
+
+**Does self-correction actually help?**
+In Run 1 the overall gain came mostly from added context, and no ablation isolated the correction loop. After the audit fixes the net effect is slightly positive on a 96-row check. That is why the next design changes what triggers reflection.
+
+**Why did you drop the Visual Verifier?**
+It returned a constant rating regardless of the image, with three different vision approaches. A product photo mostly shows the product looking normal; dissatisfaction usually comes from things a photo cannot show. It still runs and is logged.
+
+**What are the "hallucinations" you mention?**
+We have not yet measured generated-reasoning hallucination. What we measured: the model is not overconfident (no prediction reached 0.9 probability on 4,000 rows), and its errors are neighbour swaps. Case studies of invented details in the reasoning text are planned from a 200-row generation sample.
+
+**Why train on balanced data but test on skewed?**
+The paper's protocol does both. Balanced training prevents the model from always answering 5; skewed testing reflects real data. The side effect is the gap that the class-balance correction recovers.
+
+**Would more training data help?**
+Probably a little. Classical models gain about 3 to 4 points per four-times more data. LLMs usually gain less. We have not measured it for LLaMA. A local 2,000-row retrain is queued, but it is a reproduction check of the committed adapter, not an improvement test; a real data-scale test needs a larger run.
+
+**What does "answer-only loss" mean?**
+During fine-tuning the model can be scored on every token or only on the answer. The original Phase 1 training already scored only the answer (prompt tokens are masked). Our early local experiments on the Mac did not, so they were weaker. The new local runs mask the prompt like the original, which makes them a fair reproduction rather than a new improvement.
+
+**What is the adjudicator?**
+A small fine-tuned model that answers one question: "is this review N stars or N+1?" It is trained on neighbouring pairs, and the plan is to call it only when the main model is torn between two ratings.
+
+**What would make Phase 2 fail?**
+If the adjudicator cannot beat the main model's roughly 60% pick rate between its top two choices. We test that first, and we report the result either way.
+
+**Latency?**
+Phase 2 is slower (3.7 times in Run 1). The next design only reflects on uncertain rows, roughly two thirds of rows at most.
+
+**Why is Run 2 lower than Run 1?**
+Different dataset, different baseline behaviour, and the Run 2 pipeline had the defects described on slide 18. Run 1's baseline had collapsed, which exaggerated the gain.
+
+**Is your LLM judge too strict? Did you try a second judge?**
+Yes. Qwen2.5-7B-Instruct as a second judge rejected every explanation, under two prompts, so it could not referee (logged as a failure, no test read). It flags the stated star and the agent shares as "not in the review", which shows the judge prompt does not say those parts come from the system. Whether our Llama judge is too strict is being settled by a human check of 50 explanations.
+
+**What are the limits of your evidence?**
+Small test sets for some checks (96 and 300 rows), a community 4-bit base, a one-shot example chosen with the true rating, unrecorded training rows, and no ablations of VGST or the quality filter.
+
+---
+
+## Part 5 — Caveats checklist (say each at least once)
+1. Phase 1 applied to Amazon 2023 is a transfer test.
+2. 60.1% is on a balanced set; the paper's 92.6% used a different protocol and looks polarity-style.
+3. Run 1's 16.1% to 38.7% started from a collapsed baseline and is not a general claim.
+4. The correction loop's contribution was not isolated by an ablation.
+5. The post-fix result is 96 rows, so directional.
+6. The class-balance correction is a prior fix, not better understanding.
+7. The 4-bit community base differs from the fp16 weights used in training.
+8. The one-shot example is chosen using the true rating (mild label leak).
+9. VGST and the TextBlob filter were implemented as in the paper but not ablated.
+10. v2 (reflective orchestration) is a design; no results claimed yet.
+
+## Part 6 — Numbers cheat sheet
+
+| Item | Value |
+|---|---|
+| Paper (Wang et al.) accuracy / precision / F1 | 92.6% / 95.3% / 93.3% |
+| Our LLaMA, paper-style test (4,000 rows) | 70.7% exact, 85.0% polarity, 91.7% within-1, MAE 0.422 |
+| Trivial baselines on that test | 63.8% (always 5), 78.6% (always positive) |
+| Our LLaMA, balanced eval (1,000 rows) | 60.1% exact, 92.0% within-1, MAE 0.505, 79.2% 3-class, 90.8% binary |
+| Classical baselines, paper-style test | DT 58.5 / 75.3, SVM 70.0 / 84.5, NB 67.4 / 83.1 (exact / polarity) |
+| Logistic regression at 128K rows | 78.7% exact, 90.4% polarity |
+| Class-balance correction on LLaMA | 79.9% exact, 92.0% polarity (balanced eval drops 60.2% to 57.9%) |
+| Per-star recall, balanced eval | 1★ 0.86, 2★ 0.34, 3★ 0.59, 4★ 0.47, 5★ 0.75 |
+| Macro-F1 | 0.588 (balanced), 0.548 (paper-style test) |
+| Correct star in model's top two | 88.4% (dev) / 89.0% (eval) |
+| Run 1 (All Beauty, 2,000 rows) | accuracy 16.1% to 38.7%, macro-F1 0.095 to 0.273, MAE 1.52 to 0.96, latency 0.77 s to 2.83 s |
+| Run 1 recovery | 491 fixed, 39 regressed; 922 correction events over 669 samples (33.5%) |
+| Run 2 (Electronics) before fixes | text-only 50.95%, full graph 46.40% |
+| After fixes (96 real rows) | 52.08% to 54.17%, 9 fixed, 7 regressed |
+| LoRA | r 4, alpha 64, layers 29–31, q and v, about 160K parameters, about 640 KB |
+| Training | lr 5e-5, 3 epochs, batch 3 x 4, fp16, cosine |
+| Dissonance | D = std(votes) / 2; threshold 0.4; at most 2 corrections |
+| Vector DB | 7,301 spec snippets, 489 Electronics products |

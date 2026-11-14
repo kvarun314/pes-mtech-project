@@ -1,0 +1,4 @@
+train  11250: val exact 0.5346 macroF1 0.5331
+train  22500: val exact 0.5494 macroF1 0.5475
+train  45000: val exact 0.5516 macroF1 0.5502
+train  90000: val exact 0.5679 macroF1 0.5664

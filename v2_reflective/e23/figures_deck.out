@@ -1,0 +1,16 @@
+eval main-stack confusion:
+ [[144  48   7   1   0]
+ [ 38 115  46   1   0]
+ [ 14  48 114  24   0]
+ [  0   3  32 126  39]
+ [  0   0   1  23 176]]
+natural_test main-stack confusion:
+ [[ 138   42    6    2    1]
+ [  25   42   15    1    0]
+ [  12   35   84   18    1]
+ [   0    5   32  184   56]
+ [   4    1   19  165 1112]]
+eval recall P1 [0.635 0.39  0.48  0.635 0.56 ] main [0.72  0.575 0.57  0.63  0.88 ]
+natural_test recall P1 [0.656 0.422 0.5   0.715 0.49 ] main [0.73  0.506 0.56  0.664 0.855]
+length quartile acc {'evid': array([70. , 66.7, 57.4, 55.8]), 'probe': array([54.6, 67.1, 59.4, 64.3]), 'main': array([71.2, 68.8, 63.7, 66.3])}
+agree share / stack acc agree / disagree: stack, evid, probe [('eval', np.float64(64.2), np.float64(72.9), np.float64(57.8), np.float64(42.7), np.float64(39.1)), ('natural_test', np.float64(72.0), np.float64(84.2), np.float64(62.0), np.float64(35.7), np.float64(50.1))]

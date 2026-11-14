@@ -1,0 +1,25 @@
+===== dev n=500
+enc2k    : exact 52.6% macroF1 0.519 recall [0.67, 0.35, 0.46, 0.39, 0.76]
+R        : exact 55.2% macroF1 0.554 recall [0.69, 0.37, 0.45, 0.69, 0.56]
+base     : exact 36.2% macroF1 0.281 recall [0.64, 0.01, 0.89, 0.25, 0.02]
+Evidence : exact 58.6% macroF1 0.586 recall [0.69, 0.44, 0.47, 0.57, 0.76]
+===== eval n=1000
+enc2k    : exact 52.8% macroF1 0.522 recall [0.64, 0.38, 0.43, 0.42, 0.77]
+R        : exact 54.0% macroF1 0.543 recall [0.64, 0.39, 0.48, 0.64, 0.56]
+base     : exact 34.3% macroF1 0.269 recall [0.57, 0.03, 0.84, 0.26, 0.02]
+Evidence : exact 62.4% macroF1 0.622 recall [0.73, 0.49, 0.52, 0.59, 0.78]
+   enc2k vs arm R: -1.2 [-5.0,+2.2] fixed 172/regressed 184 p=0.56
+[enc2k+E]: exact 61.6% macroF1 0.613 recall [0.73, 0.48, 0.5, 0.58, 0.78]
+[R+E]    : exact 63.9% macroF1 0.638 recall [0.69, 0.56, 0.51, 0.63, 0.81]
+   [enc2k+E] vs Evidence: -0.8 [-3.2,+1.6] fixed 71/regressed 79 p=0.57
+   [enc2k+E] vs [R+E]: -2.3 [-4.7,+0.1] fixed 67/regressed 90 p=0.079
+===== natural_test n=2000
+enc2k    : exact 62.5% macroF1 0.462 recall [0.63, 0.4, 0.37, 0.37, 0.72]
+R        : exact 53.4% macroF1 0.488 recall [0.66, 0.42, 0.5, 0.71, 0.49]
+base     : exact 16.8% macroF1 0.212 recall [0.59, 0.01, 0.88, 0.21, 0.03]
+Evidence : exact 69.3% macroF1 0.541 recall [0.67, 0.43, 0.44, 0.56, 0.77]
+   enc2k vs arm R: +9.0 [+6.3,+11.8] fixed 472/regressed 291 p=5.9e-11
+[enc2k+E]: exact 70.2% macroF1 0.536 recall [0.66, 0.43, 0.42, 0.53, 0.79]
+[R+E]    : exact 73.4% macroF1 0.577 recall [0.67, 0.41, 0.49, 0.64, 0.81]
+   [enc2k+E] vs Evidence: +0.9 [-0.5,+2.2] fixed 111/regressed 94 p=0.26
+   [enc2k+E] vs [R+E]: -3.2 [-4.9,-1.6] fixed 110/regressed 174 p=0.00017

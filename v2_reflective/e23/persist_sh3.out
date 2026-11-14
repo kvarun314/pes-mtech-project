@@ -1,0 +1,3 @@
+eval: SH3 exact 0.6750 (D1 readout 0.675)
+natural_test: SH3 exact 0.7800 (D1 readout 0.78)
+saved v2_reflective/e23/agents/reflector3.joblib

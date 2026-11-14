@@ -1,0 +1,4 @@
+dev2: still unfaithful after 4 rounds 43; fallback passes the Critic 27 (62.8%); judge unparsed 0
+faithful: max-4 0.914  max-4 + fallback 0.968  | McNemar fixed 27 broken 0 p 1.5e-08
+explanations from the fallback: 27/500 (5.4%); still failing, by check: {1: 0, 2: 0, 3: 0, 4: 0, 5: 16}
+GATE (fallback passes >= 30 of the 43): FAIL

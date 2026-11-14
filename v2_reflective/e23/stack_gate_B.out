@@ -1,0 +1,20 @@
+=== dev 5-fold CV (3 repeats averaged)
+S0 A+E             exact 0.640 macroF1 0.640
+S1 A+E+E2(emb)     exact 0.627 macroF1 0.626
+S2 A+E+E3(char)    exact 0.631 macroF1 0.630
+S3 A+E+E2+E3       exact 0.619 macroF1 0.617
+=== natural_dev 5-fold CV (3 repeats averaged)
+S0 A+E             exact 0.804 macroF1 0.558
+S1 A+E+E2(emb)     exact 0.805 macroF1 0.604
+S2 A+E+E3(char)    exact 0.779 macroF1 0.520
+S3 A+E+E2+E3       exact 0.788 macroF1 0.568
+single agent evid on dev: exact 0.586
+single agent evid on natural_dev: exact 0.714
+single agent evid2 on dev: exact 0.534
+single agent evid2 on natural_dev: exact 0.612
+single agent evid3 on dev: exact 0.568
+single agent evid3 on natural_dev: exact 0.684
+=== GATE (pass: exact >= S0+0.010 on dev AND >= S0 on natural_dev AND dev macroF1 >= S0)
+S1 A+E+E2(emb) FAIL
+S2 A+E+E3(char) FAIL
+S3 A+E+E2+E3 FAIL

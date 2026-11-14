@@ -1,0 +1,12 @@
+resume: 0 done of 62
+10/62 325s
+20/62 656s
+30/62 996s
+40/62 1334s
+50/62 1663s
+60/62 2025s
+dev2: still unfaithful after 2 rounds 62; fixed by rounds 3-4 19 (30.6%); rounds 0-2 reproduced exactly 62/62
+faithful: first 0.640  max-2 0.876  max-4 0.914  | max-4 vs max-2 McNemar fixed 19 broken 0 p 3.8e-06
+extra LLM calls per re-run review 2.69; per review over the split 0.33
+still failing after round 4, by check: {1: 1, 2: 15, 3: 10, 4: 0, 5: 22}
+GATE (>= 15 of the 62 fixed): PASS

@@ -75,11 +75,13 @@ class _FakeSpecStore:
         return 0.1
 
 
-def test_graph_uses_real_grounding_score_for_dissonance_when_spec_store_present():
-    # Everyone (Analyst, Visual, RAG-sentiment-vote) agrees on a 5, so the
-    # sentiment-agreement term is 0. The ungrounded claim (grounding_score=0.1)
-    # must still force dissonance up via the independent penalty max(d, 1-Gf),
-    # not get averaged away: max(0.0, 1 - 0.1) = 0.9.
+def test_graph_grounding_does_not_force_dissonance_when_votes_agree():
+    # Run 2 regression (docs/PROGRESS.md 2026-10-09): a floor of
+    # max(d, 1-Gf) forced correction on 78.6% of rows because real-data
+    # grounding averages ~0.29, net -91 accuracy vs. not correcting.
+    # Everyone (Analyst, Visual, RAG-sentiment-vote) agrees on a 5, so
+    # dissonance must stay 0 even though the claim is ungrounded
+    # (grounding_score=0.1) -- grounding is reported, not a trigger.
     llm = _make_stub_llm({"Analyst": 5, "Visual": 5, "RAG": 5, "Critique": 5})
     graph = build_graph(llm_fn=llm, spec_store=_FakeSpecStore(), max_correction_iters=0)
 
@@ -91,16 +93,13 @@ def test_graph_uses_real_grounding_score_for_dissonance_when_spec_store_present(
     })
 
     assert result["rag_grounding"] == 0.1
-    assert result["dissonance"] == pytest.approx(0.9)
-    assert result["dissonance"] >= 0.4
+    assert result["dissonance"] == pytest.approx(0.0)
+    assert result["self_corrected"] is False
 
 
-def test_graph_grounding_penalty_fires_even_on_unanimous_negative_rating():
-    # Regression: averaging Gf with H/Ev (the pre-fix formula) made a
-    # unanimous NEGATIVE rating with an UNGROUNDED claim score dissonance
-    # 0.0 (backwards -- an ungrounded claim should raise suspicion
-    # regardless of which direction the rating leans). With the fix, the
-    # grounding penalty is independent of sentiment direction.
+def test_graph_grounding_does_not_force_dissonance_on_unanimous_negative_rating():
+    # Same as above, mirrored on a unanimous negative rating -- grounding
+    # must not push dissonance up regardless of sentiment direction.
     llm = _make_stub_llm({"Analyst": 1, "Visual": 1, "RAG": 1, "Critique": 1})
     graph = build_graph(llm_fn=llm, spec_store=_FakeSpecStore(), max_correction_iters=0)
 
@@ -111,8 +110,9 @@ def test_graph_grounding_penalty_fires_even_on_unanimous_negative_rating():
         "correction_iters": 0, "max_correction_iters": 0,
     })
 
-    assert result["dissonance"] == pytest.approx(0.9)
-    assert result["dissonance"] >= 0.4
+    assert result["rag_grounding"] == 0.1
+    assert result["dissonance"] == pytest.approx(0.0)
+    assert result["self_corrected"] is False
 
 
 def test_graph_grounding_does_not_mask_real_vote_disagreement():
@@ -140,14 +140,18 @@ def test_graph_grounding_does_not_mask_real_vote_disagreement():
     assert result["dissonance"] == pytest.approx(1.0)
 
 
-def test_critique_mentions_grounding_mismatch_when_ungrounded():
+def test_critique_mentions_grounding_mismatch_when_correction_fires_for_real_disagreement():
+    # Grounding alone can no longer trigger correction, so this needs a
+    # real vote disagreement (Analyst=1, Visual=5, RAG=1 ->
+    # dissonance_norm(0, 1, 0) = 0.5 >= threshold) to fire the critique --
+    # the low grounding score (0.1) still rides along as context in it.
     seen_critique_prompt = {"text": None}
+    llm = _make_stub_llm({"Analyst": 1, "Visual": 5, "RAG": 1, "Critique": 1})
 
     def llm_fn(prompt: str) -> str:
         if "Critique" in prompt:
             seen_critique_prompt["text"] = prompt
-            return "Reconsider: this may be a user-expectation mismatch, not a defect."
-        return "Sentiment (1-5): 5. stub."
+        return llm(prompt)
 
     graph = build_graph(llm_fn=llm_fn, spec_store=_FakeSpecStore(), max_correction_iters=1)
     graph.invoke({

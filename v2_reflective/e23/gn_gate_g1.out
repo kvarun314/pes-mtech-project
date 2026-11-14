@@ -1,0 +1,16 @@
+GATE {
+ "dev2_cv_SH": 0.642,
+ "dev2_cv": {
+  "G1": 0.6205
+ },
+ "chosen": "G1",
+ "dev2_cv_diff": -0.0215,
+ "dev2_cv_ci": [
+  -0.038,
+  -0.005987500000000012
+ ],
+ "natural_dev_SH": 0.784,
+ "natural_dev_cand": 0.756,
+ "pass": false
+}
+FAIL: no test read

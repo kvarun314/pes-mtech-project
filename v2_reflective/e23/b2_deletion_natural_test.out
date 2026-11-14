@@ -1,0 +1,22 @@
+Loading weights:   0%|          | 0/202 [00:00<?, ?it/s]Loading weights: 100%|██████████| 202/202 [00:00<00:00, 6547.78it/s]
+100 rows, 476s
+200 rows, 1079s
+300 rows, 1713s
+400 rows, 2275s
+500 rows, 2807s
+600 rows, 3302s
+700 rows, 3803s
+800 rows, 4303s
+900 rows, 4815s
+1000 rows, 5354s
+1100 rows, 5891s
+1200 rows, 6306s
+1300 rows, 6728s
+1400 rows, 7204s
+1500 rows, 7679s
+1600 rows, 8199s
+1700 rows, 8651s
+1800 rows, 9145s
+1900 rows, 9620s
+2000 rows, 10081s
+done v2_reflective/e23/b2/deletion_natural_test.jsonl

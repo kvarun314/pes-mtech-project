@@ -1,0 +1,32 @@
+{
+ "phase1": {
+  "n": 150.0,
+  "distinct_share": 0.03333333333333333,
+  "star_consistent": 1.0,
+  "grounded_in_review": 0.0,
+  "judge_no_unsupported": 0.8533333333333334,
+  "judge_unparsed": 0.0,
+  "mean_words": 12.0,
+  "template_repeats": 0.5466666666666666
+ },
+ "phase2": {
+  "n": 150.0,
+  "distinct_share": 1.0,
+  "star_consistent": 0.9933333333333333,
+  "grounded_in_review": 0.7533333333333333,
+  "judge_no_unsupported": 0.9333333333333333,
+  "judge_unparsed": 0.0,
+  "mean_words": 35.64666666666667,
+  "template_repeats": 0.0
+ },
+ "mcnemar_grounded": {
+  "p2_only": 113,
+  "p1_only": 0,
+  "p": 1.925929944387236e-34
+ },
+ "mcnemar_judge_ok": {
+  "p2_only": 17,
+  "p1_only": 5,
+  "p": 0.01690053939819336
+ }
+}

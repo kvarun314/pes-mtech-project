@@ -1,0 +1,6 @@
+eval: S0 exact 63.9 F1 0.638 pol 82.4 | D2 exact 62.0 F1 0.617 pol 80.5
+   D2-S0 exact -1.9 CI [-4.1  0.3] fixed 56 regressed 75 McNemar p 0.12; polarity -1.9 CI [-3.  -0.8]
+   per-class recall S0 [0.69, 0.56, 0.51, 0.63, 0.81] D2 [0.55, 0.63, 0.47, 0.53, 0.92]
+natural_test: S0 exact 73.4 F1 0.577 pol 90.7 | D2 exact 75.0 F1 0.570 pol 91.2
+   D2-S0 exact +1.6 CI [0.1 3. ] fixed 128 regressed 96 McNemar p 0.038; polarity +0.5 CI [-0.1  1.1]
+   per-class recall S0 [0.67, 0.41, 0.49, 0.64, 0.81] D2 [0.54, 0.51, 0.49, 0.52, 0.88]
