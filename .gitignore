@@ -77,3 +77,6 @@ v2_reflective/e23/deb3s*_probs.jsonl
 # SH3 adoption (2026-11-10): explanation outputs of the previous two-agent main stack, archived
 v2_reflective/e23/b2_sh2/
 v2_reflective/e23/agents/deberta/
+
+# decks are never committed (CLAUDE.md)
+*.pptx
