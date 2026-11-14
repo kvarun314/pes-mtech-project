@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /Users/varunk/Documents/PES_Project_Phase1/pes-mtech-project
+cd /Users/varunk/PES_Project_Phase1/pes-mtech-project
 P=.venv/bin/python
 for A in P R; do
   $P -m mlx_lm lora --config v2_reflective/e23/p1/config_$A.yaml > v2_reflective/e23/p1/train_$A.log 2>&1
