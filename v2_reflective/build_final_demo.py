@@ -3,7 +3,7 @@ Run: .venv/bin/python v2_reflective/build_final_demo.py   (then check: .venv/bin
 import nbformat as nbf
 nb = nbf.v4.new_notebook(); C = []
 md = lambda s: C.append(nbf.v4.new_markdown_cell(s.strip("\n"))); code = lambda s: C.append(nbf.v4.new_code_cell(s.strip("\n")))
-md("# Agentic sentiment on Amazon Reviews 2023 Electronics — final demo\nPhase 1 (baseline paper) and Phase 2 (agents) run live on five reviews; every paper number below is read from the frozen result files.")
+md("# Agentic sentiment on Amazon Reviews 2023 Electronics — final demo\nPhase 1 (the reference paper we chose, reproduced and explored) and Phase 2 (agents) run live on five reviews; every paper number below is read from the frozen result files.")
 code("""
 import os, sys, json, time; os.chdir(os.path.abspath(os.path.join(os.getcwd(), "..")) if os.path.basename(os.getcwd()) == "presentation" else os.getcwd()); sys.path.insert(0, "src")
 import numpy as np, joblib
@@ -14,7 +14,7 @@ T0 = time.time(); rows = {json.loads(l)["review_id"]: json.loads(l) for l in ope
 ids = cached("demo_ids", pick_demo_ids); R = [rows[i] for i in ids]
 for r in R: print(f"{r['gt_rating']}★  {r['review_text'][:140]}")
 """)
-md("## 1. Phase 1 — the baseline paper's data pipeline (20-row toy table)")
+md("## 1. Phase 1 — the reference paper's data pipeline (20-row toy table)")
 code("""
 from agentic_sentiment.phase1.data.sampling import filter_by_textblob_polarity, stratified_sample, oversample_neutral
 import random

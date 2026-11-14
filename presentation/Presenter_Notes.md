@@ -3,7 +3,7 @@
 ## Part 0 — Current deck (25 slides). READ THIS FIRST
 
 Deck: `PES_Project_Phase1/Agentic_LLaMA3_Presentation.pptx`, the only current deck, built by `v2_reflective/build_deck_e23.py`. Google Slides (always current): https://docs.google.com/presentation/d/1V08iho4p7gdllKPxRVroaPhj6oo8Km1_/edit
-**Flow (as agreed 2026-10-25):** Intro → Phase 1, the baseline paper (what it does) → its shortcomings → Phase 2 intro → in depth → how it solves the problem → results of Phase 1 → results of Phase 2 → in depth → conclusions. At most 25 slides.
+**Flow (as agreed 2026-10-25):** Intro → Phase 1, the reference paper (what it does) → its shortcomings → Phase 2 intro → in depth → how it solves the problem → results of Phase 1 → results of Phase 2 → in depth → conclusions. At most 25 slides.
 **Slide numbers and short scripts:** `deck_slide_map.md`, next to this file. It is regenerated on every build from the speaker notes, so it always matches the deck. This part gives the longer scripts in the same order.
 Slides no longer in the deck (Run 1 historical, Kaggle baseline, dissonance Critic, first stack, nine-lines summary, code map, workflow) are still in `PES_Project_Phase1/old_decks/` and stay defined in the builder. Parts 1–6 below are for the older v3 deck; use them only for the glossary and metric explanations. Full history: `Project_Journey.md`. Code: `V2_Reflective_Guide.md`.
 
@@ -27,7 +27,7 @@ Use these when explaining or when someone asks what a word means.
 |---|---|
 | LLaMA-3-8B | Meta's open large language model (8 billion parameters); the base model in both phases |
 | LoRA | Small add-on weights trained on top of a frozen model, so fine-tuning is cheap (Phase 1) |
-| Phase 1 LoRA | LLaMA-3-8B + LoRA trained to output the star: the baseline paper's method |
+| Phase 1 LoRA | LLaMA-3-8B + LoRA trained to output the star: the reference paper's method |
 | Frozen model | Used as-is, never retrained |
 | Hidden state (layer 20) | LLaMA's internal numeric summary of the review, halfway through the network |
 | LLaMA probe | Small classifier that reads the layer-20 hidden state and outputs 1–5★ probabilities |
@@ -60,7 +60,8 @@ Use these when explaining or when someone asks what a word means.
 | Faithfulness | Explanation states the right star and only uses evidence that is really in the review |
 | Deletion test | Remove the cited phrases vs random words: if confidence drops more, the explanation points at what mattered |
 
-### 2. Phase 1, the baseline paper: what it does and why it falls short (slides 3–6)
+### 2. Phase 1, the reference paper: what it does and why it falls short (slides 3–6)
+- **Framing (say it this way):** "We chose this paper as our reference. Phase 1 is our reproduction of it and our exploration of where it holds and where it does not. Phase 2 is what we built from what we learned." Call it the reference paper, not "the baseline".
 - **The paper we chose:** Wang et al. (2025). Walk the four cards:
   - **Task:** one model rates a review 1–5★ and justifies it.
   - **Data:** TextBlob cleaning, equal reviews per star, varied wording (VGST), extra neutral reviews.
@@ -99,7 +100,7 @@ Start with the data line in the subtitle. It answers any leakage question:
 - Splits drawn once and disjoint by review id and exact text.
 - Every choice made on dev; test sets read once.
 
-"This is the baseline paper's method on our data, leak-free."
+"This is the reference paper's method on our data, leak-free."
 - Exact star 54.0 / 53.4, but within one star about 94% and positive vs negative 91–93%. It gets the direction right.
 - On the paper's own Kaggle data with its protocol and no leak: 69.1% (always guessing 5★ gives 63.8%).
 - The paper's 92.6% used K=5 cross-validation and a 40K test set.
@@ -154,6 +155,7 @@ Start with the data line in the subtitle. It answers any leakage question:
 - **Numbers (three-agent stack):** faithful first drafts 62.3% (eval) / 63.7% (natural); after the loop 90.5% / 91.6%. 282 + 559 fixed, 0 broken; McNemar p < 1e-84. About 3.0 LLM calls per review. The previous two-agent stack reached 90.6% / 91.1%. A fixed-form fallback for the rest (I3) failed its dev2 check.
 - **Deletion test (right):** removing the cited phrases lowers the stack's confidence by .156 vs .077 for random words (eval) and .209 vs .119 (natural); keeping only the cited phrases holds .521 vs .301 and .616 vs .349. p < 1e-54 everywhere.
 - **Phase 1 comparison (left, small text):** same 150 reviews, same judge: Phase 1's justification never quotes the review (0% vs 75%), is one of 5 stock sentences (3% distinct vs 100%), and Phase 2 is judged free of unsupported claims 93% of the time (17 vs 5 cases where only one passes, p .017).
+- **Worked example (bottom strip, from the live demo):** a 2★ backpack review, rated 2★. Walk it left to right: the evidence pack (for: "disappointing", "Poor", "lacks"; against: "great", "easy"); draft 1 claims "Poor quality", which the review does not say, so the Critic asks to remove it; draft 2 drops it but quotes too few key phrases, so the Critic asks for at least 2; draft 3 quotes the review and passes. Say: "This is what the 62% to 91% means for one review." The demo (section 4) shows the same example live.
 - **Be open:** about 9% of final explanations still fail a check (mostly the LLM judge); they are labelled, not hidden. The judge is the same Llama-3-8B-Instruct model that writes the explanation; the deletion test and the Phase 1 comparison are the independent checks. A human check of 50 is under way (new sheet for the three-agent stack).
 
 ### 8. Build schedule and conclusions (slides 24–25)
@@ -198,7 +200,7 @@ LLM re-rating of uncertain reviews (gated) · Explainer ⇄ Critic loop (max 4 r
 ```
 - **"Why did the gain over the old system shrink in the fair comparison?"** The old Reflector was fit on only 500 rows. Given 2,000 rows it improves too. The main stack is still ahead in 4 of 5 seeds on eval and 5 of 5 on natural, but the margin is small (+0.7 ± 1.2 and +1.0 ± 0.6).
 - **"You tried many things; isn't the winner luck?"** Every rule was written before running, and failures never touched the test sets. Five candidates were compared on dev2, and I disclose that. The test sets were read once.
-- **"Then what is the role of LoRA?"** Phase 1 is still the paper's baseline reproduction. Inside Phase 2 it is an ablation row: adding it to the main stack did not help (dev2 .633 versus .639).
+- **"Then what is the role of LoRA?"** Phase 1 is still our reproduction and exploration of the reference paper. Inside Phase 2 it is an ablation row: adding it to the main stack did not help (dev2 .633 versus .639).
 - **"Why is natural-test accuracy higher than balanced?"** About 65% of natural reviews are 5-star, which are easier. That is why macro-F1 (.634) is reported next to it.
 - **"Why does DeBERTa help on natural test but not on balanced eval?"** Its gain is on the common 4★ / 5★ reviews (natural test is 65% 5★). On balanced eval it fixes and breaks the same number (58 / 58). Three DeBERTa seeds give the same picture: +2.2 ± 0.2 natural, +0.1 ± 0.3 eval.
 - **"Why is the Router off?"** With three agents, skipping the probe lowered natural-dev accuracy by 0.6 points and its corrections were not significant (p .20). The rule written beforehand said: if the check fails, the Router is off.
