@@ -53,7 +53,7 @@ Do not add new top-level files to the repo or to `PES_Project_Phase1/`. If somet
 ## Never
 
 - Commit review text, data `.jsonl`, `.pptx`, `.tar.gz`, or any file over 100 MB. `kaggle_json.py` is a secret and is gitignored.
-- Write paper prose. The user writes it (plagiarism and AI-content each under 5%). Claude supplies facts, tables, figures and `% FACT` comments.
+- Leave paper drafts unmarked. Since 2026-11-14 (user's decision) Claude writes full draft content for the papers and the user rewrites it in their own words before submission (plagiarism and AI-content each under 5%). Every draft file says at the top that it is Claude-drafted, and every number in it traces to a `.out` file.
 - Do anything in Google Drive except copy (`cp -n`) into `My Drive/PES_backups/`. No sync tools, moves or deletes.
   - One exception, approved by the user on 2026-10-25: `build_deck_e23.py` overwrites `My Drive/PES_backups/current_deck/Agentic_LLaMA3_Presentation.pptx` on every build, so the copy opened in Google Slides is always current.
 - Delete old material. Archive it instead.

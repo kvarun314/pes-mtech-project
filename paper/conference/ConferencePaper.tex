@@ -1,5 +1,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Springer LNCS Conference Paper
+% Full draft content written 2026-11-14 at the author's request (the author rewrites it in their own words).
+% Every number is copied from paper/e23_results.tex, v2_reflective/e23/results_frozen.md and the e23/*.out files named in the % SRC comments.
+% The previous Run 1 version of this file is archived in docs/archive/ConferencePaper_run1_2026-11-14.tex.
+% No review text appears in this file (repository rule); the worked example is described, not quoted.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \documentclass[runningheads]{llncs}
@@ -10,345 +14,589 @@
 \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage{url}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,fit}
 \usepackage{hyperref}
+
+\newcommand{\efigdir}{../figures/e23/}
 
 \begin{document}
 
 \title{Agentic Self-Correction in LLaMA-3: Enhancing E-Commerce Sentiment Analysis through Multi-Agent Reflection}
-
 \titlerunning{Agentic Self-Correction in LLaMA-3 for E-Commerce Sentiment Analysis}
-
 \author{Varun K}
-
 \authorrunning{Varun K}
-
-\institute{
-PES University, Bengaluru, India\\
-\email{kvarun314@gmail.com}
-}
+\institute{PES University, Bengaluru, India\\\email{kvarun314@gmail.com}}
 
 \maketitle
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
-
-Large Language Models (LLMs) such as LLaMA-3 classify e-commerce review sentiment well, but they act as static, text-only, single-pass classifiers. They cannot verify a reviewer's claims against product facts, they ignore image and metadata evidence, and they are prone to errors on sarcasm and mixed sentiment. This paper presents a multimodal agentic framework that adds verification and reflection on top of a fine-tuned LLaMA-3-8B sentiment classifier. A LoRA-tuned baseline (Phase~1) is wrapped in a four-agent pipeline (Analyst, Visual Verifier, RAG Prover, Critic) with a dissonance-triggered self-correction loop (Phase~2). Both phases are compared on 2\,000 Amazon Reviews 2023 samples (All Beauty category). Phase~2 raises accuracy from 0.161 to 0.387 (+22.6~pp), macro F1 from 0.095 to 0.273, and lowers MAE from 1.52 to 0.96. It recovers 491 Phase~1 errors while introducing 39 new ones, at a 3.7$\times$ latency cost. Most of the gain comes from multimodal context and multi-agent voting; self-correction adds a smaller but measurable benefit on contested samples.
-
-\keywords{
-Sentiment Analysis \and
-LLaMA-3 \and
-LoRA \and
-Agentic AI \and
-Self-Correction \and
-Retrieval Augmented Generation \and
-Multimodal Learning
-}
-
+Fine-tuned large language models (LLMs) are now a common choice for rating product reviews, but they are usually deployed as a single model that reads a review once, outputs a star rating and, at best, a free-text justification that nothing checks. We take a recently published method, LLaMA-3-8B fine-tuned with LoRA for five-star review rating, as our reference paper, reproduce it on a single, leakage-controlled dataset (Amazon Reviews 2023, Electronics) and explore where it holds and where it does not. The reproduction exposes three problems: the reported accuracy depends strongly on the evaluation set-up, the paper's data-cleaning step removes most negative reviews, and the model's justifications are a fixed template. We then build an agentic system around these findings. Three independent agents (a probe on the frozen LLaMA-3-8B hidden state, a TF-IDF evidence model and a fine-tuned DeBERTa-v3 encoder) are combined by a learned Reflector; an Explainer writes an explanation from evidence phrases and a Critic checks it and forces rewrites; a Hand-off agent answers only when the system is confident. On a balanced test set of 1\,000 reviews and a natural test set of 2\,000 reviews, the system reaches 67.5\% and 78.0\% exact star accuracy, against 54.0\% and 53.4\% for the reproduced method (29\% and 53\% fewer errors, significant after Holm correction). The Critic loop raises the share of faithful explanations from 62--64\% to 90.5--91.6\% without breaking any explanation that was already faithful, and a deletion test shows that the cited phrases are the ones the decision depends on. The Hand-off agent answers 56\% of natural reviews automatically with 92.8\% accuracy. Every design choice was fixed on development data with a rule written before the run; failed ideas, including three attempts to let an LLM decide the star, are reported.
+\keywords{Sentiment analysis \and LLaMA-3 \and Multi-agent systems \and Self-correction \and Faithful explanations \and Selective prediction \and Reproducibility}
 \end{abstract}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Automated Sentiment Analysis (ASA) is central to modern e-commerce, where businesses analyse large volumes of customer feedback to track product quality and user satisfaction. Recent LLMs, particularly LLaMA-3, have improved sentiment classification through strong contextual understanding and reasoning \cite{wang2025}.
+Online retailers receive far more reviews than any team can read, and star ratings alone hide why a customer was satisfied or not. Automated sentiment analysis therefore remains a core e-commerce task \cite{pang2008}. Pre-trained transformers \cite{devlin2019bert,he2021debertav3} and, more recently, instruction-tuned LLMs \cite{grattafiori2024llama3,zhang2023sentiment} have raised the accuracy of review classification, and parameter-efficient fine-tuning such as LoRA \cite{hu2022lora} and QLoRA \cite{dettmers2023qlora} makes an 8-billion-parameter model trainable on a single GPU.
 
-However, such models typically run as static, text-only classifiers that produce a prediction in a single inference step without factual verification or reflection. This causes three failure modes. \emph{Sentiment hallucination}: the model treats a user's incorrect claim (e.g.\ ``this watch isn't waterproof'') as a genuine product defect, because it has no access to the specification. \emph{Context blindness}: product images and metadata that could confirm or refute a complaint are ignored. \emph{Linguistic errors}: sarcasm (``Amazing, it broke in two days'') and mixed sentiment are misread, as nothing triggers re-evaluation.
+Wang \cite{wang2025} follows this route: LLaMA-3-8B is fine-tuned with LoRA on Amazon product reviews, after a data pipeline of TextBlob-based quality control, stratified sampling, diversity sampling and neutral oversampling, and is prompted with a rating rubric, one worked example and a step-by-step cue. The paper reports 92.6\% accuracy. We chose this paper as our reference for three reasons: it is recent, it uses an open model that can be run locally, and it describes its pipeline in enough detail to be rebuilt.
 
-This paper proposes a multimodal agentic framework that does not only \emph{read} sentiment but \emph{verifies} it against product facts and other modalities. The contributions are:
-\begin{itemize}
-\item A reproduced Phase~1 baseline: LLaMA-3-8B fine-tuned with LoRA on Amazon product reviews.
-\item A four-agent pipeline (Analyst, Visual Verifier, RAG Prover, Critic) with a dissonance-triggered self-correction loop.
-\item An empirical evaluation on 2\,000 Amazon Reviews 2023 samples with a detailed analysis of \emph{why} the agentic system improves over the baseline.
-\end{itemize}
+A system of this kind has three structural limits. First, it is a \emph{single pass}: one model reads the review once, and nothing disagrees with it or catches a mistake. Second, its \emph{justification is not checked}: the model writes a sentence about the rating, but nothing verifies that the sentence is supported by the review. Third, its reported accuracy is a \emph{single number on a single set-up}, which says little about how the method behaves under a different test distribution or a different prompt.
 
-The rest of the paper is organised as follows. Section~2 reviews related work and the research gap. Section~3 describes the datasets. Section~4 presents the baseline and Section~5 the proposed agentic system. Section~6 reports the experimental setup and results, Section~7 analyses them, and Section~8 concludes.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Related Work and Research Gap}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\textbf{Baseline.} Wang et al.\ \cite{wang2025} fine-tune LLaMA-3-8B with Low-Rank Adaptation (LoRA) \cite{hu2022lora} for product-review sentiment, using TextBlob-based Data Quality Control (DQC), Variant Greedy Search (VGST) for diversity-maximising sampling, and one-shot plus zero-shot chain-of-thought (CoT) prompting. They report 92.6\% accuracy, 95.3\% precision and 93.3\% F1, outperforming SVM and XLNet. Such a model is still a passive, single-pass classifier.
-
-\textbf{Reflection and verification.} Self-RAG \cite{asai2023} trains a model to retrieve, generate and critique through self-reflection, which is analogous to our Critic. MERMAID \cite{mermaid2025} uses a cross-modal verification module for emotion recognition and reports gains of up to 27\% absolute from self-reflection loops, similar to our Visual Verifier. Verifier-in-the-loop guidance \cite{verifier2025} motivates the use of a verifier to prevent hallucination, and LLM agents have also been used as customer simulators for evaluating shopping assistants \cite{sun2025}.
-
-\textbf{Research gap.} Three gaps separate the baseline from our proposal: (i) no \emph{factual grounding}, since user text is assumed correct (``gullibility'' gap); (ii) no \emph{autonomous auditing}, since a lone Analyst cannot catch sarcasm or logical errors (``critic'' gap); and (iii) \emph{modality isolation}, since image evidence that confirms or contradicts a review is ignored (``visual'' gap).
+This paper is organised in two phases. In Phase~1 we reproduce the reference method on one dataset with strict leakage controls and explore it: which steps help, which do not, and what the reported number depends on. In Phase~2 we design an agentic system that answers each problem found in Phase~1. The contributions are:
+\begin{enumerate}
+\item A leakage-controlled reproduction and exploration of the reference method on Amazon Reviews 2023 Electronics, including a one-shot example leak worth about 8 points, a data-cleaning step that deletes most negative reviews, and a study showing that the model's justifications are a template (Section~\ref{sec:phase1}).
+\item A three-agent rating core (a probe on the frozen LLaMA-3-8B hidden state, a TF-IDF evidence model, and a fine-tuned DeBERTa-v3 encoder) combined by a learned Reflector, which improves exact accuracy by 13.5 and 24.6 points over the reproduced method (Sections~\ref{sec:phase2} and \ref{sec:results}).
+\item An agentic layer around this core: an Explainer and a Critic that make 90.5--91.6\% of explanations faithful with no explanation broken, a deletion test that checks the cited evidence, and a Hand-off agent that answers automatically only when the system is confident (Section~\ref{sec:agentic}).
+\item A complete account of the selection process: every candidate was accepted or rejected by a rule declared before the run and checked on development data only, and the failed candidates are reported (Section~\ref{sec:failed}).
+\end{enumerate}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Datasets}
+\section{Related Work}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\textbf{Baseline dataset.} Phase~1 trains on the Kaggle \texttt{arhamrumi/amazon-product-reviews} corpus ($\sim$500\,000 reviews, ratings 1--5). The raw data contains duplicates, inconsistent sentiment--rating pairs and a strong positive bias, which are addressed by DQC and stratified sampling (Section~4).
+\textbf{Sentiment analysis and review rating.} Early work framed review sentiment as polarity or rating prediction over bag-of-words features \cite{pang2008}; term weighting such as TF-IDF \cite{salton1988} with a linear classifier remains a strong baseline. Sentiment benchmarks such as SST \cite{socher2013} and IMDB \cite{maas2011} drove the move to neural models, and fine-tuned encoders such as BERT \cite{devlin2019bert}, DistilBERT \cite{sanh2019distilbert} and DeBERTa \cite{he2021deberta,he2021debertav3} became the default. Zhang et al.\ \cite{zhang2023sentiment} find that LLMs are competitive on simple polarity tasks but lag fine-tuned models on fine-grained rating, which matches what we observe for zero-shot LLaMA-3. Large Amazon review corpora \cite{ni2019,hou2024} provide the data for this task; we use the 2023 release \cite{hou2024}.
 
-\textbf{Proposed dataset.} Phase~2 is evaluated on Amazon Reviews 2023 (UCSD McAuley Lab) \cite{hou2024}, which comprises 570 million reviews and 48 million products in 33 categories, with review text, ratings, product metadata (title, description, category, price, specifications) and product images. This enables the multimodal verification that the Kaggle data cannot support. Reviews are loaded as JSONL and metadata as Parquet through the HuggingFace \texttt{datasets} library, without \texttt{trust\_remote\_code}.
+\textbf{Fine-tuning and probing LLMs.} LoRA \cite{hu2022lora} trains low-rank update matrices on a frozen model, and QLoRA \cite{dettmers2023qlora} does so on a 4-bit quantised model. An alternative that needs no fine-tuning is a linear probe on a model's hidden states \cite{alain2016probes}; probes must be read with care \cite{hewitt2019control}, but they are a cheap way to extract what a frozen model already encodes. We use both: LoRA in Phase~1, as the reference paper does, and a probe in Phase~2.
 
-\textbf{Disjoint datasets.} Phase~1 (Kaggle) and Phase~2 (Amazon Reviews 2023) use disjoint data. The Phase~1 adapter has therefore never seen the evaluation distribution, and the Phase~1 vs.\ Phase~2 comparison should be read as a generalisation test, not as a same-distribution held-out comparison.
+\textbf{Combining models.} Stacked generalisation \cite{wolpert1992} trains a second-level model on the outputs of several first-level models; it works best when the first-level models make different errors. Our Reflector is a stacker in this sense. We report calibration with the expected calibration error \cite{guo2017calibration}.
+
+\textbf{Self-correction, reflection and multi-agent LLM systems.} Chain-of-thought prompting \cite{wei2022cot,kojima2022zeroshot} and self-consistency \cite{wang2023selfconsistency} improve LLM reasoning; Self-Refine \cite{madaan2023selfrefine} and Reflexion \cite{shinn2023reflexion} let a model critique and revise its own output, Self-RAG \cite{asai2023selfrag} adds retrieval and self-critique, ReAct \cite{yao2023react} interleaves reasoning and tool use, and multi-agent frameworks \cite{du2023debate,wu2023autogen} let several LLM agents discuss or debate. Huang et al.\ \cite{huang2024cannot} show, however, that LLMs often cannot correct their own answers without external feedback, and LLM judges have known biases \cite{zheng2023judge}. Our findings agree: an LLM asked to decide or revise the star failed three times, so in our system the LLM explains and checks, while the star is decided by the Reflector, and every check uses external signals (the review text, the evidence model and the deletion test).
+
+\textbf{Faithful explanations.} An explanation is faithful if it reflects the reasons the model actually used \cite{jacovi2020faithfulness}; LLM explanations are often plausible but unfaithful \cite{turpin2023unfaithful}. ERASER \cite{deyoung2020eraser} measures faithfulness by deleting the cited tokens (comprehensiveness) or keeping only them (sufficiency); post-hoc methods such as LIME \cite{ribeiro2016lime} attribute predictions to input features. We apply the ERASER deletion test to the phrases our explanations cite.
+
+\textbf{Abstaining and uncertainty.} A classifier can abstain when unsure; the error--reject trade-off goes back to Chow \cite{chow1970}, and selective classification for neural networks is studied by Geifman and El-Yaniv \cite{geifman2017selective}. Conformal prediction \cite{angelopoulos2021conformal} turns scores into prediction sets with a coverage guarantee. LLMs can partly estimate their own uncertainty \cite{kadavath2022know}. Our Hand-off agent combines both ideas.
+
+\textbf{Evaluation and leakage.} Data leakage inflates many published machine-learning results \cite{kapoor2023leakage}; behavioural tests such as CheckList \cite{ribeiro2020checklist} probe robustness beyond accuracy. We use frozen, disjoint splits, declare every test before running it, and report robustness under controlled text changes.
+
+\textbf{Research gap.} The reference paper reports a single accuracy on its own set-up and does not check its justifications. Self-correction work mostly targets reasoning benchmarks and often lets the LLM grade itself. We are not aware of work that reproduces a fine-tuned LLM review-rating method under leakage control and then measures, on the same frozen test sets, what independent agents, a learned combiner, a Critic loop on explanations and an abstaining hand-off each add.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Baseline Model (Phase 1)}
+\section{Data and Evaluation Protocol}
+\label{sec:data}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\textbf{Preprocessing.} Five ordered steps are applied: (1) \emph{TextBlob DQC} drops rows whose polarity contradicts the rating (polarity $<0$ with rating $>3$, or polarity $>0$ with rating $<3$); (2) \emph{stratified sampling} balances counts per rating 1--5, up to 10\,000 rows; (3) \emph{VGST} greedily selects reviews that add the most unseen token IDs when the pool exceeds the target size; (4) \emph{neutral oversampling} duplicates rating-3 rows ($\times2$) to help the hardest class; and (5) the data are shuffled and capped at 4\,000 samples, then split 80/20 into train and validation sets.
+All main results use one dataset, the Electronics category of Amazon Reviews 2023 \cite{hou2024}. Each review has a title, a text and a star rating from 1 to 5; we use title and text only. (Product images were tested in an earlier design and excluded, Section~\ref{sec:failed}.) The splits were drawn once with a fixed seed and frozen before any model was trained. They are disjoint by review identifier and by exact text, so no review, and no duplicate of a review, appears in two splits (Table~\ref{tbl:splits}).
 
-\textbf{LoRA fine-tuning.} The LLaMA-3-8B weights are frozen and the update is factorised as
-\begin{equation}
-h = Wx + \Delta W x = Wx + BAx,
-\end{equation}
-with $B\in\mathbb{R}^{d\times r}$, $A\in\mathbb{R}^{r\times d}$ and $r\ll d$; $A$ is initialised from a Gaussian and $B=0$, so that $\Delta W=0$ initially. Table~\ref{tbl:lora} compares our configuration with that of Wang et al.\ \cite{wang2025}. Training uses 4-bit NF4 quantisation, gradient checkpointing, and best-checkpoint selection on validation loss. Inference uses one-shot plus CoT prompting with greedy decoding (128 new tokens).
-
-\begin{table}[htbp]
-  \centering
-\caption{LoRA hyperparameters: Wang et al.\ vs.\ ours}
-  \label{tbl:lora}
+\begin{table}[t]
+\centering
+\caption{Data splits (Amazon Reviews 2023, Electronics). Balanced splits have the same number of reviews per star; natural splits keep the real star mix (65\% of natural\_test reviews are 5-star).}
+\label{tbl:splits}
 \small
-  \begin{tabular}{lcc}
-  \hline
-  Parameter & Wang et al. & Ours \\
-  \hline \hline
-  Learning rate & 5e-5 & 5e-5 \\
-  LoRA rank $r$ & 4 & 16 \\
-  LoRA alpha $\alpha$ & 64 & 128 \\
-  Epochs & 3 & 5 \\
-  Batch size / grad.\ accum. & 3 / 4 & 3 / 4 \\
-  Target modules & 3 layers & q/k/v/o, 8 layers \\
-  Max samples & 2000 & 4000 \\
-  Scheduler & cosine & cosine \\
-  Compute type & fp16 & 4-bit NF4 + fp16 \\
-  \hline
-  \end{tabular}
-  
+\begin{tabular}{llll}
+\toprule
+Split & Size & Star mix & Used for \\
+\midrule
+Train pool & $\sim$497\,000 & balanced & training the agents \\
+dev & 500 & balanced & early design choices \\
+dev2 & 2\,000 & balanced & fitting the Reflector; gates \\
+natural\_dev & 500 & natural & second gate check \\
+eval & 1\,000 & balanced & test, read once \\
+natural\_test & 2\,000 & natural & test, read once \\
+\bottomrule
+\end{tabular}
 \end{table}
 
-\textbf{Phase~1 results.} On 4\,000 held-out Kaggle samples our run reaches $\sim$0.666 accuracy, $\sim$0.684 weighted F1 and $\sim$0.499 macro F1 (Colab T4), against 0.926 accuracy and 0.933 F1 reported by Wang et al. The gap is expected: the baseline paper uses its own larger experimental setup (RTX 4090, different data splits), whereas this work targets sound methodology rather than bit-for-bit reproduction.
+\textbf{Two test sets.} The balanced test set (eval) asks whether the system can tell every star apart; a model that always predicts the most common star scores 20\%. The natural test set (natural\_test) asks how it performs on the real mix, where always predicting 5 stars already scores about 65\%. We report both, because a model can look good on one and poor on the other.
 
-On the 2\,000-sample Amazon Reviews 2023 slice (All Beauty), the same adapter reaches only 0.161 accuracy, 0.095 macro F1 and 1.52 MAE. This reflects the transfer to a new distribution and the class imbalance of the slice (1\,181 of 2\,000 samples are 5-star). Phase~2 improvements are measured relative to this figure.
+\textbf{Metrics.} The main metric is exact accuracy over the five stars. We also report macro-F1, the share of predictions within one star, mean absolute error (MAE) and quadratic weighted kappa \cite{cohen1968kappa}, which credit near misses. Confidence intervals are 95\% bootstrap intervals over 3\,000 resamples \cite{efron1979}. Two systems are compared on the same reviews with the exact McNemar test \cite{mcnemar1947}, and $p$-values are adjusted for multiple comparisons with the Holm procedure \cite{holm1979}.
+
+\textbf{Gates.} Every candidate change was declared in a dated log before it ran, together with a pass rule (a ``gate''), for example ``accept if dev2 accuracy improves by at least 1.0 point and the paired confidence interval excludes zero''. Gates are checked on dev, dev2 and natural\_dev only. A candidate that fails is never scored on eval or natural\_test, so the test sets are read once, by the final system and its reported comparisons.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Proposed Agentic Framework (Phase 2)}
+\section{Phase 1: Reproducing and Exploring the Reference Paper}
+\label{sec:phase1}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The framework replaces single-pass classification with a stateful multi-agent workflow over review text, product metadata and product images (Figure~\ref{fig:arch}). The LLM used by every agent is the Phase~1 LLaMA-3-8B + LoRA adapter.
+\subsection{The reference method}
 
-\begin{figure}[htbp]
-   \centering
-    \includegraphics[width=\textwidth]{figures/Phase2_Architecture.png}
-   
-   \caption{Phase~2 multi-agent architecture. In the executed pipeline, three agents (Analyst, Visual Verifier, RAG Prover) produce independent rating estimates; the Critic computes dissonance $D$ and, if $D\ge0.4$, returns feedback to the Analyst for up to two iterations.}
-   \label{fig:arch}
+Wang \cite{wang2025} rates a review from 1 to 5 stars with LLaMA-3-8B fine-tuned by LoRA. The pipeline has four data steps: (1) TextBlob data-quality control removes reviews whose polarity contradicts the star; (2) stratified sampling takes the same number of reviews per star; (3) a greedy diversity search (VGST) prefers reviews with unseen tokens; (4) neutral (3-star) reviews are oversampled. The LoRA update $h = Wx + BAx$ with $B\in\mathbb{R}^{d\times r}$, $A\in\mathbb{R}^{r\times d}$, $r \ll d$ is trained with rank $r=4$, $\alpha=64$, learning rate $5\cdot10^{-5}$ and 3 epochs. The prompt contains a rating rubric, one worked example (one-shot) and a step-by-step cue. The paper reports 92.6\% accuracy and 93.3\% F1.
+
+\subsection{Our reproduction}
+
+We trained the method on 2\,000 Electronics reviews (400 per star) with the paper's hyperparameters, using QLoRA on the 4-bit LLaMA-3-8B, on an Apple M1 laptop with 16\,GB of memory. Inference reads the model's probabilities for the digits 1--5, so every review gets a full probability vector as well as a star. We call this model ``Phase~1'' throughout.
+
+On the paper's own data source (a Kaggle collection of Amazon reviews, with the paper's protocol, 4\,000 natural reviews and no leak) the reproduction reaches 69.1\% exact accuracy, 85.9\% polarity accuracy and 93.5\% within one star. On Electronics it reaches 54.0\% exact on the balanced test set and 53.4\% on the natural test set (Table~\ref{tbl:main}). It gets the direction right (91.2\% and 92.9\% correct on positive versus negative, 3-star reviews excluded; 93.7\% and 94.3\% within one star) but often confuses neighbouring stars.
+
+\subsection{What the exploration found}
+
+\textbf{The score depends on the set-up.} In our first reproduction the one-shot example was drawn from reviews whose star differed from the star of the review being rated. The example therefore told the model one answer that was wrong. A controlled comparison showed that this choice raised accuracy by about 8 points ($-7.7$ points when removed, 95\% CI $[-13.3, -2.0]$), while a zero-shot prompt cost only $-1.3$ points (not significant). All results in this paper use the zero-shot prompt. A second effect is the test distribution: on a natural test set where 63.8\% of reviews are 5-star, always answering 5 stars already scores 63.8\%. The 92.6\% in the reference paper was measured with a different protocol (five-fold cross-validation on its own data), so it is not directly comparable to our numbers, and we do not claim that it is wrong.
+
+\textbf{The data cleaning backfires on negative reviews.} TextBlob assigns a positive polarity to many negative reviews, because complaints often contain words such as ``great'' or ``love''. On Electronics, TextBlob filtering deleted 52\% of 1-star and 67\% of 2-star reviews, and models trained after filtering were 2.5--3.5 points worse. The diversity search added +0.2 points (noise) and biased the sample towards long reviews (mean 119 words against 61). On dev, a model trained on raw balanced data beat the paper's pipeline by 3.0 points (55.2\% against 52.2\%), so the final Phase~1 model uses raw balanced data.
+
+\textbf{The justifications are a template.} We inspected 150 generated justifications. None was unparseable, but 80 (53\%) gave a star different from the true one, 20 were off by two stars or more, and the text was one fixed rubric sentence per digit, repeated with no reference to the review. The probabilities carry the useful signal; the generated text does not explain the decision.
+
+\textbf{Fine-tuning helps, but less than a second signal.} The frozen base model with the same zero-shot prompt reaches only 34.3\% (eval) and 16.8\% (natural\_test), so LoRA adds 19.7 and 36.6 points. A DistilBERT encoder \cite{sanh2019distilbert} trained on the same 2\,000 reviews reaches 52.8\%, level with Phase~1 (difference not significant). Training LoRA on 10\,000 instead of 2\,000 reviews did not pass its gate (dev 56.4\% against a required 58\%). By contrast, simply stacking the Phase~1 probabilities with a TF-IDF model trained on 100\,000 reviews raised accuracy to 63.9\% and 73.4\%. This observation shaped Phase~2.
+
+\textbf{Summary of shortcomings.} The reference method (i) reads the review once with nothing to catch mistakes, (ii) has a reported score that depends on the set-up, (iii) removes most negative reviews in its cleaning step, and (iv) produces justifications that are not grounded in the review. Phase~2 addresses each point (Table~\ref{tbl:solves}).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Phase 2: An Agentic System Built on the Findings}
+\label{sec:phase2}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Figure~\ref{fig:arch} shows the system. A review passes through a \emph{decision core} of three agents and a Reflector, which produce the star and its probability. An \emph{agentic layer} then decides whether to answer automatically, writes an explanation from evidence, and checks it. The system is implemented as a LangGraph state graph; each agent reads and writes a shared state record.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[node distance=4mm and 6mm, font=\scriptsize,
+  box/.style={draw, rounded corners=2pt, align=center, minimum height=8mm, text width=20mm, fill=blue!6},
+  llm/.style={box, fill=orange!12}, res/.style={box, fill=green!10}, >={Stealth[length=2mm]}]
+\node[box, text width=14mm] (rev) {Review\\(title + text)};
+\node[box, right=8mm of rev, yshift=10mm] (probe) {LLaMA probe\\(frozen, layer 20)};
+\node[box, below=2mm of probe] (evid) {Evidence model\\(TF-IDF + LR)};
+\node[box, below=2mm of evid] (deb) {DeBERTa-v3\\(fine-tuned)};
+\node[box, right=7mm of evid, text width=15mm] (refl) {Reflector\\(LR on log-probs)};
+\node[box, right=5mm of refl, text width=14mm] (hand) {Hand-off\\agent};
+\node[res, right=5mm of hand, yshift=7mm, text width=14mm] (auto) {Star\\(automatic)};
+\node[res, right=5mm of hand, yshift=-7mm, text width=14mm] (range) {Star range\\or person};
+\node[llm, below=9mm of refl, text width=17mm] (expl) {Explainer\\(Llama-3-8B-Instruct)};
+\node[llm, right=7mm of expl, text width=17mm] (crit) {Critic\\(5 checks)};
+\node[res, right=5mm of crit, text width=16mm] (final) {Checked\\explanation};
+\draw[->] (rev) -- (probe.west); \draw[->] (rev) -- (evid.west); \draw[->] (rev) -- (deb.west);
+\draw[->] (probe.east) -- (refl); \draw[->] (evid.east) -- (refl); \draw[->] (deb.east) -- (refl);
+\draw[->] (refl) -- (hand); \draw[->] (hand) -- (auto.west); \draw[->] (hand) -- (range.west);
+\draw[->] (refl) -- node[right, align=left]{star +\\evidence pack} (expl);
+\draw[->] (expl) -- (crit); \draw[->] (crit) -- (final);
+\draw[->] (crit.south) to[bend left=35] node[below]{feedback, $\le$ 4 rewrites} (expl.south);
+\end{tikzpicture}
+\caption{The Phase~2 system. Blue: the decision core (three independent agents and the Reflector that combines them). Orange: LLM agents that explain and check but never decide the star. Green: outputs. A Router that skips the LLaMA probe for easy reviews was built and tested; with three agents it failed its gate and is switched off (Section~\ref{sec:router}).}
+\label{fig:arch}
 \end{figure}
 
-\textbf{Analyst.} Reads the review text with one-shot plus CoT prompting and produces a preliminary rating, the hypothesis $H$.
+\subsection{The decision core}
 
-\textbf{Visual Verifier.} Downloads the product image and captions it with BLIP (\texttt{Salesforce/blip-image-captioning-base}) \cite{li2022blip}. It re-prompts the LLM with the visual evidence $E_v$ to obtain a second rating.
+\textbf{LLaMA probe.} Instead of fine-tuning LLaMA, we run the frozen 4-bit base LLaMA-3-8B on the zero-shot prompt and read the hidden state of the last prompt token at layer 20 (of 32), a 4\,096-dimensional vector. A logistic regression (regularisation $C=0.001$) fit on 40\,000 training reviews maps this vector to five star probabilities. The probe uses what the language model already encodes about the review, without training the model itself. A probe fit on 120\,000 reviews was no better (dev2 $+0.3$ points, not significant), so 40\,000 is kept.
 
-\textbf{RAG Prover.} Queries a LanceDB vector index (384-d \texttt{all-MiniLM-L6-v2} embeddings of the review corpus) for the $k=3$ nearest exemplars and re-prompts with them to obtain a grounded rating $G_f$.
+\textbf{Evidence model.} A logistic regression over TF-IDF unigrams and bigrams of the title and text \cite{salton1988}, trained on about 497\,000 balanced reviews. It is fast, and its weights tell which phrases in a review push towards or away from each star. These phrases form the \emph{evidence pack} used by the Explainer.
 
-\textbf{Critic.} Collects the votes $v=[r_{\mathrm{Analyst}}, r_{\mathrm{Visual}}, r_{\mathrm{RAG}}]$ and computes the dissonance
-\begin{equation}
-D = \frac{\sqrt{\frac{1}{3}\sum_{i=1}^{3}(v_i-\bar v)^2}}{2}.
-\end{equation}
-If $D<0.4$ the majority vote is released. Otherwise the Critic generates a critique and the Analyst re-runs with this feedback, for at most two iterations.
+\textbf{DeBERTa agent.} DeBERTa-v3-base \cite{he2021debertav3} fine-tuned for five-way rating on 100\,000 balanced training reviews (title and text, 256 tokens, 2 epochs). It reads word order and context, which the TF-IDF model cannot.
 
-\textbf{Implementation.} Each sample carries an \texttt{AgentState} record (review, metadata, caption, the four agent ratings, dissonance, correction count, final rating and rationale). BLIP is run before LLaMA is loaded and is then deleted to save VRAM. Results are streamed to a JSONL checkpoint after every sample so that a Colab disconnect does not lose progress. The pipeline is implemented as plain Python functions over this state, with a manual dissonance-triggered retry loop.
-\newcommand{\efigdir}{../figures/e23/}
-\input{../e23_results}
+\textbf{Reflector.} A multinomial logistic regression (regularisation $C=1$) on the concatenated log-probabilities of the three agents (15 features), fit on the 2\,000 dev2 reviews \cite{wolpert1992}. It learns how much to trust each agent for each star; for example, it learns that the Evidence model is reliable on short reviews and the probe on long ones (Section~\ref{sec:why}). Its output is the final star and a probability for each star.
 
+\textbf{Why these agents.} The three agents look at a review in different ways: the probe through the internal representation of a large generative model, the Evidence model through individual phrases, and DeBERTa through a fine-tuned encoder. A stacker gains most when its inputs make different errors \cite{wolpert1992}. The set was chosen in two gated steps: the probe and Evidence model were selected on dev2 among five candidate agent sets (gate: $+1.0$ point and a paired CI above zero; result $+3.9$, CI $[+2.4, +5.8]$), and DeBERTa was added later after passing its own gate (dev2 $+2.0$, CI $[+0.6, +3.35]$).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Experiments and Results}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{The agentic layer}
 
-\subsection{Setup}
+\textbf{Hand-off agent.} Exact rating is hard because neighbouring stars are often ambiguous even to people. Instead of always answering, the Hand-off agent compares the Reflector's top probability with a threshold. Above it, the star is released automatically. Below it, the system either returns a short star range with 90\% coverage (split conformal prediction \cite{angelopoulos2021conformal}, calibrated on dev2 for eval and on natural\_dev for natural\_test), when that range is at most two stars wide, or hands the review to a person. The threshold was set on dev2 so that the system answers about 40\% of balanced reviews, before the test sets were read.
 
-Table~\ref{tbl:setup} lists the configuration of Run~1. All experiments ran on a Google Colab T4 GPU (16~GB), where the 4-bit LLaMA-3-8B model fits in $\sim$8--10~GB of VRAM.
+\textbf{Explainer.} Llama-3-8B-Instruct receives the review, the final star and the evidence pack (the review's phrases that most support the star and those that most argue against it) and writes a short explanation. It is instructed to use only the review and the evidence.
 
-\begin{table}[htbp]
-  \centering
-\caption{Experimental configuration (Run 1)}
-  \label{tbl:setup}
+\textbf{Critic.} The Critic runs five checks on each explanation: (1) the stated star matches the system's star; (2) every quoted phrase occurs in the review or the evidence pack; (3) the explanation quotes at least two of the top evidence phrases; (4) if the agents disagree, the explanation says so; (5) an LLM judge (the same Instruct model) finds no claim that the review does not support. Checks 1--4 are deterministic. If any check fails, the Critic returns specific feedback (for example ``Remove the unsupported claim: \ldots'' or ``Quote at least 2 of these phrases: \ldots'') and the Explainer rewrites, at most four times. Explanations that still fail are labelled as such rather than hidden.
+
+\textbf{Design rule: LLMs explain, they do not decide.} Three attempts to let an LLM decide or revise the star failed their gates (Section~\ref{sec:failed}). In the final system, the star comes only from the decision core, and the LLM agents work on the explanation, where their output can be checked against the review.
+
+\begin{table}[t]
+\centering
+\caption{How Phase~2 answers each shortcoming found in Phase~1, and the result that checks it.}
+\label{tbl:solves}
 \small
-  \begin{tabular}{ll}
-  \hline
-  Parameter & Value \\
-  \hline \hline
-  Dataset & Amazon Reviews 2023, All Beauty \\
-  Sample size / seed & 2\,000 / 42 \\
-  Model & LLaMA-3-8B + LoRA adapter \\
-  Quantisation & 4-bit NF4 \\
-  Max new tokens & 128 \\
-  Image captioner & BLIP (base) \\
-  RAG embeddings & all-MiniLM-L6-v2, $k=3$ \\
-  Dissonance threshold & 0.4 \\
-  Max correction steps & 2 \\
-  Hardware & Google Colab T4 \\
-  \hline
-  \end{tabular}
-  
+\begin{tabular}{p{0.27\linewidth}p{0.33\linewidth}p{0.32\linewidth}}
+\toprule
+Shortcoming (Phase 1) & Phase 2 answer & Check \\
+\midrule
+One pass, no second opinion & Three independent agents + Reflector & +13.5 / +24.6 points (Table~\ref{tbl:main}) \\
+Score depends on set-up & Frozen disjoint splits, two test sets, gates on dev only & Test sets read once \\
+Cleaning removes negatives & Raw balanced training data & Filtering cost 2.5--3.5 points \\
+Template justifications & Explainer from evidence, Critic loop & Faithful 62--64\% $\to$ 90.5--91.6\%, 0 broken \\
+Always answers, even when unsure & Hand-off agent with star ranges & 92.8\% exact on 56\% answered (natural) \\
+\bottomrule
+\end{tabular}
 \end{table}
 
-\subsection{Overall Results}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Results: Rating Accuracy}
+\label{sec:results}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SRC: v2_reflective/e23/results_frozen.md, freeze_tables.out, analysis_C.out, o1_ordinal.out
 
-\begin{table}[htbp]
-  \centering
-\caption{Phase 1 vs.\ Phase 2, overall metrics (2\,000 samples)}
-  \label{tbl:overall}
+\textbf{Main result.} Table~\ref{tbl:main} lists every model on both test sets. The full system reaches 67.5\% exact accuracy on the balanced test set and 78.0\% on the natural test set, against 54.0\% and 53.4\% for Phase~1. Read as errors, the system makes 29\% fewer mistakes on eval and 53\% fewer on natural\_test. Its mistakes are also smaller: MAE falls from 0.53 to 0.35 (eval) and from 0.54 to 0.25 (natural\_test), and quadratic weighted kappa rises from .824 to .898 and from .779 to .902; the confidence intervals of both differences exclude zero.
+
+\begin{table}[t]
+\centering
+\caption{Rating accuracy on the frozen test sets: exact accuracy (\%) with 95\% bootstrap CI, macro-F1, share within one star (\%) and MAE. Phase~2 = the full system (probe + Evidence + DeBERTa with the Reflector).}
+\label{tbl:main}
 \small
-  \begin{tabular}{lccc}
-  \hline
-  Metric & Phase 1 & Phase 2 & $\Delta$ \\
-  \hline \hline
-  Accuracy & 0.1610 & 0.3870 & +22.60 pp \\
-  Macro F1 & 0.0946 & 0.2725 & +17.79 pp \\
-  MAE & 1.5205 & 0.9635 & $-$0.557 \\
-  Mean latency & 0.77 s & 2.83 s & 3.7$\times$ \\
-  \hline
-  \end{tabular}
-  
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcccc|cccc}
+\toprule
+ & \multicolumn{4}{c|}{eval (1\,000, balanced)} & \multicolumn{4}{c}{natural\_test (2\,000, natural)} \\
+Model & Exact [CI] & F1 & W-1 & MAE & Exact [CI] & F1 & W-1 & MAE \\
+\midrule
+Base LLaMA-3-8B, zero-shot & 34.3 [31.3, 37.3] & .269 & 83.3 & .824 & 16.8 [15.2, 18.4] & .212 & 70.5 & 1.129 \\
+DistilBERT, 2K reviews & 52.8 [49.6, 55.9] & .522 & 89.1 & .597 & 62.5 [60.4, 64.6] & .462 & 90.5 & .512 \\
+\textbf{Phase 1}: LLaMA + LoRA, 2K & 54.0 [50.9, 57.1] & .543 & 93.7 & .529 & 53.4 [51.3, 55.6] & .488 & 94.3 & .539 \\
+\midrule
+LLaMA probe alone & 61.2 [58.1, 64.2] & .610 & 94.6 & .455 & 74.3 [72.4, 76.2] & .606 & 96.3 & .307 \\
+Evidence model alone & 62.5 [59.5, 65.4] & .624 & 93.4 & .452 & 70.2 [68.3, 72.2] & .550 & 94.5 & .372 \\
+DeBERTa-v3 alone & 66.5 [63.6, 69.4] & .667 & 97.7 & .359 & 75.8 [73.8, 77.6] & .614 & 98.0 & .267 \\
+LoRA + Evidence stack (dev2) & 65.5 [62.5, 68.5] & .653 & 96.2 & .386 & 74.2 [72.4, 76.1] & .587 & 96.6 & .307 \\
+Probe + Evidence stack & 67.5 [64.6, 70.3] & .675 & 96.7 & .363 & 75.7 [73.8, 77.6] & .612 & 96.7 & .288 \\
+\textbf{Phase 2}: Probe + Evidence + DeBERTa & \textbf{67.5 [64.5, 70.5]} & \textbf{.675} & \textbf{97.3} & \textbf{.353} & \textbf{78.0 [76.2, 79.8]} & \textbf{.634} & \textbf{97.4} & \textbf{.253} \\
+\bottomrule
+\end{tabular}}
 \end{table}
 
-\begin{figure}[htbp]
-   \centering
-    \includegraphics[width=\textwidth]{figures/metrics_comparison.png}
-   
-   \caption{Phase~1 vs.\ Phase~2 metric comparison on 2\,000 samples.}
-   \label{fig:metrics}
+\textbf{How to read the table.} The upper block contains the reference points: the untuned model, a small fine-tuned encoder and the reproduced method. The lower block contains the Phase~2 agents alone and in combination. Three patterns stand out. First, each Phase~2 agent alone already beats Phase~1; the frozen probe in particular shows that LLaMA's hidden states hold much more rating information (61.2\% and 74.3\%) than its generated digit after fine-tuning (54.0\% and 53.4\%). Second, the combination beats every single agent. Third, DeBERTa, the strongest single agent, adds to the two-agent stack on the natural test set (+2.3 points) but not on the balanced one (+0.0).
+
+\textbf{Significance.} Table~\ref{tbl:paired} compares the full system with each alternative on the same reviews. After Holm correction over the 12 comparisons, 8 remain significant: all six on natural\_test, and the comparisons with the probe and the Evidence model on eval. On eval, the full system is not significantly better than DeBERTa alone (+1.0), the two-agent stack (+0.0), or the LoRA + Evidence stack fit on the same dev2 reviews (+2.0). The last comparison matters: part of the gain over the earliest stack comes from fitting the Reflector on 2\,000 instead of 500 reviews, not from the new agents.
+
+\begin{table}[t]
+\centering
+\caption{Paired comparisons of the full system against each alternative: difference in exact accuracy (points), exact McNemar $p$, and Holm-adjusted $p$ over these 12 comparisons.}
+\label{tbl:paired}
+\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcc}
+\toprule
+Full system vs & eval & natural\_test \\
+\midrule
+Phase 1 (LLaMA + LoRA) & +13.5 & +24.6 \\
+Probe + Evidence stack & +0.0, $p$=1 (Holm 1) & +2.3, $p$=8.6e-4 (Holm .0043) \\
+DeBERTa alone & +1.0, $p$=.39 (Holm .77) & +2.3, $p$=4.5e-4 (Holm .0031) \\
+LoRA + Evidence stack (dev) & +3.6, $p$=.018 (Holm .072) & +4.6, $p$=1.8e-7 (Holm 1.9e-6) \\
+LoRA + Evidence stack (dev2) & +2.0, $p$=.16 (Holm .48) & +3.7, $p$=1.2e-5 (Holm 1e-4) \\
+Evidence model alone & +5.0, $p$=6.8e-4 (Holm .0041) & +7.8, $p$=1.8e-16 (Holm 2.2e-15) \\
+LLaMA probe alone & +6.3, $p$=1.2e-5 (Holm 1e-4) & +3.7, $p$=9.9e-6 (Holm 9.9e-5) \\
+\bottomrule
+\end{tabular}}
+\end{table}
+% FACT: the Phase 1 row has no p in the Holm family of 12; the gain over Phase 1 is significant after Holm (LOG.md 2026-11-12, analysis_C.out).
+
+\textbf{Stability.} Results from one training run can be lucky. Over five seeds (bootstrapping the probe's fit set and dev2), the two-agent stack scores $65.8 \pm 0.6$ (eval) and $75.4 \pm 0.8$ (natural\_test), and its gain over each single agent is positive in 5 of 5 seeds on both test sets. With three DeBERTa seeds, the gain from adding DeBERTa is $+2.2 \pm 0.2$ points on natural\_test (stable) and $+0.1 \pm 0.3$ on eval (no gain), which confirms the pattern above.
+
+\textbf{Where the system errs.} Of its 325 errors on eval, 91.7\% are one star off; on natural\_test 88.2\% of 440 errors are. The hardest classes are 2 and 3 stars (recall .51--.58); 1 and 5 stars are easiest (.72--.88). Figure~\ref{fig:cm} shows the confusion matrix: mistakes sit next to the diagonal. Phase~2 finds more reviews of every star than Phase~1 on eval except 4 stars (.630 against .635); the largest difference is on 5-star reviews (.855 against .490 on natural\_test), the most common class.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.42\linewidth]{\efigdir cm_main_eval.png}\hfill
+\includegraphics[width=0.56\linewidth]{\efigdir recall_phase1_vs_main.png}
+\caption{Left: confusion matrix of the full system on eval (rows = true star). Right: recall per star, Phase~1 against Phase~2, on both test sets.}
+\label{fig:cm}
 \end{figure}
 
-Phase~2 improves accuracy by 22.6~pp, macro F1 by 17.8~pp and reduces MAE by 0.56 (Table~\ref{tbl:overall}, Figure~\ref{fig:metrics}), at 3.7$\times$ the latency. Table~\ref{tbl:perclass} gives per-rating accuracy. The neutral (3-star) class gains most ($+$52.1~pp), because metadata and image context are most useful for disambiguating neutral reviews. The 2-star class shows a slight regression ($-$1.0~pp), a known difficulty for the borderline negative class.
-
-\begin{table}[htbp]
-  \centering
-\caption{Per-rating accuracy}
-  \label{tbl:perclass}
-\small
-  \begin{tabular}{lcccc}
-  \hline
-  Rating & $n$ & Phase 1 & Phase 2 & $\Delta$ \\
-  \hline \hline
-  1$\star$ & 147 & 0.020 & 0.272 & +0.252 \\
-  2$\star$ & 105 & 0.019 & 0.010 & $-$0.010 \\
-  3$\star$ & 190 & 0.458 & 0.979 & +0.521 \\
-  4$\star$ & 377 & 0.000 & 0.053 & +0.053 \\
-  5$\star$ & 1181 & 0.195 & 0.446 & +0.251 \\
-  \hline
-  \end{tabular}
-  
-\end{table}
-
-\subsection{Error Recovery and Self-Correction}
-
-Phase~2 recovers 491 samples that Phase~1 got wrong and introduces 39 new errors, a net improvement of $+452$ samples and a recovery ratio of 12.6$\times$. The Critic's self-correction was triggered on 922 samples (46.1\%); 669 samples (33.5\%) had $D\ge0.4$. The mean dissonance is 0.211 and the maximum 0.471. The frequent disagreement shows that the ensemble is not trivially redundant.
+\textbf{Calibration and cost.} The Reflector's probabilities are well calibrated on eval (expected calibration error .031; mean confidence .679 against accuracy .675) and slightly under-confident on natural\_test (.052; .733 against .780). This matters for the Hand-off agent, which relies on the probability. On the M1 laptop, the probe costs about 0.67 s per review (one forward pass to layer 20), DeBERTa 86 ms, and the Evidence model and Reflector well under 0.1 ms each.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Analysis: Why Phase 2 Works}
+\section{Why Several Agents Beat One}
+\label{sec:why}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SRC: analysis_C.out, hard_cases.out
 
-\textbf{Rating collapse in Phase 1.} Phase~1 collapses to a narrow range of predictions (Table~\ref{tbl:dist}). It predicts 4-star only 25 times despite 377 true 4-star samples, over-predicts 3-star by 6.6$\times$, and 90.2\% of its errors are under-predictions. Phase~2 distributes predictions more faithfully; its 5-star predictions rise from 241 to 569.
+The gain comes from the agents being strong on different reviews (Figure~\ref{fig:complement}). On the shortest quarter of eval reviews, the Evidence model is right 70.0\% of the time and the probe only 54.6\%: a short review is mostly a few telling words. On the longest quarter, the order reverses (probe 64.3\%, Evidence 55.8\%): long reviews mix praise and complaint, and the language model's representation handles the context better. The full system is best or near-best in every length band (71.2\% and 66.3\%).
 
-\begin{table}[htbp]
-  \centering
-\caption{Prediction distribution vs.\ ground truth}
-  \label{tbl:dist}
+When the probe and the Evidence model disagree on the star (36\% of eval reviews, 28\% of natural ones), each alone is right only 36--50\% of the time, but the full system picks the right star 57.8\% (eval) and 62.0\% (natural\_test) of the time. The Reflector has learned which agent to trust in which situation, which is the purpose of a learned combiner.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{\efigdir agents_complement.png}
+\caption{Left: exact accuracy by review length (quartiles) for the Evidence model, the probe and the full system. Right: accuracy on reviews where the probe and the Evidence model disagree.}
+\label{fig:complement}
+\end{figure}
+
+\textbf{Hard cases.} We defined three hard subsets before reading the results, using TextBlob polarity and contrast words. On reviews that \emph{sound negative but are rated 4--5 stars}, the full system beats Phase~1 by 32.5 points on eval (67.5\% against 35.0\%, $n=40$, $p=.0023$) and by 35.2 points on natural\_test (78.2\% against 43.0\%, $n=193$, $p=5.4\cdot10^{-16}$). On reviews that \emph{sound positive but are rated 1--2 stars}, the gain is about 10 points but not significant ($n=72$ and 68). On mixed reviews with a contrast word, the gain is 10.0 points on eval ($p=.0032$) and 3.2 on natural\_test (not significant). Explicit sarcasm cue words were too rare to measure (6 and 1 reviews), so we make no claim about sarcasm.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Results: The Agentic Layer}
+\label{sec:agentic}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SRC: b2_report.out, b2_deletion.out, x1_explain_compare.out, s1_selective.out, q1_conformal.out, gate_B1.out, gate_B1b.out
+
+\subsection{Explanations and the Critic loop}
+
+We ran the Explainer and Critic on all 3\,000 test reviews. An explanation counts as \emph{faithful} when it passes all five checks. Table~\ref{tbl:faith} shows the effect of the loop.
+
+\begin{table}[t]
+\centering
+\caption{Explanations on all 3\,000 test reviews. Faithful = passes all five Critic checks. Fixed / broken = reviews whose explanation went from failing to passing, or from passing to failing, between the first draft and the final one. Deletion test: drop in the system's probability of its star when the cited phrases are removed (comprehensiveness), and probability when only they are kept (sufficiency), against the same number of random words.}
+\label{tbl:faith}
 \small
-  \begin{tabular}{lccccc}
-  \hline
-   & 1$\star$ & 2$\star$ & 3$\star$ & 4$\star$ & 5$\star$ \\
-  \hline \hline
-  Ground truth & 147 & 105 & 190 & 377 & 1181 \\
-  Phase 1 & 349 & 124 & 1261 & 25 & 241 \\
-  Phase 2 & 51 & 10 & 1289 & 81 & 569 \\
-  \hline
-  \end{tabular}
-  
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+Split & First draft & After loop & Fixed / broken & McNemar $p$ & Compr.\ cited / random & Suff.\ cited / random \\
+\midrule
+eval & 62.3\% & 90.5\% & 282 / 0 & 2.6e-85 & .156 / .077 & .521 / .301 \\
+natural\_test & 63.7\% & 91.6\% & 559 / 0 & 1.1e-168 & .209 / .119 & .616 / .349 \\
+\bottomrule
+\end{tabular}}
 \end{table}
 
-\textbf{Where recoveries come from.} Nearly 80\% of the 491 recoveries come from two transitions: Phase~1 predicts 3-star and Phase~2 corrects to 5-star (288, 58.7\%), and 1-star corrected to 3-star (100, 20.4\%). An ambiguous review becomes clearly positive once the Visual Verifier sees a clean product image and the RAG Prover retrieves highly rated similar reviews.
+\textbf{The loop works and is safe.} About 37\% of first drafts fail at least one check. After at most four rewrites, 90.5\% (eval) and 91.6\% (natural\_test) of explanations are faithful. The loop never broke an explanation that was already faithful (0 of 3\,000), because a rewrite is only requested when a check fails. The cost is modest: 2.9--3.0 LLM calls per review on average, about 11 s for the Explainer and 2 s for the Critic per review on the M1. Allowing four rewrites instead of two passed its own gate and fixed 17 + 46 more explanations.
 
-\textbf{Agent specialisation.} On the 774 samples that Phase~2 classifies correctly, the Visual Verifier's vote matches the ground truth in 97.7\% of cases, the RAG Prover's in 91.2\%, and the Analyst's in only 64.9\% (Table~\ref{tbl:agents}). The ensemble thus overrules the conservative text-only Analyst on 35\% of its correct predictions, and the two context-aware agents systematically push the vote towards the true rating.
+\textbf{What the Critic catches.} On the first drafts, the most frequent failures are quotes that do not occur in the review or the evidence pack (194 on eval, 367 on natural\_test), missing top evidence phrases (183 and 289), and claims the judge finds unsupported (71 and 180). A wrong star is rare (7 and 9) and the agent-disagreement check never fired.
 
-\begin{table}[htbp]
-  \centering
-\caption{Per-agent vote alignment on Phase~2-correct samples ($n=774$)}
-  \label{tbl:agents}
+\textbf{A worked example.} One balanced-eval review used in the live demonstration is a 2-star review of a backpack: the reviewer likes the many pockets and the waterproof surface, but says the quality is questionable because a zipper broke within four months, and calls the purchase disappointing. The system rates it 2 stars. The evidence pack lists ``disappointing'', ``Poor'' and ``lacks'' as supporting the star and ``great'' and ``easy'' as arguing against it. The first draft attributes the words ``Poor quality'' to the reviewer, a phrase that does not occur in the review; the Critic replies ``Remove the unsupported claim''. The second draft removes it but quotes only one of the top evidence phrases; the Critic asks it to quote at least two. The third draft quotes ``questionable'', ``disappointing'', ``lacks space'' and ``Poor'' from the review and passes all five checks. This is what the move from 62\% to 91\% means for a single review.
+
+\textbf{The cited phrases carry the decision.} A faithful explanation should cite what the decision actually depends on \cite{jacovi2020faithfulness}. Following ERASER \cite{deyoung2020eraser}, we removed the cited phrases from each review and re-ran the decision core, and compared this with removing the same number of random words (Figure~\ref{fig:deletion}). Removing the cited phrases lowers the system's probability of its star about twice as much as removing random words (.156 against .077 on eval, .209 against .119 on natural\_test), and keeping only the cited phrases preserves much more of it (.521 against .301; .616 against .349). All differences are significant (Wilcoxon \cite{wilcoxon1945} $p < 10^{-54}$).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{\efigdir deletion_test.png}
+\caption{Deletion test. Left: drop in the probability of the system's star when the cited phrases (red) or the same number of random words (grey) are removed; higher means the cited words matter more. Right: probability with only those words kept.}
+\label{fig:deletion}
+\end{figure}
+
+\textbf{Compared with Phase~1.} On the same 150 balanced reviews, judged by the same model, Phase~1's justification quotes the review in 0\% of cases and Phase~2's in 75.3\% ($p = 1.9\cdot10^{-34}$). Phase~1 produced only 5 distinct sentences (3.3\% distinct outputs) and repeated its template in 54.7\% of outputs; every Phase~2 explanation was distinct. The judge found no unsupported claim in 93.3\% of Phase~2 explanations, and in the 22 reviews where only one system passed, Phase~2 passed 17 times and Phase~1 5 times ($p=.017$).
+
+\textbf{Limits.} About 9\% of final explanations still fail a check, mostly the LLM judge (check 5). The judge is the same model that writes the explanation, so it is not an independent check; the deterministic checks, the deletion test and the comparison with Phase~1 are. A second judge (Qwen2.5-7B-Instruct) was tried and failed its gate: it rejected every explanation, whatever its content.
+
+\subsection{The Hand-off agent}
+
+Figure~\ref{fig:handoff} shows the trade-off between how many reviews the system answers automatically (coverage) and how often it is right on those. At the threshold fixed on dev2, the system answers 56.1\% of natural reviews automatically and is right on 92.8\% of them (95\% CI $[91.3, 94.3]$); on balanced eval it answers 41.1\% and is right on 86.9\%. Phase~1 with the same rule reaches only 67.9\% and 66.9\%. The reviews passed on are genuinely hard: the system's own star is right on only 54--59\% of them.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\linewidth]{\efigdir selective_SH.png}
+\caption{Accuracy against coverage when the system answers only reviews whose top probability exceeds a threshold. The marked point is the threshold fixed on dev2.}
+\label{fig:handoff}
+\end{figure}
+
+\textbf{Star ranges instead of a person.} For a review below the threshold, a two-star range is often still useful (``4 or 5 stars''). Split conformal prediction with a 90\% target gives ranges that contain the true star 91.6\% (eval) and 90.1\% (natural\_test) of the time, with a mean width of 1.77 and 1.44 stars, against 2.40 and 2.08 for Phase~1 at similar coverage (Table~\ref{tbl:conformal}). With answer-or-range-or-person, a person is needed for only 11.2\% of balanced and 1.6\% of natural reviews.
+
+\begin{table}[t]
+\centering
+\caption{Star ranges with a 90\% coverage target (split conformal). Coverage = share of reviews whose true star lies in the range. Single star = share of reviews where the range is one star.}
+\label{tbl:conformal}
 \small
-  \begin{tabular}{lcc}
-  \hline
-  Agent & Correct votes & Rate \\
-  \hline \hline
-  Analyst (text only) & 502 / 774 & 64.9\% \\
-  RAG Prover & 706 / 774 & 91.2\% \\
-  Visual Verifier & 756 / 774 & 97.7\% \\
-  \hline
-  \end{tabular}
-  
+\begin{tabular}{llccc}
+\toprule
+Split & System & Coverage & Mean width (stars) & Single star \\
+\midrule
+eval & Phase 2 & 91.6\% & 1.77 & 34.0\% \\
+eval & Phase 1 & 91.8\% & 2.40 & 4.7\% \\
+natural\_test & Phase 2 & 90.1\% & 1.44 & 57.8\% \\
+natural\_test & Phase 1 & 88.0\% & 2.08 & 11.1\% \\
+\bottomrule
+\end{tabular}
 \end{table}
 
-\textbf{Dissonance as a proxy for difficulty.} Table~\ref{tbl:diss} groups samples by dissonance. Even when the agents fully agree ($D<0.1$), Phase~2 is 23.9~pp better than Phase~1, so the gain does not come primarily from self-correction but from the additional context. Gains are largest under moderate disagreement ($+$36.0~pp) and smallest for high dissonance ($+$11.7~pp), which are the genuinely hardest samples.
+\subsection{The Router: useful with two agents, off with three}
+\label{sec:router}
 
-\begin{table}[htbp]
-  \centering
-\caption{Accuracy by dissonance level}
-  \label{tbl:diss}
+The LLaMA probe is the slowest agent. The Router skips it when the Evidence model is already confident, and otherwise calls it and lets the Reflector revise the draft star (``escalation''). For the two-agent stack, the Router skipped the probe on 39\% (eval) and 48\% (natural\_test) of reviews with no significant loss of accuracy (67.4\% against 67.5\%; 75.5\% against 75.7\%), and escalation fixed more stars than it broke (92 against 50 on eval, $p=5.3\cdot10^{-4}$; 152 against 78 on natural\_test, $p=1.2\cdot10^{-6}$). When DeBERTa was added, the same rule was re-checked on dev data and failed: on natural\_dev the routed system was 0.6 points below the full one, and escalation fixed 50 and broke 37 stars ($p=.20$). As declared beforehand, the Router is therefore switched off and every review uses all three agents.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Robustness}
+\label{sec:robust}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SRC: q4_robustness.out, q5_breakdown.out
+
+\textbf{Text changes.} In the spirit of behavioural testing \cite{ribeiro2020checklist}, we changed 300 eval reviews (60 per star) in three controlled ways and counted how often the star changed (Table~\ref{tbl:robust}). Lowercasing and removing punctuation changes the Phase~2 star for 9.3\% of reviews, against 29.7\% for Phase~1. Typos barely matter for either. Removing the title, however, changes the Phase~2 star for 15.7\% of reviews and lowers its accuracy by 4.3 points, while Phase~1, which never reads the title, is unaffected. Both the Evidence model and DeBERTa read the title, so the three-agent system depends on it more than the two-agent one (8.0\%). This is a limitation for sources without review titles.
+
+\begin{table}[t]
+\centering
+\caption{Share of 300 eval reviews whose star changes under a text change.}
+\label{tbl:robust}
 \small
-  \begin{tabular}{lccc}
-  \hline
-  Dissonance $D$ & $n$ & Phase 1 & Phase 2 \\
-  \hline \hline
-  $[0.0, 0.1)$ & 867 & 0.241 & 0.480 \\
-  $[0.2, 0.3)$ & 464 & 0.078 & 0.438 \\
-  $[0.4, 1.0)$ & 669 & 0.115 & 0.232 \\
-  \hline
-  \end{tabular}
-  
+\begin{tabular}{lccc}
+\toprule
+Change & Phase 1 & Phase 2 & $p$ \\
+\midrule
+Typos & 2.0\% & 0.7\% & .29 \\
+Lowercase, no punctuation & 29.7\% & 9.3\% & 3e-11 \\
+Title removed & 0\% & 15.7\% & 1.4e-14 \\
+\bottomrule
+\end{tabular}
 \end{table}
 
-\textbf{Self-correction is useful but secondary.} On the 922 samples where self-correction ran, Phase~1 accuracy is 0.095 and Phase~2 accuracy is 0.261 ($+$16.6~pp). On the remaining samples Phase~2 gains $+$27.7~pp. Context enrichment is therefore the primary driver, multi-agent majority voting the second, and self-correction on genuinely ambiguous reviews the third.
+\textbf{Time and product popularity.} The gain over Phase~1 is positive in every band of review year ($\le$2014, 2015--17, 2018--20, 2021--23: +10.3 to +16.3 points on eval, +21.5 to +26.5 on natural\_test) and of product popularity (1, 2--5, 6+ reviews), with all confidence intervals above zero. The improvement is therefore not confined to one period or to popular products.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{What Did Not Work}
+\label{sec:failed}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SRC: EXPERIMENTS_SUMMARY.md section 3; LOG.md
+
+Negative results are part of the evidence for the final design, and reporting them guards against the selection bias of showing only what worked. Table~\ref{tbl:failed} lists the main candidates that failed their gates; none was scored on the test sets.
+
+\begin{table}[t]
+\centering
+\caption{Candidates that failed their gate (dev data only; never scored on eval or natural\_test).}
+\label{tbl:failed}
+\small
+\begin{tabular}{p{0.33\linewidth}p{0.38\linewidth}p{0.22\linewidth}}
+\toprule
+Candidate & Dev result & Lesson \\
+\midrule
+LLM adjudicator picks between two agents' stars (twice) & 54.2\% vs stack 73.3\% on 434 disagreements & LLM does not decide \\
+Instruct LLM re-rates unsure reviews & 76 fixed vs 89 broken ($p=.35$) & Third LLM-judge failure \\
+Visual Verifier (BLIP, moondream2, Qwen2-VL) & Constant output (always 3, then 5) & A photo shows no satisfaction \\
+LoRA on 10K instead of 2K reviews & dev 56.4\% $<$ gate 58\% & Not data-starved \\
+Probe on 120K instead of 40K rows & +0.3, CI includes 0 & Saturated \\
+Gradient-boosted Reflector & dev2 62.1\% vs 64.2\% & Overfits 2\,000 rows \\
+More text views (MiniLM, char n-grams, NB-SVM) & $-2.1$ to $+0.5$, not significant & Same words, no new signal \\
+Learned Hand-off (8 features) & AUROC .701 vs .706 & Confidence suffices \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Three lessons follow. First, an LLM asked to choose or revise the star did worse than the stack every time, which agrees with reports that LLMs struggle to self-correct without external feedback \cite{huang2024cannot}; this is why the LLM explains and checks instead. Second, extra views of the same words add noise, while a genuinely different view (the frozen LLM's hidden state, a fine-tuned encoder) adds signal. Third, an earlier version of this project used a four-agent design with a product-image verifier, a retrieval agent and a dissonance-based critic. An audit showed that the image verifier produced a constant output and the critic overrode the vote on only 0.4\% of reviews, so the design was replaced by the system described here.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discussion}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\textbf{Benefits.} Richer context helps borderline ratings the most; multi-agent specialisation is more robust than any single agent; and explainability is structural, since Phase~2 yields a per-agent vote, a dissonance score, a correction trace and a rationale, where Phase~1 yields an opaque single output. The 12.6$\times$ recovery ratio shows that corrections are almost always beneficial.
+\textbf{What the gain consists of.} The jump from 54.0\% to 67.5\% (eval) and from 53.4\% to 78.0\% (natural\_test) has three parts. Most of it comes from adding independent signals and a learned combiner: even the LoRA + Evidence stack reaches 65.5\% and 74.2\%. A smaller part comes from fitting the Reflector on more reviews (2\,000 instead of 500). The new agents (the probe and DeBERTa) add the rest, significantly on natural\_test but not on eval. The natural-test gain is partly a class-mix effect: Phase~1 was trained on balanced data and under-predicts 5-star reviews, which make up 65\% of natural\_test; this is why we report macro-F1 and the balanced test set beside it.
 
-\textbf{Limitations.}
-(i) Absolute accuracy (38.7\%) remains low because the slice is heavily skewed to 5-star reviews; a balanced test set would likely give higher figures.
-(ii) BLIP captions depend on image availability and quality.
-(iii) The RAG index holds review embeddings, not product specifications, so the Prover retrieves similar reviews and does not check claims against a specification store.
-(iv) The 3.7$\times$ latency overhead suits offline batch analysis but not real-time use.
-(v) The Phase~1 adapter is trained on a different dataset from the one evaluated.
+\textbf{Why ``agentic''.} The decision core alone is an ensemble. The system becomes agentic through the components that decide what to do next for each review: whether to answer or hand off, whether an explanation is good enough or must be rewritten, and (with two agents) whether the slow agent is needed. Each of these decisions is measured on the same frozen test sets, with fixed and broken counts, rather than assumed to help.
+
+\textbf{Practical use.} For a retailer, the most useful output is probably the combination of the Hand-off agent and the checked explanation: more than half of real reviews receive an automatic star that is right 93\% of the time, with an explanation that quotes the review, and the rest receive a two-star range or go to a person.
+
+\textbf{Limitations.} (i) All main results use one dataset and one product category. (ii) The three-agent system depends on the review title (Section~\ref{sec:robust}). (iii) Part of the gain over the earliest stack comes from the larger Reflector fit set. (iv) The LLM judge in the Critic is the same model as the Explainer, and about 9\% of explanations still fail a check. (v) Sarcasm was too rare in the test sets to measure. (vi) The 92.6\% of the reference paper and our numbers come from different protocols and are not directly comparable. (vii) Five candidate agent sets were compared on dev2 before the final choice, by a rule fixed beforehand.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusion}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-A four-agent framework with dissonance-triggered self-correction improves LLaMA-3 sentiment classification on 2\,000 Amazon Reviews 2023 samples from 16.1\% to 38.7\% accuracy, with a 12.6$\times$ ratio of recovered to introduced errors. Analysis shows the gain comes mainly from multimodal context and multi-agent voting, and secondarily from self-correction. Future work includes a production vector store with CLIP-indexed product specifications, a vision-language Analyst (e.g.\ LLaVA-class) for direct image understanding, deeper multi-round reflection at scale, and comparison with classical baselines (Decision Tree, SVM, XLNet) on the Amazon 2023 slice.
+We reproduced a fine-tuned LLaMA-3 review-rating method under leakage control and explored it, finding a one-shot example leak, a cleaning step that removes most negative reviews, and template justifications. Building on these findings, a system of three independent agents and a learned Reflector improves exact star accuracy from 54.0\% to 67.5\% on balanced reviews and from 53.4\% to 78.0\% on the natural mix. An agentic layer makes the system's output checkable: a Critic loop raises faithful explanations from 62--64\% to 90.5--91.6\% without breaking any, the cited evidence passes a deletion test, and a Hand-off agent answers automatically only when confident. Three attempts to let an LLM decide the star failed, which suggests a division of labour: trained models decide, LLMs explain, and deterministic checks keep the explanations honest. Future work includes other product categories and datasets, an independent explanation judge, and agents that do not depend on the review title.
 
+\subsubsection*{Acknowledgements.} This work was carried out as part of an M.Tech project at PES University. Code and results are available at\\ \url{https://github.com/kvarun314/pes-mtech-project}.
 
-\subsubsection*{Acknowledgements.} This work was carried out as part of an M.Tech project at PES University. Code, results and the trained LoRA adapter: \url{https://github.com/kvarun314/pes-mtech-project}.
-
-\begin{thebibliography}{8}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% REFERENCES. Every entry was checked on 2026-11-14 against the arXiv API or Crossref (title, authors, year, venue),
+% except Holm (1979), which has no DOI (JSTOR only): check the JSTOR link once by hand.
+% Links: arXiv abstract page; PDF at https://arxiv.org/pdf/<id>; DOI resolves to the publisher page.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{thebibliography}{99}
 
 \bibitem{wang2025}
-Wang, et al.: Sentiment Analysis of Product Reviews Using Fine-Tuned LLaMa-3 Model. ITM Web of Conferences 70, 04021 (2025)
+Wang, Y.: Sentiment Analysis of Product Reviews Using Fine-Tuned LLaMa-3 Model: Evaluation with Comprehensive Benchmark Metrics. ITM Web of Conferences \textbf{70}, 04021 (2025). \doi{10.1051/itmconf/20257004021}
 
-\bibitem{asai2023}
-Asai, A., Wu, Z., Wang, Y., Sil, A., Hajishirzi, H.: Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection. arXiv:2310.11511 (2023)
+\bibitem{pang2008}
+Pang, B., Lee, L.: Opinion Mining and Sentiment Analysis. Foundations and Trends in Information Retrieval \textbf{2}(1--2), 1--135 (2008). \doi{10.1561/1500000011}
 
-\bibitem{mermaid2025}
-MERMAID: Multi-perspective Self-reflective Agents with Generative Augmentation for Emotion Recognition. In: Proc. EMNLP 2025, ACL Anthology 2025.emnlp-main.1252 (2025)
+\bibitem{salton1988}
+Salton, G., Buckley, C.: Term-weighting approaches in automatic text retrieval. Information Processing \& Management \textbf{24}(5), 513--523 (1988). \doi{10.1016/0306-4573(88)90021-0}
 
-\bibitem{verifier2025}
-Local Look-Ahead Guidance via Verifier-in-the-Loop for Automated Theorem Proving. arXiv:2503.09730 (2025)
+\bibitem{socher2013}
+Socher, R., Perelygin, A., Wu, J., Chuang, J., Manning, C.D., Ng, A., Potts, C.: Recursive Deep Models for Semantic Compositionality Over a Sentiment Treebank. In: Proc.\ EMNLP, pp.\ 1631--1642 (2013). \doi{10.18653/v1/D13-1170}, PDF: \url{https://aclanthology.org/D13-1170.pdf}
 
-\bibitem{sun2025}
-Sun, et al.: Can LLM Agents Simulate Customers to Evaluate Agentic-AI-based Shopping Assistants? arXiv:2509.21501 (2025)
+\bibitem{maas2011}
+Maas, A.L., Daly, R.E., Pham, P.T., Huang, D., Ng, A.Y., Potts, C.: Learning Word Vectors for Sentiment Analysis. In: Proc.\ ACL, pp.\ 142--150 (2011). PDF: \url{https://aclanthology.org/P11-1015.pdf}
+
+\bibitem{ni2019}
+Ni, J., Li, J., McAuley, J.: Justifying Recommendations using Distantly-Labeled Reviews and Fine-Grained Aspects. In: Proc.\ EMNLP-IJCNLP, pp.\ 188--197 (2019). \doi{10.18653/v1/D19-1018}, PDF: \url{https://aclanthology.org/D19-1018.pdf}
 
 \bibitem{hou2024}
-Hou, Y., Li, J., He, Z., Yan, A., Chen, X., McAuley, J.: Bridging Language and Items for Retrieval and Recommendation. arXiv:2403.03952 (2024)
+Hou, Y., Li, J., He, Z., Yan, A., Chen, X., McAuley, J., et al.: Bridging Language and Items for Retrieval and Recommendation. arXiv:2403.03952 (2024). \url{https://arxiv.org/abs/2403.03952}
+
+\bibitem{devlin2019bert}
+Devlin, J., Chang, M.W., Lee, K., Toutanova, K.: BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding. In: Proc.\ NAACL-HLT (2019). arXiv:1810.04805, \url{https://arxiv.org/abs/1810.04805}
+
+\bibitem{sanh2019distilbert}
+Sanh, V., Debut, L., Chaumond, J., Wolf, T.: DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter. arXiv:1910.01108 (2019). \url{https://arxiv.org/abs/1910.01108}
+
+\bibitem{he2021deberta}
+He, P., Liu, X., Gao, J., Chen, W.: DeBERTa: Decoding-enhanced BERT with Disentangled Attention. In: Proc.\ ICLR (2021). arXiv:2006.03654, \url{https://arxiv.org/abs/2006.03654}
+
+\bibitem{he2021debertav3}
+He, P., Gao, J., Chen, W.: DeBERTaV3: Improving DeBERTa using ELECTRA-Style Pre-Training with Gradient-Disentangled Embedding Sharing. In: Proc.\ ICLR (2023). arXiv:2111.09543, \url{https://arxiv.org/abs/2111.09543}
+
+\bibitem{grattafiori2024llama3}
+Grattafiori, A., Dubey, A., et al.: The Llama 3 Herd of Models. arXiv:2407.21783 (2024). \url{https://arxiv.org/abs/2407.21783}
+
+\bibitem{zhang2023sentiment}
+Zhang, W., Deng, Y., Liu, B., Pan, S.J., Bing, L.: Sentiment Analysis in the Era of Large Language Models: A Reality Check. arXiv:2305.15005 (2023). \url{https://arxiv.org/abs/2305.15005}
 
 \bibitem{hu2022lora}
-Hu, E.J., et al.: LoRA: Low-Rank Adaptation of Large Language Models. In: ICLR (2022)
+Hu, E.J., Shen, Y., Wallis, P., Allen-Zhu, Z., Li, Y., Wang, S., Wang, L., Chen, W.: LoRA: Low-Rank Adaptation of Large Language Models. In: Proc.\ ICLR (2022). arXiv:2106.09685, \url{https://arxiv.org/abs/2106.09685}
 
-\bibitem{li2022blip}
-Li, J., Li, D., Xiong, C., Hoi, S.: BLIP: Bootstrapping Language-Image Pre-training for Unified Vision-Language Understanding and Generation. In: ICML (2022)
+\bibitem{dettmers2023qlora}
+Dettmers, T., Pagnoni, A., Holtzman, A., Zettlemoyer, L.: QLoRA: Efficient Finetuning of Quantized LLMs. In: Proc.\ NeurIPS (2023). arXiv:2305.14314, \url{https://arxiv.org/abs/2305.14314}
+
+\bibitem{alain2016probes}
+Alain, G., Bengio, Y.: Understanding intermediate layers using linear classifier probes. arXiv:1610.01644 (2016). \url{https://arxiv.org/abs/1610.01644}
+
+\bibitem{hewitt2019control}
+Hewitt, J., Liang, P.: Designing and Interpreting Probes with Control Tasks. In: Proc.\ EMNLP-IJCNLP (2019). arXiv:1909.03368, \url{https://arxiv.org/abs/1909.03368}
+
+\bibitem{wolpert1992}
+Wolpert, D.H.: Stacked generalization. Neural Networks \textbf{5}(2), 241--259 (1992). \doi{10.1016/S0893-6080(05)80023-1}
+
+\bibitem{guo2017calibration}
+Guo, C., Pleiss, G., Sun, Y., Weinberger, K.Q.: On Calibration of Modern Neural Networks. In: Proc.\ ICML (2017). arXiv:1706.04599, \url{https://arxiv.org/abs/1706.04599}
+
+\bibitem{wei2022cot}
+Wei, J., Wang, X., Schuurmans, D., Bosma, M., Ichter, B., Xia, F., Chi, E., Le, Q., Zhou, D.: Chain-of-Thought Prompting Elicits Reasoning in Large Language Models. In: Proc.\ NeurIPS (2022). arXiv:2201.11903, \url{https://arxiv.org/abs/2201.11903}
+
+\bibitem{kojima2022zeroshot}
+Kojima, T., Gu, S.S., Reid, M., Matsuo, Y., Iwasawa, Y.: Large Language Models are Zero-Shot Reasoners. In: Proc.\ NeurIPS (2022). arXiv:2205.11916, \url{https://arxiv.org/abs/2205.11916}
+
+\bibitem{wang2023selfconsistency}
+Wang, X., Wei, J., Schuurmans, D., Le, Q., Chi, E., Narang, S., Chowdhery, A., Zhou, D.: Self-Consistency Improves Chain of Thought Reasoning in Language Models. In: Proc.\ ICLR (2023). arXiv:2203.11171, \url{https://arxiv.org/abs/2203.11171}
+
+\bibitem{madaan2023selfrefine}
+Madaan, A., Tandon, N., Gupta, P., et al.: Self-Refine: Iterative Refinement with Self-Feedback. In: Proc.\ NeurIPS (2023). arXiv:2303.17651, \url{https://arxiv.org/abs/2303.17651}
+
+\bibitem{shinn2023reflexion}
+Shinn, N., Cassano, F., Berman, E., Gopinath, A., Narasimhan, K., Yao, S.: Reflexion: Language Agents with Verbal Reinforcement Learning. In: Proc.\ NeurIPS (2023). arXiv:2303.11366, \url{https://arxiv.org/abs/2303.11366}
+
+\bibitem{asai2023selfrag}
+Asai, A., Wu, Z., Wang, Y., Sil, A., Hajishirzi, H.: Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection. In: Proc.\ ICLR (2024). arXiv:2310.11511, \url{https://arxiv.org/abs/2310.11511}
+
+\bibitem{yao2023react}
+Yao, S., Zhao, J., Yu, D., Du, N., Shafran, I., Narasimhan, K., Cao, Y.: ReAct: Synergizing Reasoning and Acting in Language Models. In: Proc.\ ICLR (2023). arXiv:2210.03629, \url{https://arxiv.org/abs/2210.03629}
+
+\bibitem{du2023debate}
+Du, Y., Li, S., Torralba, A., Tenenbaum, J.B., Mordatch, I.: Improving Factuality and Reasoning in Language Models through Multiagent Debate. arXiv:2305.14325 (2023). \url{https://arxiv.org/abs/2305.14325}
+
+\bibitem{wu2023autogen}
+Wu, Q., Bansal, G., Zhang, J., Wu, Y., Li, B., Zhu, E., et al.: AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation. arXiv:2308.08155 (2023). \url{https://arxiv.org/abs/2308.08155}
+
+\bibitem{huang2024cannot}
+Huang, J., Chen, X., Mishra, S., Zheng, H.S., Yu, A.W., Song, X., Zhou, D.: Large Language Models Cannot Self-Correct Reasoning Yet. In: Proc.\ ICLR (2024). arXiv:2310.01798, \url{https://arxiv.org/abs/2310.01798}
+
+\bibitem{zheng2023judge}
+Zheng, L., Chiang, W.L., Sheng, Y., et al.: Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena. In: Proc.\ NeurIPS Datasets and Benchmarks (2023). arXiv:2306.05685, \url{https://arxiv.org/abs/2306.05685}
+
+\bibitem{jacovi2020faithfulness}
+Jacovi, A., Goldberg, Y.: Towards Faithfully Interpretable NLP Systems: How Should We Define and Evaluate Faithfulness? In: Proc.\ ACL (2020). arXiv:2004.03685, \url{https://arxiv.org/abs/2004.03685}
+
+\bibitem{turpin2023unfaithful}
+Turpin, M., Michael, J., Perez, E., Bowman, S.R.: Language Models Don't Always Say What They Think: Unfaithful Explanations in Chain-of-Thought Prompting. In: Proc.\ NeurIPS (2023). arXiv:2305.04388, \url{https://arxiv.org/abs/2305.04388}
+
+\bibitem{deyoung2020eraser}
+DeYoung, J., Jain, S., Rajani, N.F., Lehman, E., Xiong, C., Socher, R., Wallace, B.C.: ERASER: A Benchmark to Evaluate Rationalized NLP Models. In: Proc.\ ACL (2020). arXiv:1911.03429, \url{https://arxiv.org/abs/1911.03429}
+
+\bibitem{ribeiro2016lime}
+Ribeiro, M.T., Singh, S., Guestrin, C.: ``Why Should I Trust You?'': Explaining the Predictions of Any Classifier. In: Proc.\ KDD (2016). arXiv:1602.04938, \url{https://arxiv.org/abs/1602.04938}
+
+\bibitem{chow1970}
+Chow, C.K.: On optimum recognition error and reject tradeoff. IEEE Transactions on Information Theory \textbf{16}(1), 41--46 (1970). \doi{10.1109/TIT.1970.1054406}
+
+\bibitem{geifman2017selective}
+Geifman, Y., El-Yaniv, R.: Selective Classification for Deep Neural Networks. In: Proc.\ NeurIPS (2017). arXiv:1705.08500, \url{https://arxiv.org/abs/1705.08500}
+
+\bibitem{angelopoulos2021conformal}
+Angelopoulos, A.N., Bates, S.: A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification. arXiv:2107.07511 (2021). \url{https://arxiv.org/abs/2107.07511}
+
+\bibitem{kadavath2022know}
+Kadavath, S., Conerly, T., Askell, A., et al.: Language Models (Mostly) Know What They Know. arXiv:2207.05221 (2022). \url{https://arxiv.org/abs/2207.05221}
+
+\bibitem{kapoor2023leakage}
+Kapoor, S., Narayanan, A.: Leakage and the Reproducibility Crisis in Machine-Learning-Based Science. Patterns \textbf{4}(9), 100804 (2023). \doi{10.1016/j.patter.2023.100804}, arXiv:2207.07048, \url{https://arxiv.org/abs/2207.07048}
+
+\bibitem{ribeiro2020checklist}
+Ribeiro, M.T., Wu, T., Guestrin, C., Singh, S.: Beyond Accuracy: Behavioral Testing of NLP Models with CheckList. In: Proc.\ ACL (2020). arXiv:2005.04118, \url{https://arxiv.org/abs/2005.04118}
+
+\bibitem{cohen1968kappa}
+Cohen, J.: Weighted kappa: Nominal scale agreement provision for scaled disagreement or partial credit. Psychological Bulletin \textbf{70}(4), 213--220 (1968). \doi{10.1037/h0026256}
+
+\bibitem{efron1979}
+Efron, B.: Bootstrap Methods: Another Look at the Jackknife. The Annals of Statistics \textbf{7}(1), 1--26 (1979). \doi{10.1214/aos/1176344552}
+
+\bibitem{mcnemar1947}
+McNemar, Q.: Note on the sampling error of the difference between correlated proportions or percentages. Psychometrika \textbf{12}(2), 153--157 (1947). \doi{10.1007/BF02295996}
+
+\bibitem{holm1979}
+Holm, S.: A Simple Sequentially Rejective Multiple Test Procedure. Scandinavian Journal of Statistics \textbf{6}(2), 65--70 (1979). \url{https://www.jstor.org/stable/4615733}
+
+\bibitem{wilcoxon1945}
+Wilcoxon, F.: Individual Comparisons by Ranking Methods. Biometrics Bulletin \textbf{1}(6), 80--83 (1945). \doi{10.2307/3001968}
 
 \end{thebibliography}
 
