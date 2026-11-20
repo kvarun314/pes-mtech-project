@@ -19,9 +19,11 @@ DST = os.path.join(ROOT, "presentation", "Agentic_LLaMA3_Presentation.pptx")  # 
 FIG = os.path.join(ROOT, "paper", "figures", "e23")
 FONT = "Arial"
 C = lambda h: RGBColor.from_string(h)
-INK, BODY, MUTED = C("1A2332"), C("3D4C5C"), C("8792A0")
-BLUE, DEEP, TINT, RULE = C("2C5AA0"), C("1B3C6E"), C("ECF2F9"), C("D8E0E8")
-GREY, POS, NEG, WHITE, SOFT = C("AAB4C0"), C("1E7A46"), C("A93636"), C("FFFFFF"), C("C9D7EA")
+# Apple-inspired: near-black type, soft grey tiles, one accent blue, deep-navy stage for big moments
+INK, BODY, MUTED = C("1D1D1F"), C("424245"), C("86868B")
+BLUE, DEEP, TINT, RULE = C("2C5AA0"), C("1B3C6E"), C("F5F5F7"), C("E5E5EA")
+GREY, POS, NEG, WHITE, SOFT = C("C7C7CC"), C("1E7A46"), C("A93636"), C("FFFFFF"), C("A1A1A6")
+NIGHT, SKY = C("0B1A33"), C("7FA8E8")
 W, H, M = 13.333, 7.5, 0.8
 CW = W - 2 * M
 
@@ -44,8 +46,9 @@ def text(sl, x, y, w, h, s, size=16, color=BODY, bold=False, align=PP_ALIGN.LEFT
     return tb
 
 
-def rect(sl, x, y, w, h, fill):
-    s = sl.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(h))
+def rect(sl, x, y, w, h, fill, r=0):
+    s = sl.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE if r else MSO_SHAPE.RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(h))
+    if r: s.adjustments[0] = r
     s.fill.solid(); s.fill.fore_color.rgb = fill; s.line.fill.background()
     st = s._element.find(qn("p:style"))
     if st is not None: s._element.remove(st)   # no theme shadow or outline
@@ -57,23 +60,27 @@ def hline(sl, x, y, w, color=RULE, h=0.015): return rect(sl, x, y, w, h, color)
 
 def slide(key, part, title, note, sub=None):
     sl = prs.slides.add_slide(LAY); SLIDES.append((key, title, sl)); NOTES[key] = note
-    text(sl, M, 0.55, CW, 0.3, part.upper(), size=11, color=BLUE, bold=True)
-    text(sl, M, 0.85, CW, 0.7, title, size=32, color=INK, bold=True)
-    if sub: text(sl, M, 1.6, CW, 0.4, sub, size=16, color=MUTED)
-    hline(sl, M, 6.95, CW)
-    text(sl, M, 7.05, 6, 0.25, "Agentic Self-Correction in LLaMA-3", size=10, color=MUTED)
+    text(sl, M, 0.65, CW, 0.8, title, size=38, color=INK, bold=True, line=1.0)   # no kicker, no footer: the title carries the slide
+    if sub: text(sl, M, 1.4, CW, 0.5, sub, size=18, color=MUTED)
     return sl
 
 
-def cols(sl, items, y=2.5, big=40, gap=0.5, color=BLUE):
-    """Columns with a thin rule on top: (big, title, body). big may be '' to skip."""
-    n = len(items); w = (CW - gap * (n - 1)) / n
+def cols(sl, items, y=2.5, big=40, gap=0.3, color=BLUE, th=None):
+    """Rounded grey tiles: (big, title, body). Four items go in a 2 x 2 grid. big may be '' to skip."""
+    n = len(items); per = 2 if n == 4 else n; nr = (n + per - 1) // per
+    w = (CW - gap * (per - 1)) / per; th = th or (2.0 if nr == 2 else 3.2)
     for i, (b, t, s) in enumerate(items):
-        x = M + i * (w + gap); yy = y
-        hline(sl, x, yy, w, color, 0.04); yy += 0.25
-        if b: text(sl, x, yy, w, 0.8, b, size=big, color=color, bold=True); yy += big / 72 * 1.35
-        text(sl, x, yy, w, 0.5, t, size=19, color=INK, bold=True); yy += 0.5
-        text(sl, x, yy, w, 1.6, s, size=15)
+        x = M + (i % per) * (w + gap); yt = y + (i // per) * (th + gap); rect(sl, x, yt, w, th, TINT, 0.08)
+        if nr == 2 and b:   # wide tile: number on the left, words on the right
+            nw = 2.4 if len(b) > 4 else 1.3   # number column sized to the number
+            text(sl, x + 0.35, yt + 0.3, nw, 1.2, b, size=big, color=color, bold=True)
+            text(sl, x + 0.45 + nw, yt + 0.35, w - nw - 0.7, 0.5, t, size=19, color=INK, bold=True)
+            text(sl, x + 0.45 + nw, yt + 0.9, w - nw - 0.7, th - 1.0, s, size=15); continue
+        x += 0.35; ww = w - 0.7; yy = yt + 0.4
+        if b: text(sl, x, yy, ww, 0.8, b, size=big, color=color, bold=True); yy += big / 72 * 1.35
+        lines = 1 + int(len(t) * 18 * 0.5 / 72 / ww)
+        text(sl, x, yy, ww, 0.5 * lines, t, size=18, color=INK, bold=True); yy += 0.32 * lines + 0.25
+        text(sl, x, yy, ww, 1.6, s, size=15)
 
 
 def rows(sl, data, widths, y=2.2, head=None, size=14, rh=0.52, tw=None):
@@ -105,9 +112,9 @@ def bars(sl, x, y, w, h, cats, series, colors, maxv=100, fmt='0.0"%"'):
     va, ca = ch.value_axis, ch.category_axis
     va.maximum_scale, va.minimum_scale = maxv, 0; va.has_major_gridlines = False; va.visible = False
     ca.format.line.color.rgb = RULE; ca.tick_labels.font.size = Pt(14)
-    pl = ch.plots[0]; pl.gap_width = 70; pl.overlap = -8
+    pl = ch.plots[0]; pl.gap_width = 55; pl.overlap = -6
     pl.has_data_labels = True; dl = pl.data_labels; dl.number_format = fmt; dl.number_format_is_linked = False
-    dl.font.size = Pt(15); dl.font.bold = True; dl.position = XL_LABEL_POSITION.OUTSIDE_END
+    dl.font.size = Pt(16); dl.font.bold = True; dl.font.color.rgb = INK; dl.position = XL_LABEL_POSITION.OUTSIDE_END
     for s, c in zip(pl.series, colors): s.format.fill.solid(); s.format.fill.fore_color.rgb = c
     ch.has_legend = len(series) > 1
     if ch.has_legend:
@@ -119,7 +126,7 @@ def pic(sl, f, x, y, w=None, h=None):
 
 
 def node(sl, x, y, w, h, title, sub="", dark=False):
-    rect(sl, x, y, w, h, DEEP if dark else TINT)
+    rect(sl, x, y, w, h, DEEP if dark else TINT, 0.15)
     text(sl, x + 0.1, y + (0.18 if sub else 0), w - 0.2, 0.4 if sub else h, title, size=15, color=WHITE if dark else INK, bold=True,
          align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.TOP if sub else MSO_ANCHOR.MIDDLE)
     if sub: text(sl, x + 0.1, y + 0.55, w - 0.2, h - 0.6, sub, size=12, color=SOFT if dark else BODY, align=PP_ALIGN.CENTER)
@@ -140,11 +147,19 @@ def flow(sl, y, items, dark=None, h=1.2):
 
 def dark_slide(key, title, lines, note, kicker=None):
     sl = prs.slides.add_slide(LAY); SLIDES.append((key, title, sl)); NOTES[key] = note
-    rect(sl, 0, 0, W, H, DEEP)
-    if kicker: text(sl, M, 2.2, CW, 0.4, kicker.upper(), size=13, color=SOFT, bold=True)
-    text(sl, M, 2.65, CW, 1.6, title, size=44, color=WHITE, bold=True)
-    hline(sl, M, 4.25, 1.0, C("6F9BD8"), 0.05)
-    text(sl, M, 4.55, CW, 1.5, lines, size=18, color=SOFT)
+    rect(sl, 0, 0, W, H, NIGHT)
+    if kicker: text(sl, M, 2.0, CW, 0.4, kicker.upper(), size=14, color=SKY, bold=True, align=PP_ALIGN.CENTER)
+    text(sl, M, 1.6, CW, 2.6, title, size=54, color=WHITE, bold=True, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+    text(sl, M + 1, 4.3, CW - 2, 1.8, lines, size=20, color=SOFT, align=PP_ALIGN.CENTER)
+    return sl
+
+
+def hero(key, big, lines, note, title):
+    """Apple-style moment: one giant number on the dark stage."""
+    sl = prs.slides.add_slide(LAY); SLIDES.append((key, title, sl)); NOTES[key] = note
+    rect(sl, 0, 0, W, H, NIGHT)
+    text(sl, M, 1.4, CW, 2.6, big, size=150, color=SKY, bold=True, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, line=1.0)
+    text(sl, M + 1.5, 4.4, CW - 3, 1.8, lines, size=22, color=SOFT, align=PP_ALIGN.CENTER)
     return sl
 
 
@@ -179,7 +194,7 @@ sl = slide("implement", "Part 1 · Our implementation", "How we implemented it",
            sub="Same pipeline and settings, on a clean benchmark with a fair test")
 cols(sl, [("", "Rebuild", "The paper's pipeline and Table 1 settings: LoRA rank 4, α 64, 3 epochs."),
           ("", "Clean benchmark", "Amazon Reviews 2023 Electronics. Train, development and test sets kept apart."),
-          ("", "Fair test", "No prompt example that hints at the answer. Test sets read once, after all choices.")], y=2.4)
+          ("", "Fair test", "No prompt example that hints at the answer. Test sets read once, after all choices.")], y=2.3, th=2.0)
 hline(sl, M, 4.75, CW)
 stat(sl, M, 5.0, 3.2, "69.1%", "check on the paper's own data", size=40)
 text(sl, 4.4, 5.2, 8, 1.2, "Our rebuild works. But always guessing 5★ already scores 63.8% on that data, so it says little about the hard stars.", size=16, color=INK)
@@ -192,7 +207,8 @@ stat(sl, 8.9, 2.5, 3.7, "94%", "within one star: it reads the direction well")
 stat(sl, 8.9, 4.4, 3.7, "54%", "exact star: neighbouring stars are hard", color=MUTED)
 
 sl = slide("found", "Part 1 · What we found", "Four things hold it back",
-           "Findings. (1) Label leak (LOG 2026-10-11): in our first reproduction the prompt's example hinted at the answer; a random example costs 7.7 points. This was our first reproduction's example choice, not a claim about the authors. (2) TextBlob cleaning removes 52% of 1-star and 67% of 2-star reviews. (3) Justifications are a template: 5 distinct sentences for 150 reviews, none quoting the review (x1_explain_compare.out). (4) One model, one pass: nothing catches a mistake.")
+           "Findings. (1) Label leak (LOG 2026-10-11): in our first reproduction the prompt's example hinted at the answer; a random example costs 7.7 points. This was our first reproduction's example choice, not a claim about the authors. (2) TextBlob cleaning removes 52% of 1-star and 67% of 2-star reviews. (3) Justifications are a template: 5 distinct sentences for 150 reviews, none quoting the review (x1_explain_compare.out). (4) One model, one pass: nothing catches a mistake.",
+           sub="What we found when we rebuilt it on a clean benchmark")
 cols(sl, [("−7.7", "Set-up dependent", "points when the prompt's example no longer hints at the answer"),
           ("52 / 67%", "Negatives removed", "of 1★ / 2★ reviews deleted by the TextBlob filter"),
           ("5", "Template reasons", "distinct justifications for 150 reviews; none quotes the review"),
@@ -204,14 +220,14 @@ sl = slide("novelty_paper", "Part 1 · Reference paper", "Its novelty",
 cols(sl, [("01", "LLM for star rating", "A general open LLM, fine-tuned for five stars, beats classic models and XLNet."),
           ("02", "Curated data", "Quality control, balanced stars, varied wording, extra neutral reviews."),
           ("03", "Efficient training", "A small LoRA add-on and 4-bit weights: one 16 GB GPU."),
-          ("04", "Star with a reason", "The prompt returns a justification with the star.")], y=2.8, big=36, gap=0.45)
+          ("04", "Star with a reason", "The prompt returns a justification with the star.")], y=2.3, big=36, gap=0.45)
 
 # ======================================================================= PART 2: our approach
-dark_slide("approach", "Our approach",
-           ["Trained models decide the star. LLMs explain it. Checks keep the explanation honest.",
-            ("A second opinion, data kept whole, and explanations that can be checked.", {"size": 15})],
-           "Our approach. Say: from Part 1 we need a second opinion, data kept whole, and explanations that can be checked. Three attempts to let an LLM decide the star failed, so trained models decide, the LLM explains, and checks keep the explanation honest.",
-           kicker="Part 2")
+sl = dark_slide("approach", "", [], "Our approach. Say: from Part 1 we need a second opinion, data kept whole, and explanations that can be checked. Three attempts to let an LLM decide the star failed, so trained models decide, the LLM explains, and checks keep the explanation honest.")
+SLIDES[-1] = ("approach", "Our approach", sl)
+text(sl, M, 1.3, CW, 0.4, "PART 2  \u00b7  OUR APPROACH", size=14, color=SKY, bold=True, align=PP_ALIGN.CENTER)
+text(sl, M, 2.0, CW, 3.5, [("Models decide.", {}), ("LLMs explain.", {"gap": 6}), ("Checks keep it honest.", {"gap": 6, "color": SKY})],
+     size=60, color=WHITE, bold=True, align=PP_ALIGN.CENTER, line=1.0)
 
 sl = slide("arch", "Part 2 · Our approach", "Our stack",
            "Our stack. Three independent agents read the review: the LLaMA probe (a classifier on a frozen LLaMA-3-8B layer, meaning), the Evidence model (TF-IDF + logistic regression on about 497K reviews, key words) and DeBERTa-v3 (fine-tuned encoder, wording). The Reflector, a logistic regression on their probabilities, decides the star. The Hand-off agent answers only when confident. The Explainer writes from the evidence; the Critic checks it and sends it back, up to four rewrites. Built in LangGraph; LLaMA runs locally on MLX.",
@@ -261,6 +277,9 @@ rows(sl, [("Leak-free protocol", "The example leak was worth 7.7 points; test se
      [4.6, 5.9, 1.2], y=2.3, head=["Choice", "Evidence", "Verdict"], size=15, rh=0.62)
 
 # ======================================================================= results
+hero("hero", "+24.6", ["points of exact-star accuracy over the reference method, on the real mix of reviews.", ("+13.5 on balanced reviews. Both significant.", {"size": 18, "color": SOFT})],
+     "Hero moment. Pause on the number. Say: on the natural mix of reviews, the three-agent system gets the exact star 24.6 points more often than the reference method (53.4% to 78.0%); on balanced reviews +13.5 (54.0% to 67.5%). Both significant after Holm correction (analysis_C.out). Then go to the chart.",
+     "+24.6 points")
 sl = slide("headline", "Results", "Phase 2 gets the exact star far more often",
            "Headline (results_frozen.md, analysis_C.out). Exact star: Phase 1 54.0 / 53.4, Phase 2 67.5 / 78.0: +13.5 and +24.6 points, 29% and 53% fewer errors, significant after Holm correction. Within one star 97.3 / 97.4. If asked whether 67.5 is good: random is 20%, and neighbouring stars are ambiguous. Caveat if asked: on balanced eval the three-agent stack ties the previous two-agent stack; DeBERTa's +2.3 is on the natural mix.",
            sub="Exact star accuracy, Phase 1 vs Phase 2")
@@ -269,7 +288,7 @@ stat(sl, 8.9, 2.3, 3.7, "+13.5", "points on balanced reviews", color=POS)
 stat(sl, 8.9, 3.85, 3.7, "+24.6", "points on the natural mix", color=POS)
 stat(sl, 8.9, 5.4, 3.7, "97%", "within one star", size=30)
 
-sl = slide("hard", "Results", "It reads reviews that sound negative but are happy",
+sl = slide("hard", "Results", "Negative words, happy reviewer",
            "Hard cases (hard_cases.out). Reviews whose words sound negative but whose star is 4 or 5. Phase 1: 35.0% (balanced, n 40), 43.0% (natural, n 193). Phase 2: 67.5% and 78.2%. p 0.0023 and 5.4e-16.",
            sub="Exact star accuracy on reviews rated 4–5★ whose words sound negative")
 bars(sl, M, 2.2, 7.4, 4.5, ["Balanced test (40)", "Natural test (193)"], [("Phase 1", (35.0, 43.0)), ("Phase 2", (67.5, 78.2))], [GREY, BLUE])
@@ -299,7 +318,7 @@ if os.path.exists(cache):
         if r["review_id"] == rid: EX = (r, o, c["phase2_states"][1]["star"]); break
 if EX:
     r, o, star = EX
-    rect(sl, M, 1.85, 3.5, 4.8, TINT)
+    rect(sl, M, 1.85, 3.5, 4.8, TINT, 0.05)
     text(sl, M + 0.3, 2.05, 2.9, 0.3, f"REVIEW  ·  {r['gt_rating']}★, system {star}★", size=11, color=BLUE, bold=True)
     text(sl, M + 0.3, 2.45, 2.9, 4.1, r["review_text"], size=13, color=INK)
     n = len(o["drafts"]); g = 0.35; cw = (CW - 3.85 - g * (n - 1)) / n
@@ -354,7 +373,7 @@ dark_slide("thanks", "Thank you", ["Questions  ·  live demo"],
 # ---- page numbers, notes, slide map
 n = len(SLIDES)
 for i, (k, t, sl) in enumerate(SLIDES, 1):
-    if k not in ("title", "thanks", "approach"): text(sl, W - M - 1, 7.05, 1, 0.25, f"{i} / {n}", size=10, color=MUTED, align=PP_ALIGN.RIGHT)
+    if k not in ("title", "thanks", "approach", "hero"): text(sl, W - M - 1, 7.0, 1, 0.25, str(i), size=10, color=GREY, align=PP_ALIGN.RIGHT)
     sl.notes_slide.notes_text_frame.text = NOTES[k]
 with open(os.path.join(ROOT, "presentation", "deck_slide_map.md"), "w") as f:
     f.write("# Deck slide map and short scripts (auto-generated by v2_reflective/build_deck_clean.py on every build; do not edit)\n\n"

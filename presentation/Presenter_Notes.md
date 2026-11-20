@@ -1,6 +1,6 @@
 # Presenter Notes — Agentic Self-Correction in LLaMA-3
 
-## Part 0 — Current deck (22 slides, minimal layout). READ THIS FIRST
+## Part 0 — Current deck (23 slides, Apple-inspired layout). READ THIS FIRST
 
 Deck: `presentation/Agentic_LLaMA3_Presentation.pptx`, the only current deck, built by `v2_reflective/build_deck_clean.py` (2026-11-20, user: "more clean, more straightforward and simple, showcasing the analysis, same colour palette"). The previous 25-slide dense deck is in `old_decks/Agentic_LLaMA3_Presentation_dense_2026-11-20.pptx`; its Part 0 is in `docs/archive/Presenter_Notes_Part0_2026-11-20.md`.
 
@@ -8,7 +8,7 @@ Deck: `presentation/Agentic_LLaMA3_Presentation.pptx`, the only current deck, bu
 
 **Flow (user, 2026-11-20, second version):** Part 1: reference paper in a nutshell → its stack → our implementation and what we found → its novelty. Part 2: our approach → our stack → why it works → approaches we tried → what we kept → results → why it is better → conclusion.
 
-**Layout (user, 2026-11-20: "simpler, cleaner, more presentable"):** flat shapes, no boxes or shadows, white space, one message per slide, big numbers, plain tables with hairlines. Same blue palette.
+**Layout (user, 2026-11-20: "more presentable, modern, similar to Apple's, not exact"):** one idea per slide, large titles without kickers or footers, soft grey rounded tiles, near-black type, one accent blue, and a deep-navy stage for the big moments (title, Part 2, the +24.6 hero, thank you). Plain tables with hairlines; native charts.
 
 **Timing (about 22 minutes):** Part 1 7 min; our approach, stack, why it works 4 min; tried and kept 3 min; results 6 min; why better and conclusion 2 min.
 
@@ -27,16 +27,17 @@ Deck: `presentation/Agentic_LLaMA3_Presentation.pptx`, the only current deck, bu
 10. **Why it works.** Evidence model wins on short reviews, probe on long; when they disagree the stack is right 58–62%.
 11. **What we tried and dropped.** LLM decides the star (3 attempts); photo agent; more views of the same words; bigger probe; non-linear Reflector; second judge.
 12. **What we kept.** Leak-free protocol; raw balanced data; probe + Evidence; DeBERTa-v3; simple Reflector; Critic loop and Hand-off.
-13. **Accuracy.** +13.5 / +24.6 points; 97% within one star.
-14. **Hard language.** 35.0 → 67.5 and 43.0 → 78.2.
-15. **Hand-off.** 92.8% right on 56% (natural); 86.9% on 41% (balanced; Phase 1 66.9%).
-16. **Critic loop.** 62.3 / 63.7 → 90.5 / 91.6; 841 fixed, 0 broken; cited words matter 2× random.
-17. **Example.** Three drafts; the Critic names what is wrong; draft 3 passes.
-18. **Human check.** Author 80% vs Critic 92%, agreement 76%; agents disagreed: author 37.5%, Critic 93.8%.
-19. **Robustness.** Flat text 9.3% vs 29.7%; typos 0.7% vs 2.0%; no title 15.7% vs 0% (limitation).
-20. **Why it is better.** Side-by-side table; say the one row where Phase 2 is worse (no title).
-21. **Conclusion.** Rebuilt and explored; several agents beat one; output you can check.
-22. **Thank you.** Questions, then the live demo.
+13. **+24.6 (hero).** One number on the dark stage: +24.6 points on the natural mix (+13.5 balanced). Pause, then the chart.
+14. **Accuracy.** +13.5 / +24.6 points; 97% within one star.
+15. **Hard language.** 35.0 → 67.5 and 43.0 → 78.2.
+16. **Hand-off.** 92.8% right on 56% (natural); 86.9% on 41% (balanced; Phase 1 66.9%).
+17. **Critic loop.** 62.3 / 63.7 → 90.5 / 91.6; 841 fixed, 0 broken; cited words matter 2× random.
+18. **Example.** Three drafts; the Critic names what is wrong; draft 3 passes.
+19. **Human check.** Author 80% vs Critic 92%, agreement 76%; agents disagreed: author 37.5%, Critic 93.8%.
+20. **Robustness.** Flat text 9.3% vs 29.7%; typos 0.7% vs 2.0%; no title 15.7% vs 0% (limitation).
+21. **Why it is better.** Side-by-side table; say the one row where Phase 2 is worse (no title).
+22. **Conclusion.** Rebuilt and explored; several agents beat one; output you can check.
+23. **Thank you.** Questions, then the live demo.
 
 ### Key terms (for you; not on the slides)
 Use these when explaining or when someone asks what a word means.
