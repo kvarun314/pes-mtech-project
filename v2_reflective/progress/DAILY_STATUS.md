@@ -80,3 +80,7 @@
 - 2026-11-14 Project moved out of iCloud: copied to `~/PES_Project_Phase1` (8,877 files, identical by rsync dry-run, 0 cloud-only files). New `.venv` with the same 161 package versions; Jupyter kernel `pes-mtech` re-registered to it; model symlinks made relative; old run scripts repointed. Tests 168 passed. check_demo: 10/10 PAPER numbers match, but runtime 335 s (limit 180 s) with heavy swap from other open apps. The old `~/Documents/PES_Project_Phase1` is kept until the user OKs deleting it.
 - 2026-11-14 Conference paper: full draft content written (Claude-drafted at the user's request; the user rewrites it). 45 verified references. audit.py: 100% AI-drafted until the user's rewrite is committed.
 - TO DO (user): before the presentation, quit other apps (Teams, Chrome, Notion, Spotify, MySQL) or restart the Mac, then run `check_demo.py` the day before; the demo needs ~10 GB free for the two LLaMA models.
+
+## 2026-11-20
+- Human check of 50 explanations scored: author 80% vs Critic 92% faithful, agreement 76%; the Critic is too lenient when agents disagree (author 37.5%, Critic 93.8%). Added to LOG, summary, paper, notes, deck.
+- Deck rebuilt as a clean 21-slide version (`build_deck_clean.py`); old deck in `old_decks/`.

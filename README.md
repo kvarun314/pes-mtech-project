@@ -10,7 +10,7 @@
 
 | I want… | Go to |
 |---|---|
-| **The presentation** | `../Agentic_LLaMA3_Presentation.pptx`, the **only** current deck. Build it with `/opt/homebrew/bin/python3 v2_reflective/build_deck_e23.py` |
+| **The presentation** | `../Agentic_LLaMA3_Presentation.pptx`, the **only** current deck. Build it with `/opt/homebrew/bin/python3 v2_reflective/build_deck_clean.py` (clean 21-slide deck, 2026-11-20) |
 | The deck in Google Slides (always current; synced by the builder) | https://docs.google.com/presentation/d/1V08iho4p7gdllKPxRVroaPhj6oo8Km1_/edit (Drive `PES_backups/current_deck/`). View and present there; make changes through the builder, because edits in Slides are overwritten on the next build |
 | Old decks (kept, never deleted) | `../old_decks/` |
 | What to say on each slide | `presentation/Presenter_Notes.md` (Part 0 = current deck) |
@@ -42,7 +42,7 @@ pes-mtech-project/
 │   ├── plans/           older plan documents
 │   ├── progress/        status updates
 │   ├── e23/             Electronics 2023: data, agents, gates, readouts, freeze  ← all current numbers
-│   ├── build_deck_e23.py, build_presentation_v4.py, build_demo_notebook.py
+│   ├── build_deck_clean.py, build_presentation_v4.py, build_demo_notebook.py
 │   └── (top-level *.py) Kaggle close-out scripts, Oct 9–12 (historical; paths inside are repo-root relative)
 ├── paper/               LaTeX papers and figures (paper/figures/e23/)
 ├── docs/
