@@ -234,13 +234,15 @@ cols(sl, [("−7.7", "Set-up dependent", "points when the prompt's example no lo
           ("5", "Template reasons", "distinct justifications for 150 reviews; none quotes the review"),
           ("1", "Single pass", "one model decides; nothing catches a mistake")], y=2.6, big=40, color=NEG, gap=0.45)
 
-sl = slide("novelty_paper", "Part 1 · Reference paper", "Its novelty",
-           "What the paper contributes, and why we chose it: (1) a general open LLM fine-tuned for five-star rating, beating classic models and XLNet; (2) a data pipeline combining quality control, balance, lexical diversity and neutral oversampling; (3) parameter-efficient training, a small LoRA add-on and 4-bit weights on one 16 GB GPU; (4) a prompt that returns a justification with the star. Our findings show where each of these needs help.",
-           sub="What the paper contributes, and why we chose it")
-cols(sl, [("01", "LLM for star rating", "A general open LLM, fine-tuned for five stars, beats classic models and XLNet."),
-          ("02", "Curated data", "Quality control, balanced stars, varied wording, extra neutral reviews."),
-          ("03", "Efficient training", "A small LoRA add-on and 4-bit weights: one 16 GB GPU."),
-          ("04", "Star with a reason", "The prompt returns a justification with the star.")], y=2.3, big=36, gap=0.45)
+sl = slide("novelty_paper", "Part 1 \u00b7 Reference paper", "Its novelty: what is missing",
+           "The gap. Read each row left to right: what the paper does, what is missing from it, and what this project adds. (1) It fine-tunes an LLM for star rating, but one model decides alone: we add a second, independent opinion (three agents and a Reflector). (2) It gives a star with a justification, but nothing checks that the justification is true: we add the Critic loop, the deletion test and a human check. (3) It answers every review the same way: we add a Hand-off agent that knows when it is unsure, and star ranges. (4) It reports 92.6% on curated data: we add a leak-free, fixed protocol (frozen splits, rules written before runs, test sets read once). This slide is the bridge to Part 2.",
+           sub="What the paper does, the gap we found, and what this project adds")
+G = lambda s: (s, {"color": BLUE, "bold": True})
+rows(sl, [("Fine-tunes an LLM for star rating", "A second, independent opinion", G("Three agents + a Reflector")),
+          ("Gives a star with a justification", "A check that the justification is true", G("Critic loop, deletion test, human check")),
+          ("Answers every review the same way", "Knowing when it is unsure", G("Hand-off agent, star ranges")),
+          ("Reports 92.6% on curated data", "A leak-free, fixed test protocol", G("Frozen splits, rules set before runs"))],
+     [4.0, 3.9, 3.8], y=2.3, head=["The paper", "What is missing", "What we add"], size=17, rh=0.95)
 
 # ======================================================================= PART 2: our approach
 sl = dark_slide("approach", "", [], "Our approach. Say: from Part 1 we need a second opinion, data kept whole, and explanations that can be checked. Three attempts to let an LLM decide the star failed, so trained models decide, the LLM explains, and checks keep the explanation honest.")
