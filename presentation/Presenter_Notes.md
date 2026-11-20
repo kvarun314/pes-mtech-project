@@ -21,7 +21,7 @@ Deck: `presentation/Agentic_LLaMA3_Presentation.pptx`, the only current deck, bu
 4. **How we implemented it.** Rebuild with Table 1 settings; clean benchmark (Electronics 2023, disjoint splits); fair test. Check on the paper's own data: 69.1% (always 5★: 63.8%).
 5. **Right direction, wrong star.** 54.0 / 53.4 exact; 93.7 / 94.4 within one star.
 6. **Four things hold it back.** Label leak −7.7 (our first reproduction's example choice, not a claim about the authors); TextBlob removes 52% / 67% of 1★ / 2★; 5 template justifications; single pass.
-7. **Its novelty.** LLM for star rating; curated data; efficient training; star with a reason. Why we chose it.
+7. **Its novelty: what is missing.** Table: the paper does → what is missing → what we add. LLM rating → a second opinion → three agents + Reflector; star with justification → a check it is true → Critic loop, deletion test, human check; answers every review the same → knowing when unsure → Hand-off, star ranges; 92.6% on curated data → a leak-free fixed protocol → frozen splits, rules set before runs. Bridge to Part 2.
 8. **Our approach (Part 2).** Trained models decide; LLMs explain; checks keep them honest.
 9. **Our stack.** Three agents → Reflector → Hand-off; Explainer ⇄ Critic. LangGraph, LLaMA-3-8B on MLX, DeBERTa-v3, scikit-learn.
 10. **Why it works.** Evidence model wins on short reviews, probe on long; when they disagree the stack is right 58–62%.
