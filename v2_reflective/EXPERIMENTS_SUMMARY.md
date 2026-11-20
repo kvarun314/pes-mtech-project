@@ -117,29 +117,18 @@ Numbers freeze on Nov 1. The paper is due Nov 21–22.
 
 ## 6. Integrity notes (disclose in the paper)
 
-1. Five candidate agent sets were compared on dev2 for Phase H. The winner was chosen by a rule fixed beforehand.
+1. Six candidate agent sets were compared on dev2 for Phase H (`gate_H.out`); the probe's layer and C were also chosen on dev2. The winner was chosen by a rule fixed beforehand.
 2. E6b-alone accuracy on eval and natural_test was printed once before the Phase H gate. It was not used for any choice.
 3. Polarity / binary metrics were added after the 5-class gains looked small (post hoc, but also reported by the original paper).
-4. All p-values are uncorrected.
+4. The 12 paired comparisons of the main stack are Holm-corrected (`analysis_C.out`). Secondary tests (hard cases, robustness, X1, deletion test, Phase 1 vs Phase 2 McNemar) are uncorrected.
 5. In the SH variance run, E6b was not retrained per seed (too slow).
-6. The natural_test gain of stackers fit on balanced dev partly reflects a class-prior effect. Report macro-F1 beside exact.
+6. The natural_test gain of stackers fit on balanced dev partly reflects a class-prior effect: Phase 1 adjusted to the star mix gets 75.5% (`prior_baseline.out`), and Phase 1 LoRA seed 2 gets 74.8%. Report eval exact and natural macro-F1 as the main comparison.
+7. DeBERTa (SH3) was adopted on 2026-11-10 after D1/D2 had read eval and natural_test; SH (67.5 / 75.7) is the strictly held-out main result.
+8. The human check's agreed/disagreed split was added after the marks were in (post hoc).
 
-## 7. What we will do next
+## 7. What is next (updated 2026-11-20)
 
-| When | Task | Status |
-|---|---|---|
-| Oct 25 | Present the deck (`PES_Project_Phase1/Agentic_LLaMA3_Presentation.pptx`, 30 slides) | ready |
-| Oct 25–31 | Off-disk backup to Google Drive (user installs Drive for desktop) | waiting on user |
-| by Nov 1 | **Numbers freeze.** Rerun `e23/freeze_tables.py`; lock the paper angle | tables done Oct 24 |
-| Nov 2–7 | Paper prose, one section per day. The author writes; facts are in `paper/e23_results.tex` (`% FACT` comments) and `PAPER_OUTLINE.md` | todo |
-| Nov 8 | Draft 1 to supervisor + similarity check #1 | todo |
-| Nov 9–14 | Supervisor fixes, thesis sections, archive, docs | todo |
-| Nov 15 | Draft 2 + similarity check #2 | todo |
-| Nov 16–20 | Buffer, final checks, submit by Nov 20 | todo |
-
-**Optional experiments.** Only if time allows before Nov 1. Each needs a gate declared first, and none is needed for the paper.
-- ~~Retrain E6b inside the variance seeds~~: done as C1 (Oct 26): SH 66.1 ± 0.6 / 75.4 ± 0.7, same as with E6b fixed. Disclosure 5 closed.
-- ~~Probe on more rows~~: done as A1 (120K), failed (F18).
-- Disagreement routing on top of SH. Earlier it gave +0.8, not significant.
-
-**Not planned (closed lines):** LLM adjudicator, more LoRA data, vision agent, extra classical text views, natural-prior Reflectors.
+- Paper: author rewrites in own words; text fixes from the academic review (see LOG 2026-11-20); submit.
+- Optional, gated before running: leave-one-agent-out and a probability-averaging baseline (CPU, existing probabilities); per-star mix of Hand-off answers.
+- Later (days): two outside annotators on ~150 explanations with kappa; a second Amazon category; matched-data agents; deletion test rerun with the title.
+- Final presentation in December with the live demo.

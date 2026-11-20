@@ -48,7 +48,7 @@ Do not add new top-level files to the repo or to `PES_Project_Phase1/`. If somet
 1. Write the `LOG.md` entry.
 2. Refresh the labelled results: `.venv/bin/python v2_reflective/e23/collect_results.py`.
 3. Back up: `backup_artifacts.sh`, then `verify_backup.sh` with an absolute path. The script then copies the backup to Drive.
-4. Commit and push to branch `e23-leakfree-oct2026`. End the message with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
+4. Commit and push to branch `e23-leakfree-oct2026`. No Co-Authored-By trailer (user, 2026-11-20: commits are the user's own).
 
 ## Never
 
