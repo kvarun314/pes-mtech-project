@@ -1,6 +1,6 @@
 # Presenter Notes — Agentic Self-Correction in LLaMA-3
 
-## Part 0 — Current deck (23 slides, Apple-inspired layout). READ THIS FIRST
+## Part 0 — Current deck (25 slides, academic revision). READ THIS FIRST
 
 Deck: `presentation/Agentic_LLaMA3_Presentation.pptx`, the only current deck, built by `v2_reflective/build_deck_clean.py` (2026-11-20, user: "more clean, more straightforward and simple, showcasing the analysis, same colour palette"). The previous 25-slide dense deck is in `old_decks/Agentic_LLaMA3_Presentation_dense_2026-11-20.pptx`; its Part 0 is in `docs/archive/Presenter_Notes_Part0_2026-11-20.md`.
 
@@ -14,30 +14,44 @@ Deck: `presentation/Agentic_LLaMA3_Presentation.pptx`, the only current deck, bu
 
 **Rule for every slide:** say the title first, then point at the big number. Details live in the speaker note. No results on the cover.
 
-### Slide by slide
-1. **Title.** Project name only.
-2. **Reference paper in a nutshell.** Wang et al. (2025): task, approach (one fine-tuned LLaMA-3-8B, one pass), data (Kaggle Amazon, ~500K). Reported 92.6% (93.3% F1). Never call it just "the baseline".
-3. **Its stack.** TextBlob filter → balance → VGST → neutral ×2; LLaMA-3-8B 4-bit → LoRA (r 4, α 64, last 3 layers) → prompt → star + justification.
-4. **How we implemented it.** Rebuild with Table 1 settings; clean benchmark (Electronics 2023, disjoint splits); fair test. Check on the paper's own data: 69.1% (always 5★: 63.8%).
-5. **Right direction, wrong star.** 54.0 / 53.4 exact; 93.7 / 94.4 within one star.
-6. **Four things hold it back.** Label leak −7.7 (our first reproduction's example choice, not a claim about the authors); TextBlob removes 52% / 67% of 1★ / 2★; 5 template justifications; single pass.
-7. **Its novelty: what is missing.** Table: the paper does → what is missing → what we add. LLM rating → a second opinion → three agents + Reflector; star with justification → a check it is true → Critic loop, deletion test, human check; answers every review the same → knowing when unsure → Hand-off, star ranges; 92.6% on curated data → a leak-free fixed protocol → frozen splits, rules set before runs. Bridge to Part 2.
-8. **Our approach (Part 2).** Trained models decide; LLMs explain; checks keep them honest.
-9. **Our stack.** Three agents → Reflector → Hand-off; Explainer ⇄ Critic. LangGraph, LLaMA-3-8B on MLX, DeBERTa-v3, scikit-learn.
-10. **Why it works.** Evidence model wins on short reviews, probe on long; when they disagree the stack is right 58–62%.
-11. **What we tried and dropped.** LLM decides the star (3 attempts); photo agent; more views of the same words; bigger probe; non-linear Reflector; second judge.
-12. **What we kept.** Leak-free protocol; raw balanced data; probe + Evidence; DeBERTa-v3; simple Reflector; Critic loop and Hand-off.
-13. **+13.5 (hero).** One number on the dark stage: +13.5 exact points on balanced reviews (54.0% to 67.5%). Pause, then the chart. Do not lead with +24.6: on the natural test Phase 1 adjusted to the star mix gets 75.5%, so say the natural gain as macro-F1 .49 to .63.
-14. **Better on both test sets.** Balanced: exact star 54.0 → 67.5 (+13.5). Natural: macro-F1 .488 → .634 (the star mix cannot inflate it). 97% within one star. Say the caveat: raw natural 53.4 → 78.0, but +2.5 against Phase 1 adjusted to the 65% 5-star mix.
-15. **Hard language.** 35.0 → 67.5 and 43.0 → 78.2.
-16. **Hand-off.** 92.8% right on 56% (natural); 86.9% on 41% (balanced; Phase 1 66.9%).
-17. **The Critic loop repairs explanations.** Critic pass rate 62.3 / 63.7 → 90.5 / 91.6; 841 fixed, 0 broken; cited words matter 2× random. Do not call it "faithful": the human check gives 80%.
-18. **Example.** Point at the TITLE line: "Poor" and "lacks space" come from the title, not invented. The Critic names what is wrong; draft 3 passes.
-19. **Human check.** Author 80% vs Critic 92%, agreement 76%; agents disagreed: author 37.5%, Critic 93.8%.
-20. **Robustness.** Flat text 9.3% vs 29.7%; typos 0.7% vs 2.0%; no title 15.7% vs 0% (limitation).
-21. **Why it is better.** Side-by-side table; say the one row where Phase 2 is worse (no title).
-22. **Conclusion.** Rebuilt and explored; several agents beat one; output you can check. Read the limits line.
-23. **Live demo.** Five test reviews, Phase 1 next to Phase 2: star, explanation, Critic verdict, hand-off. Start with the slide 18 review. Then questions.
+### Slide by slide (25 slides; full speaker notes in deck_slide_map.md)
+1. **Agentic Self-Correction in LLaMA-3.** Three agents rate the star, LLaMA-3 explains it, and a Critic checks it. First the paper we started from.
+2. **The reference paper in a nutshell.** We chose this paper as our reference: one fine-tuned LLaMA rates a review and justifies it, and it reports 92.6%.
+3. **Its stack.** Its stack is a cleaning pipeline and one fine-tuned model that answers in a single pass.
+4. **How we implemented it.** We rebuilt it exactly and tested it fairly, on a clean benchmark with no hints in the prompt.
+5. **Right direction, wrong star.** It reads the direction well, 94% within one star, but gets the exact star only about half the time.
+6. **What the rebuild revealed.** Four things hold it back; the leak was in our first reproduction's example choice, not a claim about the authors.
+7. **Its novelty: what is missing.** Here is what the paper does, what is missing, and what our project adds. That is Part 2.
+8. **Four research questions.** Part 2 answers four research questions; each results slide maps back to one. Our principle: trained models decide the star, the LLM explains it, and checks keep it honest.
+9. **Our stack.** Three agents read each review, a Reflector combines them, and the agentic layer answers, explains and checks.
+10. **Why it works.** It works because each agent is strong where another is weak, and the Reflector learns whom to trust.
+11. **What we tried and dropped.** Every idea had a rule written before it ran. These six failed and were dropped.
+12. **What we kept, and why.** These passed their own checks, so we kept them.
+13. **How we test: frozen splits, rules before runs.** Before results, how we test: frozen splits, rules written before runs, and one exception I disclose.
+14. **+13.5 points.** On balanced reviews, Phase 2 gets the exact star 13.5 points more often.
+15. **Phase 2 is better on both test sets.** Better on both test sets: exact star on balanced reviews, and macro-F1 on the real mix.
+16. **Where the gain comes from.** Where the gain comes from: every agent beats Phase 1, the combination beats every agent, and note the data-size caveat.
+17. **Negative words, happy reviewer.** The biggest gain is on reviews that sound negative but are rated 4 or 5 stars.
+18. **It knows when it is unsure.** It answers alone only when it is confident, and then it is right 93% of the time.
+19. **The Critic loop repairs explanations.** The Critic loop repairs explanations: 91% pass all checks after rewrites, and none got worse.
+20. **One review, three drafts.** Here is one review: the Critic names what is wrong, and the third draft passes.
+21. **A person checked the Critic.** I checked the Critic myself: it is too lenient when the agents disagree. That is the next fix.
+22. **Stable on messy text, but it needs the title.** It is stable on messy text, but it depends on the review title. That is a limitation.
+23. **Phase 1 vs Phase 2, side by side.** Side by side, Phase 2 is better on every row but one, and I show that one in red.
+24. **What the project shows.** Three takeaways and the limits. Then the live demo.
+25. **Live demo.** Now the live demo: five test reviews, Phase 1 next to Phase 2.
+
+### Panel questions (from the academic deck review, 2026-11-20)
+1. **Isn't the gain just more data?** Partly possible, disclosed: Phase 1 sees 2K reviews, the agents 40K-497K. LoRA on 10K failed its gate (dev 56.4 vs 58); DistilBERT on 2K (52.8) matches Phase 1. Matched-data comparison is future work.
+2. **DeBERTa alone gets 66.5 / 75.8. Why several agents?** On eval +1.0 (not significant); on natural +2.2 ± 0.2 over 3 seeds. The probe and Evidence model also supply the phrases and confidence the Explainer, Critic and Hand-off use.
+3. **Were the test sets read once?** Yes for the two-agent system (67.5 / 75.7). DeBERTa was adopted after its test readout, disclosed. The +13.5 headline is the same without it.
+4. **Is +24.6 on natural real?** Mostly star mix: Phase 1 adjusted to the mix gets 75.5 (+2.5); Phase 1 seed 2 gets 74.8. Fair comparison: macro-F1 .488 (.507 adjusted) to .634.
+5. **Why not compare with 92.6%?** Different protocol (5-fold CV on curated Kaggle data). Our leak-free run on that data gets 69.1%; always 5 stars gets 63.8%.
+6. **The Critic pass rate rises because you optimise against the Critic.** Agreed; independent evidence: deletion test (.156 vs .077) and the blind human check (80%, 37.5% when agents disagree).
+7. **One annotator, n = 50, the author?** Yes, a limitation; next step a second annotator and kappa.
+8. **Phase 2 reads the title, Phase 1 doesn't.** Without the title Phase 2 still scores 63.7% vs 50.0% (300 reviews); title dependence disclosed (15.7% of stars change).
+9. **Garden of forking paths?** Every candidate had a gate before it ran, on dev sets only; six agent-set candidates on dev2 disclosed; failures reported; Holm-corrected p-values.
+10. **Is it agentic or an ensemble?** The rating core is a stacked ensemble on purpose (LLM deciding the star failed three times: 76 fixed vs 89 broken). The agentic parts are the Explainer-Critic loop with external checks and the Hand-off decision (Huang et al. 2024: LLMs rarely self-correct without external feedback).
 
 ### Key terms (for you; not on the slides)
 Use these when explaining or when someone asks what a word means.
