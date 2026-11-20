@@ -27,8 +27,8 @@ Deck: `presentation/Agentic_LLaMA3_Presentation.pptx`, the only current deck, bu
 10. **Why it works.** Evidence model wins on short reviews, probe on long; when they disagree the stack is right 58–62%.
 11. **What we tried and dropped.** LLM decides the star (3 attempts); photo agent; more views of the same words; bigger probe; non-linear Reflector; second judge.
 12. **What we kept.** Leak-free protocol; raw balanced data; probe + Evidence; DeBERTa-v3; simple Reflector; Critic loop and Hand-off.
-13. **+24.6 (hero).** One number on the dark stage: +24.6 points on the natural mix (+13.5 balanced). Pause, then the chart.
-14. **Accuracy.** +13.5 / +24.6 points; 97% within one star.
+13. **+13.5 (hero).** One number on the dark stage: +13.5 exact points on balanced reviews (54.0% to 67.5%). Pause, then the chart. Do not lead with +24.6: on the natural test Phase 1 adjusted to the star mix gets 75.5%, so say the natural gain as macro-F1 .49 to .63.
+14. **Accuracy.** +13.5 balanced; natural test macro-F1 .49 → .63 (raw +24.6, +2.5 against star-mix-adjusted Phase 1). Significance: McNemar, not the Holm set.
 15. **Hard language.** 35.0 → 67.5 and 43.0 → 78.2.
 16. **Hand-off.** 92.8% right on 56% (natural); 86.9% on 41% (balanced; Phase 1 66.9%).
 17. **Critic loop.** 62.3 / 63.7 → 90.5 / 91.6; 841 fixed, 0 broken; cited words matter 2× random.

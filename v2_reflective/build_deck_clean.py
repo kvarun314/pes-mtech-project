@@ -10,7 +10,7 @@ from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE, MSO_CONNECTOR
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
-from pptx.chart.data import CategoryChartData
+from pptx.chart.data import CategoryChartData, XyChartData
 from pptx.enum.chart import XL_CHART_TYPE, XL_LEGEND_POSITION, XL_LABEL_POSITION
 from pptx.oxml.ns import qn
 
@@ -104,7 +104,7 @@ def stat(sl, x, y, w, big, label, color=BLUE, size=54):
     text(sl, x, y + size / 72 * 1.3, w, 1.2, label, size=15, color=BODY)
 
 
-def bars(sl, x, y, w, h, cats, series, colors, maxv=100, fmt='0.0"%"'):
+def bars(sl, x, y, w, h, cats, series, colors, maxv=100, fmt='0.0"%"', lsize=16):
     cd = CategoryChartData(); cd.categories = cats
     for n, v in series: cd.add_series(n, v)
     ch = sl.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, Inches(x), Inches(y), Inches(w), Inches(h), cd).chart
@@ -114,11 +114,31 @@ def bars(sl, x, y, w, h, cats, series, colors, maxv=100, fmt='0.0"%"'):
     ca.format.line.color.rgb = RULE; ca.tick_labels.font.size = Pt(14)
     pl = ch.plots[0]; pl.gap_width = 55; pl.overlap = -6
     pl.has_data_labels = True; dl = pl.data_labels; dl.number_format = fmt; dl.number_format_is_linked = False
-    dl.font.size = Pt(16); dl.font.bold = True; dl.font.color.rgb = INK; dl.position = XL_LABEL_POSITION.OUTSIDE_END
+    dl.font.size = Pt(lsize); dl.font.bold = True; dl.font.color.rgb = INK; dl.position = XL_LABEL_POSITION.OUTSIDE_END
     for s, c in zip(pl.series, colors): s.format.fill.solid(); s.format.fill.fore_color.rgb = c
     ch.has_legend = len(series) > 1
     if ch.has_legend:
         ch.legend.position = XL_LEGEND_POSITION.TOP; ch.legend.include_in_layout = False; ch.legend.font.size = Pt(13)
+
+
+def curves(sl, x, y, w, h, series, colors, xt, yt):
+    """Native line chart with real x values: series = [(name, [(x, y), ...])]."""
+    cd = XyChartData()
+    for n, pts in series:
+        sr = cd.add_series(n)
+        for a, b in pts: sr.add_data_point(a, b)
+    ch = sl.shapes.add_chart(XL_CHART_TYPE.XY_SCATTER_LINES, Inches(x), Inches(y), Inches(w), Inches(h), cd).chart
+    ch.font.name = FONT; ch.font.size = Pt(13); ch.font.color.rgb = BODY
+    va, ca = ch.value_axis, ch.category_axis
+    va.minimum_scale, va.maximum_scale = 50, 100; ca.minimum_scale, ca.maximum_scale = 40, 100
+    for ax, t in ((va, yt), (ca, xt)):
+        ax.has_major_gridlines = False; ax.format.line.color.rgb = RULE; ax.tick_labels.font.size = Pt(12)
+        ax.has_title = True; ax.axis_title.text_frame.text = t
+        r = ax.axis_title.text_frame.paragraphs[0].runs[0]; r.font.size = Pt(12); r.font.bold = False; r.font.color.rgb = MUTED; r.font.name = FONT
+    for s_, c in zip(ch.plots[0].series, colors):
+        s_.format.line.color.rgb = c; s_.format.line.width = Pt(3); s_.smooth = False
+        s_.marker.format.fill.solid(); s_.marker.format.fill.fore_color.rgb = c; s_.marker.format.line.color.rgb = c
+    ch.has_legend = True; ch.legend.position = XL_LEGEND_POSITION.TOP; ch.legend.include_in_layout = False; ch.legend.font.size = Pt(13)
 
 
 def pic(sl, f, x, y, w=None, h=None):
@@ -184,7 +204,7 @@ sl = slide("stack", "Part 1 · Reference paper", "Its stack",
            sub="A data pipeline, then one fine-tuned model")
 text(sl, M, 2.3, 4, 0.3, "DATA", size=11, color=BLUE, bold=True)
 flow(sl, 2.65, [("TextBlob filter", "drop reviews whose tone contradicts the star"), ("Balance", "equal reviews per star"),
-                ("VGST", "prefer reviews with new words"), ("Neutral ×2", "double the 3★ reviews")])
+                ("VGST", "prefer reviews with new words"), ("Neutral ×2", "double the 3-star reviews")])
 text(sl, M, 4.3, 4, 0.3, "MODEL", size=11, color=BLUE, bold=True)
 flow(sl, 4.65, [("LLaMA-3-8B", "4-bit, one 16 GB GPU"), ("LoRA fine-tuning", "rank 4, α 64, last 3 layers"),
                 ("Prompt", "rubric, one example, step by step"), ("Output", "star + justification")], dark=1)
@@ -197,7 +217,7 @@ cols(sl, [("", "Rebuild", "The paper's pipeline and Table 1 settings: LoRA rank 
           ("", "Fair test", "No prompt example that hints at the answer. Test sets read once, after all choices.")], y=2.3, th=2.0)
 hline(sl, M, 4.75, CW)
 stat(sl, M, 5.0, 3.2, "69.1%", "check on the paper's own data", size=40)
-text(sl, 4.4, 5.2, 8, 1.2, "Our rebuild works. But always guessing 5★ already scores 63.8% on that data, so it says little about the hard stars.", size=16, color=INK)
+text(sl, 4.4, 5.2, 8, 1.2, "Our rebuild works. But always guessing 5 stars already scores 63.8% on that data, so it says little about the hard stars.", size=16, color=INK)
 
 sl = slide("p1result", "Part 1 · What we found", "Right direction, wrong star",
            "Phase 1 results (results_frozen.md). The reference method on Electronics, leak-free: exact star 54.0% balanced, 53.4% natural; within one star 93.7% / 94.4%. It reads the direction well; choosing between neighbouring stars is the hard part. The paper's 92.6% used a different protocol and is not comparable.",
@@ -210,7 +230,7 @@ sl = slide("found", "Part 1 · What we found", "Four things hold it back",
            "Findings. (1) Label leak (LOG 2026-10-11): in our first reproduction the prompt's example hinted at the answer; a random example costs 7.7 points. This was our first reproduction's example choice, not a claim about the authors. (2) TextBlob cleaning removes 52% of 1-star and 67% of 2-star reviews. (3) Justifications are a template: 5 distinct sentences for 150 reviews, none quoting the review (x1_explain_compare.out). (4) One model, one pass: nothing catches a mistake.",
            sub="What we found when we rebuilt it on a clean benchmark")
 cols(sl, [("−7.7", "Set-up dependent", "points when the prompt's example no longer hints at the answer"),
-          ("52 / 67%", "Negatives removed", "of 1★ / 2★ reviews deleted by the TextBlob filter"),
+          ("52 / 67%", "Negatives removed", "of 1-star / 2-star reviews deleted by the TextBlob filter"),
           ("5", "Template reasons", "distinct justifications for 150 reviews; none quotes the review"),
           ("1", "Single pass", "one model decides; nothing catches a mistake")], y=2.6, big=40, color=NEG, gap=0.45)
 
@@ -245,12 +265,13 @@ arrow(sl, 10.58, 4.8, 10.9, 4.8, BLUE); arrow(sl, 10.9, 5.15, 10.58, 5.15, BLUE)
 text(sl, M, 6.35, CW, 0.4, "LangGraph  ·  LLaMA-3-8B on MLX  ·  DeBERTa-v3  ·  scikit-learn", size=13, color=MUTED, align=PP_ALIGN.CENTER)
 
 sl = slide("complement", "Part 2 · Our approach", "Why it works",
-           "Why several agents beat one (agents_complement.png). Left: the Evidence model wins on short reviews, the LLaMA probe on long reviews, and the combined stack is best or near-best in every length band. Right: when the probe and the Evidence model disagree, the stack still gets 58-62% right, against 36-50% for either alone. The Reflector learns which agent to trust for which review.",
+           "Why several agents beat one (native charts; numbers from figures_deck.out). Left: the Evidence model wins on short reviews, the LLaMA probe on long reviews, and the combined stack is best or near-best in every length band. Right: when the probe and the Evidence model disagree, the stack still gets 58-62% right, against 36-50% for either alone. The Reflector learns which agent to trust for which review.",
            sub="Each agent is strong where another is weak; the Reflector learns whom to trust")
-pic(sl, "agents_complement.png", M, 2.2, w=8.2)
-text(sl, 9.5, 2.4, 3.0, 4, [("Short reviews", {"bold": True, "color": INK}), ("Evidence model leads", {"gap": 2}),
-                          ("Long reviews", {"bold": True, "color": INK}), ("LLaMA probe leads", {"gap": 2}),
-                          ("They disagree", {"bold": True, "color": INK}), ("the stack is still right 58–62%", {"gap": 2})], size=16)
+text(sl, M, 2.1, 7, 0.3, "BY REVIEW LENGTH  \u00b7  balanced test", size=11, color=MUTED, bold=True)
+bars(sl, M, 2.35, 7.3, 4.4, ["Shortest", "Short", "Long", "Longest"], [("Evidence model", (70.0, 66.7, 57.4, 55.8)), ("LLaMA probe", (54.6, 67.1, 59.4, 64.3)), ("Stack", (71.2, 68.8, 63.7, 66.3))],
+     [GREY, SKY, BLUE], maxv=85, fmt='0', lsize=12)
+text(sl, 8.5, 2.1, 4, 0.3, "WHEN THE TWO AGENTS DISAGREE", size=11, color=MUTED, bold=True)
+bars(sl, 8.5, 2.35, 4.03, 4.4, ["Balanced", "Natural"], [("Evidence", (42.7, 35.7)), ("Probe", (39.1, 50.1)), ("Stack", (57.8, 62.0))], [GREY, SKY, BLUE], maxv=85, fmt='0', lsize=12)
 
 sl = slide("tried", "Part 2 · Approaches we took", "What we tried and dropped",
            "Approaches tried (EXPERIMENTS_SUMMARY.md, section 3). Every idea had a pass/fail rule written before it ran and was checked on development data only; none touched the test sets. LLM deciding the star: 54.2% vs 73.3% on disagreement rows, and later 76 fixed vs 89 broken. Product-photo agent: constant output. More views of the same text (MiniLM, character n-grams, NB-SVM): no gain. Bigger LLaMA probe (120K): +0.3, saturated. Gradient-boosted Reflector: overfits (.621 vs .642). Second LLM judge: rejects everything.",
@@ -277,27 +298,29 @@ rows(sl, [("Leak-free protocol", "The example leak was worth 7.7 points; test se
      [4.6, 5.9, 1.2], y=2.3, head=["Choice", "Evidence", "Verdict"], size=15, rh=0.62)
 
 # ======================================================================= results
-hero("hero", "+24.6", ["points of exact-star accuracy over the reference method, on the real mix of reviews.", ("+13.5 on balanced reviews. Both significant.", {"size": 18, "color": SOFT})],
-     "Hero moment. Pause on the number. Say: on the natural mix of reviews, the three-agent system gets the exact star 24.6 points more often than the reference method (53.4% to 78.0%); on balanced reviews +13.5 (54.0% to 67.5%). Both significant after Holm correction (analysis_C.out). Then go to the chart.",
-     "+24.6 points")
+hero("hero", "+13.5", ["points of exact-star accuracy over the reference method, on balanced reviews.", ("54.0% to 67.5%, the same 1,000 reviews. 29% fewer errors.", {"size": 18, "color": SOFT})],
+     "Hero moment. Pause on the number. Say: on balanced reviews (200 per star, so the star mix gives no free points) the three-agent system gets the exact star 13.5 points more often than the reference method, 54.0% to 67.5% (results_frozen.md); McNemar p 6.7e-14 (hard_cases.out). Then go to the chart, which also shows the natural test.",
+     "+13.5 points")
 sl = slide("headline", "Results", "Phase 2 gets the exact star far more often",
-           "Headline (results_frozen.md, analysis_C.out). Exact star: Phase 1 54.0 / 53.4, Phase 2 67.5 / 78.0: +13.5 and +24.6 points, 29% and 53% fewer errors, significant after Holm correction. Within one star 97.3 / 97.4. If asked whether 67.5 is good: random is 20%, and neighbouring stars are ambiguous. Caveat if asked: on balanced eval the three-agent stack ties the previous two-agent stack; DeBERTa's +2.3 is on the natural mix.",
+           "Headline (results_frozen.md, hard_cases.out, prior_baseline.out). Exact star: Phase 1 54.0 / 53.4, Phase 2 67.5 / 78.0: +13.5 and +24.6 points, McNemar p 6.7e-14 and 3.7e-84 (this comparison is not part of the 12-comparison Holm set). Say the natural-test caveat yourself: Phase 1 was trained on balanced data, and 65% of natural reviews are 5-star; adjusted to the real star mix Phase 1 gets 75.5%, so the fair natural gain is +2.5 exact. Macro-F1, which ignores the star mix, still rises from .488 (.507 adjusted) to .634. Within one star 97.3 / 97.4. If asked whether 67.5 is good: random is 20%, and neighbouring stars are ambiguous. Caveat if asked: on balanced eval the three-agent stack ties the previous two-agent stack; DeBERTa's +2.3 is on the natural mix.",
            sub="Exact star accuracy, Phase 1 vs Phase 2")
 bars(sl, M, 2.2, 7.4, 4.5, ["Balanced test (1,000)", "Natural test (2,000)"], [("Phase 1", (54.0, 53.4)), ("Phase 2", (67.5, 78.0))], [GREY, BLUE])
 stat(sl, 8.9, 2.3, 3.7, "+13.5", "points on balanced reviews", color=POS)
-stat(sl, 8.9, 3.85, 3.7, "+24.6", "points on the natural mix", color=POS)
-stat(sl, 8.9, 5.4, 3.7, "97%", "within one star", size=30)
+stat(sl, 8.9, 3.85, 3.7, ".49 \u2192 .63", "macro-F1 on the natural mix, which the star mix cannot inflate", color=POS, size=44)
+text(sl, 8.9, 5.55, 3.7, 1.2, "Natural test raw gain is +24.6; with Phase 1 adjusted to the real star mix it is +2.5.", size=13, color=MUTED)
 
 sl = slide("hard", "Results", "Negative words, happy reviewer",
            "Hard cases (hard_cases.out). Reviews whose words sound negative but whose star is 4 or 5. Phase 1: 35.0% (balanced, n 40), 43.0% (natural, n 193). Phase 2: 67.5% and 78.2%. p 0.0023 and 5.4e-16.",
-           sub="Exact star accuracy on reviews rated 4–5★ whose words sound negative")
+           sub="Exact star accuracy on 4- and 5-star reviews whose words sound negative")
 bars(sl, M, 2.2, 7.4, 4.5, ["Balanced test (40)", "Natural test (193)"], [("Phase 1", (35.0, 43.0)), ("Phase 2", (67.5, 78.2))], [GREY, BLUE])
 stat(sl, 8.9, 2.5, 3.7, "+33 / +35", "points over Phase 1 on the hardest kind of review", color=POS, size=44)
 
 sl = slide("handoff", "Results", "It knows when it is unsure",
-           "Hand-off agent (s1_selective.out). Threshold fixed on dev2 before the tests. Natural test: answers 56% of reviews automatically, 92.8% right. Balanced test: 86.9% on 41%; Phase 1 with the same rule 66.9%. What it hands to a person is only 54-59% right: those are the hard ones. Star ranges (q1_conformal.out): a range that holds the true star 90% of the time is 1.44 stars wide on natural (Phase 1 2.08).",
+           "Hand-off agent (s1_selective.out). Threshold fixed on dev2 before the tests. Natural test: answers 56% of reviews automatically, 92.8% right. Balanced test: 86.9% on 41%; Phase 1 with the same rule 66.9%. What it hands to a person is only 54-59% right: those are the hard ones. Native chart from s1_selective.out (natural test). Star ranges (q1_conformal.out): over all reviews the answer covers the true star 90% of the time; for the unsure reviews that get a range, coverage is 86% (natural) and 91% (balanced). Ranges are 1.44 stars wide on average on natural (Phase 1 2.08).",
            sub="The Hand-off agent answers alone only when confident, otherwise it asks a person")
-pic(sl, "selective_SH.png", M, 2.25, w=7.4)
+curves(sl, M, 2.1, 7.6, 4.7, [("Phase 1", [(100, 53.4), (94.6, 55.2), (90.0, 56.3), (85.2, 57.3), (77.8, 60.1), (67.5, 64.4), (55.0, 67.9)]),
+                              ("Phase 2", [(100, 78.0), (95.7, 79.9), (90.5, 81.7), (82.6, 84.4), (74.9, 86.9), (67.0, 89.9), (56.1, 92.8)])],
+       [GREY, BLUE], "Share of natural-test reviews answered automatically (%)", "Right on those (%)")
 stat(sl, 8.9, 2.3, 3.7, "92.8%", "right on the 56% of natural-test reviews it answers alone", color=POS)
 stat(sl, 8.9, 4.3, 3.7, "86.9%", "on balanced reviews (Phase 1 with the same rule: 66.9%)", size=40)
 
@@ -319,7 +342,7 @@ if os.path.exists(cache):
 if EX:
     r, o, star = EX
     rect(sl, M, 1.85, 3.5, 4.8, TINT, 0.05)
-    text(sl, M + 0.3, 2.05, 2.9, 0.3, f"REVIEW  ·  {r['gt_rating']}★, system {star}★", size=11, color=BLUE, bold=True)
+    text(sl, M + 0.3, 2.05, 2.9, 0.3, f"REVIEW  ·  {r['gt_rating']} stars, system {star} stars", size=11, color=BLUE, bold=True)
     text(sl, M + 0.3, 2.45, 2.9, 4.1, r["review_text"], size=13, color=INK)
     n = len(o["drafts"]); g = 0.35; cw = (CW - 3.85 - g * (n - 1)) / n
     for i, (d, f) in enumerate(zip(o["drafts"], o["feedback"])):
@@ -347,11 +370,11 @@ stat(sl, 8.9, 4.2, 3.7, "15.7%", "of stars change without the title: a limitatio
 
 # ======================================================================= why better
 sl = slide("better", "Why it is better", "Phase 1 vs Phase 2, side by side",
-           "Why it is better: every row is a number already shown. Exact star 54.0 to 67.5 (balanced) and 53.4 to 78.0 (natural). Negative-sounding happy reviews 35.0 to 67.5. Explanations that quote the review 0% to 75.3% (x1_explain_compare.out). When sure: 66.9% to 86.9% right on about 41% of balanced reviews. Star changes on flat text 29.7% to 9.3%. One thing is worse: without the title, 0% to 15.7%.",
+           "Why it is better: every row is a number already shown. Exact star 54.0 to 67.5 (balanced). On the natural test macro-F1 .488 to .634 is shown instead of exact star, because Phase 1's raw natural exact (53.4) is low partly from the star mix (prior-adjusted 75.5, prior_baseline.out). Negative-sounding happy reviews 35.0 to 67.5. Explanations that quote the review 0% to 75.3% (x1_explain_compare.out). When sure: 66.9% to 86.9% right on about 41% of balanced reviews. Star changes on flat text 29.7% to 9.3%. One thing is worse: without the title, 0% to 15.7%.",
            sub="Same test sets, same reviews")
 P = lambda s, c=POS: (s, {"color": c, "bold": True})
 rows(sl, [("Exact star, balanced test", "54.0%", P("67.5%")),
-          ("Exact star, natural test", "53.4%", P("78.0%")),
+          ("Macro-F1, natural test", ".488", P(".634")),
           ("Negative-sounding happy reviews", "35.0%", P("67.5%")),
           ("Explanations that quote the review", "0%", P("75.3%")),
           ("Right when it answers alone (about 41% of reviews)", "66.9%", P("86.9%")),
@@ -361,11 +384,11 @@ rows(sl, [("Exact star, balanced test", "54.0%", P("67.5%")),
 
 # ======================================================================= conclusion
 sl = slide("conclusions", "Conclusion", "What the project shows",
-           "Conclusion. (1) The reference method, rebuilt leak-free, gets 54% exact; we found a label leak, a cleaning step that removes negative reviews, and template justifications. (2) Three agents and a Reflector reach 67.5% / 78.0%, +13.5 / +24.6 points, significant. (3) The agentic layer makes the output checkable: 91-92% faithful explanations, 0 broken; 93% right when it answers alone; a human check shows where the Critic is still too lenient. Limits: one dataset; needs the title.",
+           "Conclusion. (1) The reference method, rebuilt leak-free, gets 54% exact; we found a label leak, a cleaning step that removes negative reviews, and template justifications. (2) Three agents and a Reflector reach 67.5% / 78.0%: +13.5 on balanced reviews; on the natural mix +24.6 raw but +2.5 against Phase 1 adjusted to the star mix, with macro-F1 .49 to .63. (3) The agentic layer makes the output checkable: about 91% (90.5-91.6%) faithful explanations, 0 broken; 93% right when it answers alone; a human check shows where the Critic is still too lenient. Limits: one dataset; needs the title.",
            sub="Trained models decide. LLMs explain. Checks keep them honest.")
 cols(sl, [("01", "Rebuilt and explored", "Leak-free, the reference method gets 54%. We found a label leak, a biased filter and template reasons."),
-          ("02", "Several agents beat one", "Three agents and a Reflector: 67.5% and 78.0%, +13.5 and +24.6 points."),
-          ("03", "Output you can check", "91–92% faithful explanations, none broken; 93% right when it answers alone.")], y=2.8, big=36)
+          ("02", "Several agents beat one", "Three agents and a Reflector: 54% to 67.5% on balanced reviews; macro-F1 .49 to .63 on the natural mix."),
+          ("03", "Output you can check", "About 91% faithful explanations, none broken; 93% right when it answers alone.")], y=2.8, big=36)
 
 dark_slide("thanks", "Thank you", ["Questions  ·  live demo"],
            "Close. Offer the live demo notebook (presentation/Final_Demo.ipynb): five reviews rated, explained and checked, Phase 1 next to Phase 2.")
