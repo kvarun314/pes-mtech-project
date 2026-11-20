@@ -132,54 +132,106 @@ text(sl, 5.3, 5.2, 7.4, 0.9, ["Varun K  ·  PES University, M.Tech Project", "Am
 NOTES["title"] = ("Title. Say: we take one LLM review-rating method from a published paper, rebuild it, find where it falls short, and replace it "
                   "with several agents that rate, explain and check.")
 
-# 2 ---------------------------------------------------------------- problem
-sl = slide("problem", "The problem", "One model, one pass, nothing checks it",
-           "Problem. Today a single LLM reads a review and gives a star and a justification. Three things go wrong: no second opinion, the explanation cannot be checked, and hard language (mixed or negative-sounding but positive reviews) trips it up. Keep it to one minute.")
-for i, (n, t, s) in enumerate([("1", "No second opinion", "One model decides. A mistake has nothing to catch it."),
-                                ("2", "Unchecked explanations", "The model writes a justification. Nothing tests whether it is true."),
-                                ("3", "Hard language", "Mixed reviews, and reviews that sound negative but are happy, confuse it.")]):
+# 2 ---------------------------------------------------------------- problem statement
+sl = slide("problem", "Problem statement", "Rate a product review from 1 to 5 stars, and say why",
+           "Problem statement. The task: read an e-commerce product review and give its star rating with a short reason. Three things make it hard: neighbouring stars differ only in tone, many reviews praise and complain at once, and a rating is only useful if its reason can be trusted. Keep it to one minute.")
+for i, (n, t, s) in enumerate([("1", "Fuzzy borders", "A 4★ and a 5★ review often differ only in tone."),
+                                ("2", "Mixed language", "Many reviews praise and complain in the same breath."),
+                                ("3", "Trust", "A rating is only useful if its reason can be checked against the review.")]):
     x = M + i * 4.05
     rect(sl, x, 2.4, 0.8, 0.8, BLUE, MSO_SHAPE.OVAL)
     text(sl, x, 2.4, 0.8, 0.8, n, size=26, color=WHITE, bold=True, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
     text(sl, x, 3.5, 3.6, 0.5, t, size=22, color=INK, bold=True)
     text(sl, x, 4.15, 3.6, 1.5, s, size=16)
-takeaway(sl, "Goal: a rating system whose answer is more accurate and whose explanation can be checked.")
+takeaway(sl, "Goal: an accurate star and an explanation that can be checked.")
 
 # 3 ---------------------------------------------------------------- Phase 1 divider
-divider("d1", "01", "Phase 1 · The reference paper", "We chose one published method, rebuilt it on a clean benchmark, and explored where it breaks.",
-        "Section 1. Say: we chose Wang et al. (2025) as our reference paper. Phase 1 is our reproduction of it and our exploration of it.")
+divider("d1", "01", "Phase 1 · The reference paper", "What the paper does, how we implemented it, what we found.",
+        "Section 1. Say: we chose Wang et al. (2025) as our reference paper. First the paper itself: what it does, its stack and its novelty. Then our implementation of it, its results, and why they fall short.")
 
-# 4 ---------------------------------------------------------------- the paper
-sl = slide("paper", "Phase 1 · The reference paper", "One fine-tuned LLaMA rates each review",
-           "The paper we chose. Walk the pipeline left to right: clean the data with TextBlob, balance the stars, fine-tune LLaMA-3-8B with a small LoRA add-on, then one prompt gives a star and a justification. The paper reports 92.6% on its own data and protocol. Source: Wang et al. (2025), ITM Web of Conferences 70, 04021.",
-           sub="Wang et al. (2025), “Sentiment Analysis of Product Reviews Using Fine-Tuned LLaMA-3”")
-steps = [("Clean", "TextBlob filter"), ("Balance", "equal reviews per star"), ("Fine-tune", "LLaMA-3-8B + LoRA"), ("Prompt", "one example, step by step"), ("Output", "star + justification")]
-for i, (t, s) in enumerate(steps):
-    x = M + i * 2.42
-    box(sl, x, 2.6, 2.05, 1.3, t, s, fill=DEEP if i == 2 else WHITE, tc=WHITE if i == 2 else INK)
-    if i < 4: arrow(sl, x + 2.08, 3.25, x + 2.39, 3.25)
-stat(sl, M, 4.55, 5, "92.6%", "accuracy reported in the paper, on its own data and test protocol", size=60)
-text(sl, 6.6, 4.75, 6.0, 1.6, "We rebuilt this pipeline exactly, as Phase 1, and tested it on Amazon Reviews 2023 Electronics with a leak-free protocol.", size=18, color=INK)
+# 4 ---------------------------------------------------------------- the paper in brief
+sl = slide("paper", "Phase 1 · The reference paper", "The paper in brief",
+           "The paper in brief. Wang et al. (2025), ITM Web of Conferences 70, 04021. Task: rate an Amazon product review 1-5 stars and give a short justification, with one fine-tuned model in one pass. Data: Kaggle Amazon reviews (about 500K). Reported: 92.6% accuracy and 93.3% F1 with 5-fold cross-validation and a 40K-review test set; it beats SVM, Naive Bayes, Decision Tree and XLNet.",
+           sub="Wang et al. (2025), “Sentiment Analysis of Product Reviews Using Fine-Tuned LLaMA-3”, ITM Web of Conferences 70")
+for i, (t, s) in enumerate([("Task", "Rate an Amazon product review from 1 to 5 stars and give a short justification."),
+                            ("Approach", "One fine-tuned LLaMA-3-8B reads the review once and answers."),
+                            ("Data", "Kaggle Amazon reviews, about 500K, cleaned and balanced before training.")]):
+    y = 2.2 + i * 1.3
+    text(sl, M, y, 1.8, 0.5, t.upper(), size=13, color=BLUE, bold=True)
+    text(sl, M + 1.9, y - 0.03, 5.6, 1.1, s, size=18, color=INK)
+rect(sl, 8.4, 2.1, 4.23, 3.9, TINT, MSO_SHAPE.ROUNDED_RECTANGLE)
+stat(sl, 8.8, 2.45, 3.6, "92.6%", "accuracy reported (93.3% F1), 5-fold cross-validation, 40K test reviews", size=60)
+text(sl, 8.8, 4.75, 3.6, 1.0, "Beats SVM, Naive Bayes, Decision Tree and XLNet.", size=15, color=BODY)
 
-# 5 ---------------------------------------------------------------- what we found
-sl = slide("found", "Phase 1 · What we found", "Three problems when we rebuilt it",
-           "Exploration findings. (1) Leak audit (LOG 2026-10-11): choosing the one-shot example from the true star inflates accuracy; with a random example it drops 7.7 points (59.7 to 52.0). Be fair: the leak was in our first reproduction's example choice, not a claim about the authors. (2) Preprocessing ablation: TextBlob cleaning removes most negative reviews, 52% of 1-star and 67% of 2-star. (3) Explanation study (x1_explain_compare.out): Phase 1 produced only 5 distinct sentences for 150 reviews and never quoted the review.")
-for i, (b, l) in enumerate([("−7.7 pts", "when the prompt's example no longer reveals the answer (a label leak)"),
-                            ("52% / 67%", "of 1★ / 2★ reviews deleted by the TextBlob cleaning step"),
-                            ("5", "different justification sentences across 150 reviews; none quotes the review")]):
-    card(sl, M + i * 4.05, 2.3, 3.75, 3.0, b, l, color=NEG if i == 0 else BLUE)
-takeaway(sl, "The headline number depends on the set-up, and the justifications are a template.")
+# 5 ---------------------------------------------------------------- its stack
+sl = slide("stack", "Phase 1 · The reference paper", "Its stack",
+           "The paper's stack. Data pipeline: TextBlob quality control drops reviews whose tone contradicts the star; stratified sampling balances the stars; VGST, a greedy diversity search, prefers reviews with new words; 3-star reviews are doubled. Model: LLaMA-3-8B, 4-bit NF4, LoRA rank 4, alpha 64 on q_proj and v_proj of the last 3 layers, 3 epochs, lr 5e-5; fits one 16 GB GPU. Prompt: a 1-5 star rubric, one worked example, and a step-by-step cue. Output: a star and a justification.")
+text(sl, M, 1.75, 4, 0.3, "DATA PIPELINE", size=12, color=BLUE, bold=True)
+for i, (t, s) in enumerate([("TextBlob filter", "drop reviews whose tone contradicts the star"), ("Balance", "equal reviews per star"),
+                            ("VGST", "prefer reviews with new words"), ("Neutral ×2", "double the 3★ reviews")]):
+    x = M + i * 3.05
+    box(sl, x, 2.1, 2.7, 1.25, t, s)
+    if i < 3: arrow(sl, x + 2.73, 2.72, x + 3.02, 2.72)
+text(sl, M, 3.8, 4, 0.3, "MODEL AND PROMPT", size=12, color=BLUE, bold=True)
+for i, (t, s) in enumerate([("LLaMA-3-8B", "4-bit, fits one 16 GB GPU"), ("LoRA fine-tuning", "rank 4, α 64, last 3 layers"),
+                            ("Prompt", "rubric + one example + step by step"), ("Output", "star + justification")]):
+    x = M + i * 3.05
+    box(sl, x, 4.15, 2.7, 1.25, t, s, fill=DEEP if i == 1 else WHITE, tc=WHITE if i == 1 else INK)
+    if i < 3: arrow(sl, x + 2.73, 4.77, x + 3.02, 4.77)
+takeaway(sl, "One model, trained once, answers in one pass.", y=5.95)
 
-# 6 ---------------------------------------------------------------- Phase 1 result
-sl = slide("p1result", "Phase 1 · Result", "Right direction, wrong star",
-           "Phase 1 results (results_frozen.md). The reference method retrained on Electronics, leak-free: exact star 54.0% balanced, 53.4% natural, but within one star 93.7% / 94.4%. It gets the direction right and the exact star wrong. The 92.6% used a different protocol and is not comparable. Data: frozen disjoint splits; every choice on dev; test sets read once.",
-           sub="Reference method rebuilt on Amazon Reviews 2023 Electronics, leak-free")
-ch = bars(sl, M, 2.2, 7.4, 4.1, ["Balanced test (1,000)", "Natural test (2,000)"], [("Exact star", (54.0, 53.4)), ("Within one star", (93.7, 94.4))], [BLUE, GREY])
-stat(sl, 8.7, 2.5, 4, "54%", "exact star: about one review in two", color=BLUE)
-stat(sl, 8.7, 4.2, 4, "94%", "within one star: it reads the direction well", color=MUTED)
+# 6 ---------------------------------------------------------------- its novelty
+sl = slide("novelty_paper", "Phase 1 · The reference paper", "Its novelty",
+           "What the paper adds. (1) A general open LLM fine-tuned for five-star review rating, beating classic models and XLNet. (2) A data pipeline that combines quality control, balance, lexical diversity and neutral oversampling. (3) Parameter-efficient training: a small LoRA add-on and 4-bit weights, so it fits one 16 GB GPU. (4) A prompt that returns a justification along with the star. Say: these are the reasons we chose it as our reference.")
+for i, (n, t, s) in enumerate([("1", "LLM for star rating", "A general open LLM, fine-tuned for five-star rating, beats classic models and XLNet."),
+                               ("2", "Curated training data", "Quality control, balanced stars, varied wording and extra neutral reviews."),
+                               ("3", "Efficient fine-tuning", "A small LoRA add-on and 4-bit weights: one 16 GB GPU is enough."),
+                               ("4", "Star with a reason", "The prompt asks for a justification along with the star.")]):
+    x, y = M + (i % 2) * 6.1, 1.9 + (i // 2) * 2.15
+    rect(sl, x, y, 5.8, 1.85, SURF, MSO_SHAPE.ROUNDED_RECTANGLE, RULE)
+    text(sl, x + 0.3, y + 0.25, 0.8, 1.0, n, size=40, color=BLUE, bold=True)
+    text(sl, x + 1.2, y + 0.3, 4.4, 0.5, t, size=20, color=INK, bold=True)
+    text(sl, x + 1.2, y + 0.85, 4.4, 0.9, s, size=15)
+takeaway(sl, "Why we chose it: a clear, recent, reproducible single-model method to build on.")
 
-# 7 ---------------------------------------------------------------- Phase 2 divider
-divider("d2", "02", "Phase 2 · Several agents", "Trained models decide the star. LLMs explain it. Checks keep the explanation honest.",
+# 7 ---------------------------------------------------------------- implementing it
+sl = slide("implement", "Phase 1 · Implementation", "How we implemented it",
+           "Implementation. We rebuilt the paper's pipeline with its Table 1 settings and ran it two ways. On the paper's own data source (Kaggle Amazon reviews, its protocol, no leak): 69.1% exact; always guessing 5 stars already gives 63.8% there. Then on a clean benchmark: Amazon Reviews 2023 Electronics, splits drawn once and kept disjoint (train about 497K, development, a balanced test of 1,000 and a natural test of 2,000), every choice made on development data, test sets read once.")
+for i, (t, s) in enumerate([("Rebuild", "Same pipeline and Table 1 settings: LoRA rank 4, α 64, 3 epochs."),
+                            ("Clean benchmark", "Amazon Reviews 2023 Electronics; train, development and test sets kept apart."),
+                            ("Fair test", "No example that hints at the answer; test sets read once, after all choices.")]):
+    x = M + i * 4.05
+    rect(sl, x, 2.0, 0.07, 1.6, BLUE)
+    text(sl, x + 0.3, 2.0, 3.5, 0.5, t, size=20, color=INK, bold=True)
+    text(sl, x + 0.3, 2.6, 3.5, 1.2, s, size=15)
+rect(sl, M, 4.3, W - 2 * M, 1.7, TINT, MSO_SHAPE.ROUNDED_RECTANGLE)
+stat(sl, M + 0.4, 4.45, 3.2, "69.1%", "on the paper's own data source, its protocol", size=44)
+text(sl, 4.6, 4.75, 7.8, 1.2, "A check that our rebuild works. Note: always guessing 5★ already gives 63.8% on that data, so it says little about the hard stars.", size=16, color=INK)
+
+# 8 ---------------------------------------------------------------- results
+sl = slide("p1result", "Phase 1 · Results", "Right direction, wrong star",
+           "Phase 1 results (results_frozen.md). The reference method on Electronics, leak-free: exact star 54.0% balanced, 53.4% natural; within one star 93.7% / 94.4%; positive vs negative 91.2% / 92.9%. It reads the direction well; choosing between neighbouring stars is the hard part. The 92.6% used a different protocol and is not comparable.",
+           sub="Reference method on Amazon Reviews 2023 Electronics")
+bars(sl, M, 2.1, 7.4, 4.3, ["Balanced test (1,000)", "Natural test (2,000)"], [("Exact star", (54.0, 53.4)), ("Within one star", (93.7, 94.4))], [BLUE, GREY])
+stat(sl, 8.7, 2.4, 4, "94%", "within one star: it reads the direction well", color=BLUE)
+stat(sl, 8.7, 4.2, 4, "54%", "exact star: neighbouring stars are the hard part", color=MUTED)
+
+# 9 ---------------------------------------------------------------- explanation
+sl = slide("found", "Phase 1 · Explanation", "Why it falls short",
+           "Explanation of the gap. (1) Label leak (LOG 2026-10-11): in our first reproduction the prompt's example hinted at the answer; a random example costs 7.7 points. Be fair: this was in our first reproduction's example choice, not a claim about the authors. (2) TextBlob cleaning removes 52% of 1-star and 67% of 2-star reviews, so the model sees few negatives. (3) Justifications are a template: 5 distinct sentences across 150 reviews, none quoting the review (x1_explain_compare.out). (4) One model, one pass: nothing catches a mistake.")
+for i, (b, t, s) in enumerate([("−7.7 pts", "Set-up dependent", "when the prompt's example no longer hints at the answer"),
+                               ("52% / 67%", "Negatives removed", "of 1★ / 2★ reviews deleted by the TextBlob filter"),
+                               ("5", "Template reasons", "distinct justifications for 150 reviews; none quotes the review"),
+                               ("1", "Single pass", "model decides; nothing catches a mistake")]):
+    x = M + i * 3.05
+    rect(sl, x, 1.95, 2.8, 3.3, SURF, MSO_SHAPE.ROUNDED_RECTANGLE, RULE)
+    text(sl, x + 0.25, 2.2, 2.4, 0.8, b, size=34, color=NEG, bold=True)
+    text(sl, x + 0.25, 3.15, 2.4, 0.5, t, size=17, color=INK, bold=True)
+    text(sl, x + 0.25, 3.7, 2.35, 1.9, s, size=14)
+takeaway(sl, "What Phase 2 needs: a second opinion, data kept whole, and explanations that can be checked.")
+
+# 10 --------------------------------------------------------------- Phase 2 divider
+divider("d2", "02", "Phase 2 · Our approach", "Trained models decide the star. LLMs explain it. Checks keep the explanation honest.",
         "Section 2. Say the principle out loud: three attempts to let an LLM decide the star failed, so trained models decide, the LLM explains, and checks keep the explanation honest.")
 
 # 8 ---------------------------------------------------------------- architecture
@@ -200,9 +252,19 @@ text(sl, 3.05, 6.35, 5.2, 0.4, "DECISION CORE", size=11, color=BLUE, bold=True)
 text(sl, 9.03, 6.35, 3.6, 0.4, "AGENTIC LAYER", size=11, color=BLUE, bold=True)
 text(sl, 9.03, 5.55, 3.6, 0.4, "rewrite loop, up to 4 times", size=11, color=MUTED, align=PP_ALIGN.CENTER)
 
-# 9 ---------------------------------------------------------------- Results divider
-divider("d3", "03", "Results", "All numbers from frozen test sets, read once, on Amazon Reviews 2023 Electronics.",
-        "Section 3. Say: every number from here on comes from test sets that were read once, after all choices were made on development data.")
+# our novelty
+sl = slide("novelty", "Phase 2 · Our approach", "What is new in our approach",
+           "Our novelty. (1) Several independent agents and a learned Reflector instead of one model in one pass. (2) A division of labour: trained models decide the star; the LLM only explains, because three attempts to let it decide failed. (3) Explanations are checked: a Critic loop with deterministic checks and an LLM judge, a deletion test, and a human check. (4) The system knows when it is unsure: the Hand-off agent answers alone only when confident, otherwise it gives a star range or asks a person. (5) A leak-free protocol: every rule written before the run, test sets read once.")
+for i, (n, t, s) in enumerate([("1", "Several agents, one Reflector", "Three independent views of the review, combined by a learned Reflector."),
+                               ("2", "Models decide, LLMs explain", "The star comes from trained models; the LLM writes the reason."),
+                               ("3", "Checked explanations", "A Critic loop, a deletion test and a human check."),
+                               ("4", "Knows when it is unsure", "Answers alone only when confident; otherwise a star range or a person.")]):
+    x, y = M + (i % 2) * 6.1, 1.9 + (i // 2) * 2.15
+    rect(sl, x, y, 5.8, 1.85, SURF, MSO_SHAPE.ROUNDED_RECTANGLE, RULE)
+    text(sl, x + 0.3, y + 0.25, 0.8, 1.0, n, size=40, color=BLUE, bold=True)
+    text(sl, x + 1.2, y + 0.3, 4.4, 0.5, t, size=20, color=INK, bold=True)
+    text(sl, x + 1.2, y + 0.85, 4.4, 0.9, s, size=15)
+takeaway(sl, "Evaluated leak-free: every rule written before the run, test sets read once.")
 
 # 10 --------------------------------------------------------------- headline
 sl = slide("headline", "Results · Accuracy", "Phase 2 gets the exact star far more often",
