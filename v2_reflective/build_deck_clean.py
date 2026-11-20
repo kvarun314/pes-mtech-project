@@ -125,14 +125,12 @@ def arrow(sl, x1, y1, x2, y2, color=GREY):
 # 1 ---------------------------------------------------------------- title
 sl = prs.slides.add_slide(LAY); SLIDES.append(("title", "Agentic Self-Correction in LLaMA-3", sl))
 rect(sl, 0, 0, 4.6, H, DEEP); rect(sl, 4.6, 0, 0.08, H, BLUE)
-text(sl, 0.6, 2.6, 3.6, 2.5, ["67.5%", "78.0%"], size=54, color=WHITE, bold=True, line=1.0)
-text(sl, 0.6, 5.0, 3.6, 0.8, "exact star accuracy, balanced and natural test sets (Phase 1: 54.0% and 53.4%)", size=13, color=C("C9D7EA"))
 text(sl, 5.3, 2.2, 7.4, 1.8, "Agentic Self-Correction in LLaMA-3", size=40, color=INK, bold=True)
 text(sl, 5.3, 3.75, 7.4, 1.0, "Several agents rate, explain and check e-commerce product reviews", size=20, color=BODY)
 rect(sl, 5.3, 4.95, 0.9, 0.05, BLUE)
 text(sl, 5.3, 5.2, 7.4, 0.9, ["Varun K  ·  PES University, M.Tech Project", "Amazon Reviews 2023, Electronics  ·  November 2026"], size=14, color=MUTED)
 NOTES["title"] = ("Title. Say: we take one LLM review-rating method from a published paper, rebuild it, find where it falls short, and replace it "
-                  "with several agents that rate, explain and check. The two numbers on the left are where we end: 67.5% exact on balanced reviews, 78.0% on the natural mix.")
+                  "with several agents that rate, explain and check.")
 
 # 2 ---------------------------------------------------------------- problem
 sl = slide("problem", "The problem", "One model, one pass, nothing checks it",

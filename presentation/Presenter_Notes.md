@@ -13,7 +13,7 @@ Deck: `PES_Project_Phase1/Agentic_LLaMA3_Presentation.pptx`, the only current de
 **Rule for every slide:** say the one message in the title first, then point at the big number. Details live in the speaker note, not on the slide.
 
 ### Slide by slide
-1. **Title.** Where we start and where we end: 54% to 67.5% / 78.0%.
+1. **Title.** Project name only; no results on the cover (user, 2026-11-20: clean and professional, no teasing).
 2. **Problem.** One model, one pass, nothing checks it: no second opinion, unchecked explanations, hard language.
 3. **01 Phase 1.** We chose Wang et al. (2025) as our reference paper; Phase 1 is our reproduction and exploration of it. Never call it just "the baseline".
 4. **The reference paper.** Clean, balance, fine-tune LLaMA-3-8B with LoRA, prompt, star + justification. Reported 92.6% on its own data and protocol.

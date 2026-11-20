@@ -4,7 +4,7 @@ Same text as the PowerPoint / Google Slides speaker notes. Longer scripts: `Pres
 
 | Slide | Title | Short script (speaker note) |
 |---|---|---|
-| 1 | Agentic Self-Correction in LLaMA-3 | Title. Say: we take one LLM review-rating method from a published paper, rebuild it, find where it falls short, and replace it with several agents that rate, explain and check. The two numbers on the left are where we end: 67.5% exact on balanced reviews, 78.0% on the natural mix. |
+| 1 | Agentic Self-Correction in LLaMA-3 | Title. Say: we take one LLM review-rating method from a published paper, rebuild it, find where it falls short, and replace it with several agents that rate, explain and check. |
 | 2 | One model, one pass, nothing checks it | Problem. Today a single LLM reads a review and gives a star and a justification. Three things go wrong: no second opinion, the explanation cannot be checked, and hard language (mixed or negative-sounding but positive reviews) trips it up. Keep it to one minute. |
 | 3 | Phase 1 · The reference paper | Section 1. Say: we chose Wang et al. (2025) as our reference paper. Phase 1 is our reproduction of it and our exploration of it. |
 | 4 | One fine-tuned LLaMA rates each review | The paper we chose. Walk the pipeline left to right: clean the data with TextBlob, balance the stars, fine-tune LLaMA-3-8B with a small LoRA add-on, then one prompt gives a star and a justification. The paper reports 92.6% on its own data and protocol. Source: Wang et al. (2025), ITM Web of Conferences 70, 04021. |
