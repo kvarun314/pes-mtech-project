@@ -1,42 +1,42 @@
 # Presenter Notes — Agentic Self-Correction in LLaMA-3
 
-## Part 0 — Current deck (24 slides, clean version). READ THIS FIRST
+## Part 0 — Current deck (22 slides, minimal layout). READ THIS FIRST
 
 Deck: `presentation/Agentic_LLaMA3_Presentation.pptx`, the only current deck, built by `v2_reflective/build_deck_clean.py` (2026-11-20, user: "more clean, more straightforward and simple, showcasing the analysis, same colour palette"). The previous 25-slide dense deck is in `old_decks/Agentic_LLaMA3_Presentation_dense_2026-11-20.pptx`; its Part 0 is in `docs/archive/Presenter_Notes_Part0_2026-11-20.md`.
 
 **Slide numbers and short scripts:** `deck_slide_map.md`, next to this file, regenerated on every build from the speaker notes. Each note names the `.out` file its numbers come from.
 
-**Flow (user, 2026-11-20):** the reference paper first (in brief, its stack, its novelty), then our implementation of it, its results and why it falls short; then our approach (system, what is new) and its results; then conclusions.
+**Flow (user, 2026-11-20, second version):** Part 1: reference paper in a nutshell → its stack → our implementation and what we found → its novelty. Part 2: our approach → our stack → why it works → approaches we tried → what we kept → results → why it is better → conclusion.
 
-**Timing (about 22 minutes):** intro 1 min; reference paper 4 min; implementation, results, why it falls short 4 min; our approach 3 min; results 8 min; conclusions 2 min.
+**Layout (user, 2026-11-20: "simpler, cleaner, more presentable"):** flat shapes, no boxes or shadows, white space, one message per slide, big numbers, plain tables with hairlines. Same blue palette.
 
-**Rule for every slide:** say the one message in the title first, then point at the big number. Details live in the speaker note, not on the slide. No results on the cover.
+**Timing (about 22 minutes):** Part 1 7 min; our approach, stack, why it works 4 min; tried and kept 3 min; results 6 min; why better and conclusion 2 min.
+
+**Rule for every slide:** say the title first, then point at the big number. Details live in the speaker note. No results on the cover.
 
 ### Slide by slide
 1. **Title.** Project name only.
-2. **Problem statement.** Rate a review 1–5★ and say why. Hard because of fuzzy borders between stars, mixed language, and the need for a reason that can be checked.
-3. **01 Phase 1.** We chose Wang et al. (2025) as our reference paper. Never call it just "the baseline".
-4. **The paper in brief.** Task, approach (one fine-tuned LLaMA-3-8B, one pass), data (Kaggle Amazon, ~500K). Reported 92.6% (93.3% F1), 5-fold CV, 40K test reviews; beats SVM, NB, DT, XLNet.
-5. **Its stack.** TextBlob filter → balance → VGST → neutral ×2; LLaMA-3-8B 4-bit → LoRA (r 4, α 64, last 3 layers) → prompt (rubric + one example + step by step) → star + justification.
-6. **Its novelty.** LLM for star rating; curated training data; efficient fine-tuning (one 16 GB GPU); star with a reason. These are why we chose it.
-7. **How we implemented it.** Same pipeline and Table 1 settings; clean benchmark (Amazon Reviews 2023 Electronics, disjoint splits); fair test (no hinting example, tests read once). Check on the paper's own data: 69.1% (always 5★ gives 63.8%).
-8. **Phase 1 results.** 54.0 / 53.4 exact; 93.7 / 94.4 within one star. Right direction, wrong star.
-9. **Why it falls short.** Label leak (−7.7 points; in our first reproduction's example choice, not a claim about the authors); TextBlob removes 52% / 67% of 1★ / 2★ reviews; 5 template justifications, none quoting the review; one pass, nothing catches a mistake.
-10. **02 Our approach.** Trained models decide; LLMs explain; checks keep them honest.
-11. **System.** Three agents (LLaMA probe, Evidence model, DeBERTa-v3) → Reflector → Hand-off agent; Explainer ⇄ Critic, up to 4 rewrites. Router off with three agents.
-12. **What is new.** Several agents + Reflector; models decide, LLMs explain; checked explanations (Critic, deletion test, human check); knows when it is unsure (Hand-off, star ranges). Leak-free evaluation.
-13. **Accuracy.** +13.5 / +24.6 points, significant after Holm. Within one star 97%.
-14. **Why it works.** Evidence model wins on short reviews, LLaMA probe on long; when they disagree the stack is right 58–62% vs 36–50%.
-15. **Hard language.** Negative-sounding but 4–5★ reviews: 35.0 → 67.5 and 43.0 → 78.2.
-16. **Errors.** Mistakes are one star off; mean error 0.35 / 0.25 stars.
-17. **Hand-off.** 92.8% right on 56% of natural-test reviews; 86.9% on 41% of balanced (Phase 1 66.9%).
-18. **Critic loop.** Faithful 62.3 / 63.7 → 90.5 / 91.6; 841 fixed, 0 broken; cited words matter about twice as much as random words.
-19. **Example.** A real demo review: the Critic names what is wrong; draft 3 passes.
-20. **Human check.** Author 80% vs Critic 92%, agreement 76%. Agents agreed: author 100%. Agents disagreed: author 37.5%, Critic 93.8%. One annotator, 50 items.
-21. **Robustness.** Flat text 9.3% vs 29.7% star changes; typos 0.7% vs 2.0%; without the title 15.7% vs 0% (limitation).
-22. **What did not work.** LLM deciding the star (3 failures), second judge (rejects everything), Router with three agents (off).
-23. **Conclusions.** Rebuilt and explored; several agents beat one; output you can check.
-24. **Thank you.** Questions, then the live demo notebook.
+2. **Reference paper in a nutshell.** Wang et al. (2025): task, approach (one fine-tuned LLaMA-3-8B, one pass), data (Kaggle Amazon, ~500K). Reported 92.6% (93.3% F1). Never call it just "the baseline".
+3. **Its stack.** TextBlob filter → balance → VGST → neutral ×2; LLaMA-3-8B 4-bit → LoRA (r 4, α 64, last 3 layers) → prompt → star + justification.
+4. **How we implemented it.** Rebuild with Table 1 settings; clean benchmark (Electronics 2023, disjoint splits); fair test. Check on the paper's own data: 69.1% (always 5★: 63.8%).
+5. **Right direction, wrong star.** 54.0 / 53.4 exact; 93.7 / 94.4 within one star.
+6. **Four things hold it back.** Label leak −7.7 (our first reproduction's example choice, not a claim about the authors); TextBlob removes 52% / 67% of 1★ / 2★; 5 template justifications; single pass.
+7. **Its novelty.** LLM for star rating; curated data; efficient training; star with a reason. Why we chose it.
+8. **Our approach (Part 2).** Trained models decide; LLMs explain; checks keep them honest.
+9. **Our stack.** Three agents → Reflector → Hand-off; Explainer ⇄ Critic. LangGraph, LLaMA-3-8B on MLX, DeBERTa-v3, scikit-learn.
+10. **Why it works.** Evidence model wins on short reviews, probe on long; when they disagree the stack is right 58–62%.
+11. **What we tried and dropped.** LLM decides the star (3 attempts); photo agent; more views of the same words; bigger probe; non-linear Reflector; second judge.
+12. **What we kept.** Leak-free protocol; raw balanced data; probe + Evidence; DeBERTa-v3; simple Reflector; Critic loop and Hand-off.
+13. **Accuracy.** +13.5 / +24.6 points; 97% within one star.
+14. **Hard language.** 35.0 → 67.5 and 43.0 → 78.2.
+15. **Hand-off.** 92.8% right on 56% (natural); 86.9% on 41% (balanced; Phase 1 66.9%).
+16. **Critic loop.** 62.3 / 63.7 → 90.5 / 91.6; 841 fixed, 0 broken; cited words matter 2× random.
+17. **Example.** Three drafts; the Critic names what is wrong; draft 3 passes.
+18. **Human check.** Author 80% vs Critic 92%, agreement 76%; agents disagreed: author 37.5%, Critic 93.8%.
+19. **Robustness.** Flat text 9.3% vs 29.7%; typos 0.7% vs 2.0%; no title 15.7% vs 0% (limitation).
+20. **Why it is better.** Side-by-side table; say the one row where Phase 2 is worse (no title).
+21. **Conclusion.** Rebuilt and explored; several agents beat one; output you can check.
+22. **Thank you.** Questions, then the live demo.
 
 ### Key terms (for you; not on the slides)
 Use these when explaining or when someone asks what a word means.
