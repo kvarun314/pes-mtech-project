@@ -10,7 +10,7 @@ Deck: `presentation/Agentic_LLaMA3_Presentation.pptx`, the only current deck, bu
 
 **Layout (user, 2026-11-20: "more presentable, modern, similar to Apple's, not exact"):** one idea per slide, large titles without kickers or footers, soft grey rounded tiles, near-black type, one accent blue, and a deep-navy stage for the big moments (title, Part 2, the +24.6 hero, thank you). Plain tables with hairlines; native charts.
 
-**Timing (about 22 minutes):** Part 1 7 min; our approach, stack, why it works 4 min; tried and kept 3 min; results 6 min; why better and conclusion 2 min.
+**Timing (20 minutes):** Part 1 7 min; our approach, stack, why it works 3.5 min; tried and kept 2 min (name three rows each); results 6 min; why better and conclusion 1.5 min. Each speaker note now starts with a "Say:" line to speak.
 
 **Rule for every slide:** say the title first, then point at the big number. Details live in the speaker note. No results on the cover.
 
@@ -28,16 +28,16 @@ Deck: `presentation/Agentic_LLaMA3_Presentation.pptx`, the only current deck, bu
 11. **What we tried and dropped.** LLM decides the star (3 attempts); photo agent; more views of the same words; bigger probe; non-linear Reflector; second judge.
 12. **What we kept.** Leak-free protocol; raw balanced data; probe + Evidence; DeBERTa-v3; simple Reflector; Critic loop and Hand-off.
 13. **+13.5 (hero).** One number on the dark stage: +13.5 exact points on balanced reviews (54.0% to 67.5%). Pause, then the chart. Do not lead with +24.6: on the natural test Phase 1 adjusted to the star mix gets 75.5%, so say the natural gain as macro-F1 .49 to .63.
-14. **Accuracy.** +13.5 balanced; natural test macro-F1 .49 → .63 (raw +24.6, +2.5 against star-mix-adjusted Phase 1). Significance: McNemar, not the Holm set.
+14. **Better on both test sets.** Balanced: exact star 54.0 → 67.5 (+13.5). Natural: macro-F1 .488 → .634 (the star mix cannot inflate it). 97% within one star. Say the caveat: raw natural 53.4 → 78.0, but +2.5 against Phase 1 adjusted to the 65% 5-star mix.
 15. **Hard language.** 35.0 → 67.5 and 43.0 → 78.2.
 16. **Hand-off.** 92.8% right on 56% (natural); 86.9% on 41% (balanced; Phase 1 66.9%).
-17. **Critic loop.** 62.3 / 63.7 → 90.5 / 91.6; 841 fixed, 0 broken; cited words matter 2× random.
-18. **Example.** Three drafts; the Critic names what is wrong; draft 3 passes.
+17. **The Critic loop repairs explanations.** Critic pass rate 62.3 / 63.7 → 90.5 / 91.6; 841 fixed, 0 broken; cited words matter 2× random. Do not call it "faithful": the human check gives 80%.
+18. **Example.** Point at the TITLE line: "Poor" and "lacks space" come from the title, not invented. The Critic names what is wrong; draft 3 passes.
 19. **Human check.** Author 80% vs Critic 92%, agreement 76%; agents disagreed: author 37.5%, Critic 93.8%.
 20. **Robustness.** Flat text 9.3% vs 29.7%; typos 0.7% vs 2.0%; no title 15.7% vs 0% (limitation).
 21. **Why it is better.** Side-by-side table; say the one row where Phase 2 is worse (no title).
-22. **Conclusion.** Rebuilt and explored; several agents beat one; output you can check.
-23. **Thank you.** Questions, then the live demo.
+22. **Conclusion.** Rebuilt and explored; several agents beat one; output you can check. Read the limits line.
+23. **Live demo.** Five test reviews, Phase 1 next to Phase 2: star, explanation, Critic verdict, hand-off. Start with the slide 18 review. Then questions.
 
 ### Key terms (for you; not on the slides)
 Use these when explaining or when someone asks what a word means.
