@@ -50,7 +50,7 @@ This paper is organised in two phases. In Phase~1 we reproduce the reference met
 \begin{enumerate}
 \item A leakage-controlled reproduction and exploration of the reference method on Amazon Reviews 2023 Electronics, including a one-shot example leak worth about 8 points, a data-cleaning step that deletes most negative reviews, and a study showing that the model's justifications are a template (Section~\ref{sec:phase1}).
 \item A three-agent rating core (a probe on the frozen LLaMA-3-8B hidden state, a TF-IDF evidence model, and a fine-tuned DeBERTa-v3 encoder) combined by a learned Reflector, which improves exact accuracy over the reproduced method by 13.5 points on balanced reviews and raises macro-F1 on the natural star mix from .488 to .634 (the raw natural-test gain of 24.6 exact points shrinks to 2.5 when the reproduced method is adjusted to the star mix; Section~\ref{sec:results}) (Sections~\ref{sec:phase2} and \ref{sec:results}).
-\item An agentic layer around this core: an Explainer and a Critic that make 90.5--91.6\% of explanations faithful with no explanation broken, a deletion test that checks the cited evidence, and a Hand-off agent that answers automatically only when the system is confident (Section~\ref{sec:agentic}).
+\item An agentic layer around this core: an Explainer and a Critic that make 90.5--91.6\% of explanations pass all five Critic checks with no explanation broken (a blind human check of 50 finds 80\%), a deletion test that checks the cited evidence, and a Hand-off agent that answers automatically only when the system is confident (Section~\ref{sec:agentic}).
 \item A complete account of the selection process: every candidate was accepted or rejected by a rule declared before the run and checked on development data only, and the failed candidates are reported (Section~\ref{sec:failed}).
 \end{enumerate}
 
@@ -104,7 +104,7 @@ natural\_test & 2\,000 & natural & test, read once \\
 
 \textbf{Metrics.} The main metric is exact accuracy over the five stars. We also report macro-F1, the share of predictions within one star, mean absolute error (MAE) and quadratic weighted kappa \cite{cohen1968kappa}, which credit near misses. Confidence intervals are 95\% bootstrap intervals over 3\,000 resamples \cite{efron1979}. Two systems are compared on the same reviews with the exact McNemar test \cite{mcnemar1947}, and $p$-values are adjusted for multiple comparisons with the Holm procedure \cite{holm1979}.
 
-\textbf{Gates.} Every candidate change was declared in a dated log before it ran, together with a pass rule (a ``gate''), for example ``accept if dev2 accuracy improves by at least 1.0 point and the paired confidence interval excludes zero''. Gates are checked on dev, dev2 and natural\_dev only. A candidate that fails is never scored on eval or natural\_test, so the test sets are read once, by the final system and its reported comparisons.
+\textbf{Gates.} Every candidate change was declared in a dated log before it ran, together with a pass rule (a ``gate''), for example ``accept if dev2 accuracy improves by at least 1.0 point and the paired confidence interval excludes zero''. Gates are checked on dev, dev2 and natural\_dev only. A candidate that fails is never scored on eval or natural\_test, so the test sets are read once, by the final system and its reported comparisons. One exception is disclosed: the third agent (DeBERTa) passed its dev2 gate, was then read on both test sets (with three seeds), and was adopted afterwards. The two-agent system (67.5\% / 75.7\%), fixed before any test read, is therefore our strictly held-out result; the three-agent system is a test-informed update.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Phase 1: Reproducing and Exploring the Reference Paper}
@@ -129,7 +129,7 @@ On the paper's own data source (a Kaggle collection of Amazon reviews, with the 
 
 \textbf{The justifications are a template.} We inspected 150 generated justifications. None was unparseable, but 80 (53\%) gave a star different from the true one, 20 were off by two stars or more, and the text was one fixed rubric sentence per digit, repeated with no reference to the review. The probabilities carry the useful signal; the generated text does not explain the decision.
 
-\textbf{Fine-tuning helps, but less than a second signal.} The frozen base model with the same zero-shot prompt reaches only 34.3\% (eval) and 16.8\% (natural\_test), so LoRA adds 19.7 and 36.6 points. A DistilBERT encoder \cite{sanh2019distilbert} trained on the same 2\,000 reviews reaches 52.8\%, level with Phase~1 (difference not significant). Training LoRA on 10\,000 instead of 2\,000 reviews did not pass its gate (dev 56.4\% against a required 58\%). By contrast, simply stacking the Phase~1 probabilities with a TF-IDF model trained on 100\,000 reviews raised accuracy to 63.9\% and 73.4\%. This observation shaped Phase~2.
+\textbf{Fine-tuning helps, but less than a second signal.} The frozen base model with the same zero-shot prompt reaches only 34.3\% (eval) and 16.8\% (natural\_test), so LoRA adds 19.7 and 36.7 points. A DistilBERT encoder \cite{sanh2019distilbert} trained on the same 2\,000 reviews reaches 52.8\%, level with Phase~1 (difference not significant). Training LoRA on 10\,000 instead of 2\,000 reviews did not pass its gate (dev 56.4\% against a required 58\%). By contrast, simply stacking the Phase~1 probabilities with a TF-IDF model trained on 100\,000 reviews raised accuracy to 63.9\% and 73.4\%. This observation shaped Phase~2.
 
 \textbf{Summary of shortcomings.} The reference method (i) reads the review once with nothing to catch mistakes, (ii) has a reported score that depends on the set-up, (iii) removes most negative reviews in its cleaning step, and (iv) produces justifications that are not grounded in the review. Phase~2 addresses each point (Table~\ref{tbl:solves}).
 
@@ -177,11 +177,11 @@ Figure~\ref{fig:arch} shows the system. A review passes through a \emph{decision
 
 \textbf{Reflector.} A multinomial logistic regression (regularisation $C=1$) on the concatenated log-probabilities of the three agents (15 features), fit on the 2\,000 dev2 reviews \cite{wolpert1992}. It learns how much to trust each agent for each star; for example, it learns that the Evidence model is reliable on short reviews and the probe on long ones (Section~\ref{sec:why}). Its output is the final star and a probability for each star.
 
-\textbf{Why these agents.} The three agents look at a review in different ways: the probe through the internal representation of a large generative model, the Evidence model through individual phrases, and DeBERTa through a fine-tuned encoder. A stacker gains most when its inputs make different errors \cite{wolpert1992}. The set was chosen in two gated steps: the probe and Evidence model were selected on dev2 among five candidate agent sets (gate: $+1.0$ point and a paired CI above zero; result $+3.9$, CI $[+2.4, +5.8]$), and DeBERTa was added later after passing its own gate (dev2 $+2.0$, CI $[+0.6, +3.35]$).
+\textbf{Why these agents.} The three agents look at a review in different ways: the probe through the internal representation of a large generative model, the Evidence model through individual phrases, and DeBERTa through a fine-tuned encoder. A stacker gains most when its inputs make different errors \cite{wolpert1992}. The set was chosen in two gated steps: the probe and Evidence model were selected on dev2 among six candidate agent sets (the probe's layer and regularisation were also chosen on dev2) (gate: $+1.0$ point and a paired CI above zero; result $+3.9$, CI $[+2.4, +5.8]$), and DeBERTa was added later after passing its own gate (dev2 $+2.0$, CI $[+0.6, +3.35]$) and, as noted in Section~3, after its test readout.
 
 \subsection{The agentic layer}
 
-\textbf{Hand-off agent.} Exact rating is hard because neighbouring stars are often ambiguous even to people. Instead of always answering, the Hand-off agent compares the Reflector's top probability with a threshold. Above it, the star is released automatically. Below it, the system either returns a short star range with 90\% coverage (split conformal prediction \cite{angelopoulos2021conformal}, calibrated on dev2 for eval and on natural\_dev for natural\_test), when that range is at most two stars wide, or hands the review to a person. The threshold was set on dev2 so that the system answers about 40\% of balanced reviews, before the test sets were read.
+\textbf{Hand-off agent.} Exact rating is hard because neighbouring stars are often ambiguous even to people. Instead of always answering, the Hand-off agent compares the Reflector's top probability with a threshold. Above it, the star is released automatically. Below it, the system either returns a short star range with 90\% coverage (split conformal prediction \cite{angelopoulos2021conformal}, calibrated on dev2 for eval and on natural\_dev for natural\_test), when that range is at most two stars wide, or hands the review to a person. Coverage holds over all reviews, but on the reviews that actually receive a range it is 90.8\% on eval and 86.0\% on natural\_test, below the 90\% target. The threshold was set on dev2 so that the system answers about 40\% of balanced reviews, before the test sets were read.
 
 \textbf{Explainer.} Llama-3-8B-Instruct receives the review, the final star and the evidence pack (the review's phrases that most support the star and those that most argue against it) and writes a short explanation. It is instructed to use only the review and the evidence.
 
@@ -217,7 +217,7 @@ Always answers, even when unsure & Hand-off agent with star ranges & 92.8\% exac
 
 \begin{table}[t]
 \centering
-\caption{Rating accuracy on the frozen test sets: exact accuracy (\%) with 95\% bootstrap CI, macro-F1, share within one star (\%) and MAE. Phase~2 = the full system (probe + Evidence + DeBERTa with the Reflector).}
+\caption{Rating accuracy on the frozen test sets: exact accuracy (\%) with 95\% bootstrap CI, macro-F1, share within one star (\%) and MAE. Phase~2 = the full system (probe + Evidence + DeBERTa with the Reflector). The number after a model name is its training set size; the agents use 20--250 times more training reviews than Phase~1.}
 \label{tbl:main}
 \small
 \resizebox{\linewidth}{!}{%
@@ -227,20 +227,21 @@ Always answers, even when unsure & Hand-off agent with star ranges & 92.8\% exac
 Model & Exact [CI] & F1 & W-1 & MAE & Exact [CI] & F1 & W-1 & MAE \\
 \midrule
 Base LLaMA-3-8B, zero-shot & 34.3 [31.3, 37.3] & .269 & 83.3 & .824 & 16.8 [15.2, 18.4] & .212 & 70.5 & 1.129 \\
-DistilBERT, 2K reviews & 52.8 [49.6, 55.9] & .522 & 89.1 & .597 & 62.5 [60.4, 64.6] & .462 & 90.5 & .512 \\
-\textbf{Phase 1}: LLaMA + LoRA, 2K & 54.0 [50.9, 57.1] & .543 & 93.7 & .529 & 53.4 [51.3, 55.6] & .488 & 94.3 & .539 \\
+DistilBERT, 2K reviews & 52.8 [49.6, 55.9] & .522 & 89.1 & .597 & 62.5 [60.4, 64.7] & .462 & 90.5 & .512 \\
+\textbf{Phase 1}: LLaMA + LoRA, 2K & 54.0 [50.9, 57.1] & .543 & 93.7 & .529 & 53.4 [51.2, 55.6] & .488 & 94.3 & .539 \\
+Phase 1, LoRA seed 2, 2K & 53.7 [50.6, 56.7] & .516 & 90.6 & .581 & 74.8 [73.0, 76.7] & .545 & 95.3 & .321 \\
 \midrule
-LLaMA probe alone & 61.2 [58.1, 64.2] & .610 & 94.6 & .455 & 74.3 [72.4, 76.2] & .606 & 96.3 & .307 \\
-Evidence model alone & 62.5 [59.5, 65.4] & .624 & 93.4 & .452 & 70.2 [68.3, 72.2] & .550 & 94.5 & .372 \\
-DeBERTa-v3 alone & 66.5 [63.6, 69.4] & .667 & 97.7 & .359 & 75.8 [73.8, 77.6] & .614 & 98.0 & .267 \\
-LoRA + Evidence stack (dev2) & 65.5 [62.5, 68.5] & .653 & 96.2 & .386 & 74.2 [72.4, 76.1] & .587 & 96.6 & .307 \\
-Probe + Evidence stack & 67.5 [64.6, 70.3] & .675 & 96.7 & .363 & 75.7 [73.8, 77.6] & .612 & 96.7 & .288 \\
+LLaMA probe alone, 40K & 61.2 [58.1, 64.2] & .610 & 94.6 & .455 & 74.3 [72.4, 76.1] & .606 & 96.3 & .307 \\
+Evidence model alone, 497K & 62.5 [59.5, 65.4] & .624 & 93.4 & .452 & 70.2 [68.3, 72.2] & .550 & 94.5 & .372 \\
+DeBERTa-v3 alone, 100K & 66.5 [63.6, 69.4] & .667 & 97.7 & .359 & 75.8 [73.8, 77.6] & .614 & 98.0 & .267 \\
+LoRA + Evidence stack (dev2) & 65.5 [62.5, 68.5] & .653 & 96.2 & .386 & 74.2 [72.4, 76.2] & .587 & 96.6 & .307 \\
+Probe + Evidence stack & 67.5 [64.6, 70.3] & .675 & 96.7 & .363 & 75.7 [73.8, 77.5] & .612 & 96.7 & .288 \\
 \textbf{Phase 2}: Probe + Evidence + DeBERTa & \textbf{67.5 [64.5, 70.5]} & \textbf{.675} & \textbf{97.3} & \textbf{.353} & \textbf{78.0 [76.2, 79.8]} & \textbf{.634} & \textbf{97.4} & \textbf{.253} \\
 \bottomrule
 \end{tabular}}
 \end{table}
 
-\textbf{How to read the table.} The upper block contains the reference points: the untuned model, a small fine-tuned encoder and the reproduced method. The lower block contains the Phase~2 agents alone and in combination. Three patterns stand out. First, each Phase~2 agent alone already beats Phase~1; the frozen probe in particular shows that LLaMA's hidden states hold much more rating information (61.2\% and 74.3\%) than its generated digit after fine-tuning (54.0\% and 53.4\%). Second, the combination beats every single agent. Third, DeBERTa, the strongest single agent, adds to the two-agent stack on the natural test set (+2.3 points) but not on the balanced one (+0.0).
+\textbf{How to read the table.} The upper block contains the reference points: the untuned model, a small fine-tuned encoder and the reproduced method. The lower block contains the Phase~2 agents alone and in combination. Three patterns stand out. First, each Phase~2 agent alone already beats Phase~1; the frozen probe reaches 61.2\% and 74.3\% against 54.0\% and 53.4\% for the fine-tuned digit, but it was trained on 40K reviews against 2K, so this comparison is confounded by data size (at 2K reviews DistilBERT and the LoRA model are level, 52.8\% vs 54.0\%). Second, the combination beats every single agent. Third, DeBERTa, the strongest single agent, adds to the two-agent stack on the natural test set (+2.3 points) but not on the balanced one (+0.0).
 
 \textbf{Significance.} Table~\ref{tbl:paired} compares the full system with each alternative on the same reviews. After Holm correction over the 12 comparisons, 8 remain significant: all six on natural\_test, and the comparisons with the probe and the Evidence model on eval. On eval, the full system is not significantly better than DeBERTa alone (+1.0), the two-agent stack (+0.0), or the LoRA + Evidence stack fit on the same dev2 reviews (+2.0). The last comparison matters: part of the gain over the earliest stack comes from fitting the Reflector on 2\,000 instead of 500 reviews, not from the new agents.
 
@@ -268,7 +269,7 @@ LLaMA probe alone & +6.3, $p$=1.2e-5 (Holm 1e-4) & +3.7, $p$=9.9e-6 (Holm 9.9e-5
 
 \noindent{\footnotesize $^\dagger$ Exact McNemar test, outside the Holm family of 12.}
 
-\textbf{Natural test and the star mix.} The reproduced method was trained on balanced data, while 65\% of natural\_test reviews are 5-star, so part of its low natural\_test exact accuracy (53.4\%) comes from the star mix rather than from reading the review. Adjusting its probabilities to the star mix of natural\_dev raises it to 75.5\% exact, with macro-F1 .507. Against this adjusted version the full system's natural\_test gain is 2.5 exact points, while macro-F1, which the star mix cannot inflate, rises from .507 to .634. We therefore report the balanced eval gain (+13.5) and the natural\_test macro-F1 as the main comparison with Phase~1, and the raw +24.6 only alongside this caveat.
+\textbf{Natural test and the star mix.} The reproduced method was trained on balanced data, while 65\% of natural\_test reviews are 5-star, so part of its low natural\_test exact accuracy (53.4\%) comes from the star mix rather than from reading the review. Adjusting its probabilities to the star mix of natural\_dev raises it to 75.5\% exact, with macro-F1 .507. Against this adjusted version the full system's natural\_test gain is 2.5 exact points, while macro-F1, which the star mix cannot inflate, rises from .507 to .634. A second LoRA seed points the same way: it scores 53.7\% on eval but 74.8\% on natural\_test, so the raw natural\_test gain also depends on the Phase~1 seed. We therefore report the balanced eval gain (+13.5) and the natural\_test macro-F1 as the main comparison with Phase~1, and the raw +24.6 only alongside this caveat.
 
 \textbf{Stability.} Results from one training run can be lucky. Over five seeds (bootstrapping the probe's fit set and dev2), the two-agent stack scores $65.8 \pm 0.6$ (eval) and $75.4 \pm 0.8$ (natural\_test), and its gain over each single agent is positive in 5 of 5 seeds on both test sets. With three DeBERTa seeds, the gain from adding DeBERTa is $+2.2 \pm 0.2$ points on natural\_test (stable) and $+0.1 \pm 0.3$ on eval (no gain), which confirms the pattern above.
 
@@ -282,7 +283,7 @@ LLaMA probe alone & +6.3, $p$=1.2e-5 (Holm 1e-4) & +3.7, $p$=9.9e-6 (Holm 9.9e-5
 \label{fig:cm}
 \end{figure}
 
-\textbf{Calibration and cost.} The Reflector's probabilities are well calibrated on eval (expected calibration error .031; mean confidence .679 against accuracy .675) and slightly under-confident on natural\_test (.052; .733 against .780). This matters for the Hand-off agent, which relies on the probability. On the M1 laptop, the probe costs about 0.67 s per review (one forward pass to layer 20), DeBERTa 86 ms, and the Evidence model and Reflector well under 0.1 ms each.
+\textbf{Calibration and cost.} The Reflector's probabilities are well calibrated on eval (expected calibration error .031; mean confidence .679 against accuracy .675) and slightly under-confident on natural\_test (.052; .733 against .780). This matters for the Hand-off agent, which relies on the probability. On the M1 laptop, the probe costs about 0.67 s per review (one forward pass to layer 20), DeBERTa 78 ms, and the Evidence model and Reflector well under 0.1 ms each.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Why Several Agents Beat One}
@@ -311,7 +312,7 @@ When the probe and the Evidence model disagree on the star (36\% of eval reviews
 
 \subsection{Explanations and the Critic loop}
 
-We ran the Explainer and Critic on all 3\,000 test reviews. An explanation counts as \emph{faithful} when it passes all five checks. Table~\ref{tbl:faith} shows the effect of the loop.
+We ran the Explainer and Critic on all 3\,000 test reviews. An explanation counts as \emph{faithful} when it passes all five checks; strictly this is the Critic pass rate, and because the loop rewrites until the checks pass, the rise is partly true by construction. The deletion test and the human check below are the independent measures. Table~\ref{tbl:faith} shows the effect of the loop.
 
 \begin{table}[t]
 \centering
@@ -344,11 +345,11 @@ natural\_test & 63.7\% & 91.6\% & 559 / 0 & 1.1e-168 & .209 / .119 & .616 / .349
 \label{fig:deletion}
 \end{figure}
 
-\textbf{Compared with Phase~1.} On the same 150 balanced reviews, judged by the same model, Phase~1's justification quotes the review in 0\% of cases and Phase~2's in 75.3\% ($p = 1.9\cdot10^{-34}$). Phase~1 produced only 5 distinct sentences (3.3\% distinct outputs) and repeated its template in 54.7\% of outputs; every Phase~2 explanation was distinct. The judge found no unsupported claim in 93.3\% of Phase~2 explanations, and in the 22 reviews where only one system passed, Phase~2 passed 17 times and Phase~1 5 times ($p=.017$).
+\textbf{Compared with Phase~1.} On the same 150 balanced reviews, judged by the same model, Phase~1's justification quotes the review in 0\% of cases and Phase~2's in 75.3\% ($p = 1.9\cdot10^{-34}$). Phase~1 produced only 5 distinct sentences (3.3\% distinct outputs) and repeated its template in 54.7\% of outputs; every Phase~2 explanation was distinct. The judge found no unsupported claim in 93.3\% of Phase~2 explanations, but also in 85.3\% of Phase~1's template sentences, so on its own it discriminates weakly; and in the 22 reviews where only one system passed, Phase~2 passed 17 times and Phase~1 5 times ($p=.017$).
 
 \textbf{Limits.} About 9\% of final explanations still fail a check, mostly the LLM judge (check 5). The judge is the same model that writes the explanation, so it is not an independent check; the deterministic checks, the deletion test and the comparison with Phase~1 are. A second judge (Qwen2.5-7B-Instruct) was tried and failed its gate: it rejected every explanation, whatever its content.
 
-\textbf{Human check.} To test the Critic itself, the first author marked 50 randomly drawn final explanations (seed 0, from eval and natural\_test) as faithful or not, without seeing the Critic's verdict. A mark of ``faithful'' means every claim is in the review and the star is stated correctly; it does not mean the author agrees with the star. The author judged 80\% faithful against the Critic's 92\%, and the two agreed on 76\% of explanations: 9 passed the Critic but not the author, and 3 the reverse. The disagreements are not spread evenly. When all agents agreed on the star (34 explanations), the author judged every explanation faithful and the Critic 91.2\%. When the agents disagreed (16 explanations), the author judged only 37.5\% faithful while the Critic passed 93.8\%. In these cases the Explainer adds statements about the system, such as attributing the system's star to the reviewer or quoting the Reflector's confidence, which none of the five checks catches. The Critic is therefore slightly too strict on easy cases and too lenient on contested ones, and the 90.5--91.6\% faithful rate above is optimistic for reviews on which the agents disagree. With one annotator and 50 items this is an indication rather than a measurement; a larger, multi-annotator check is future work.
+\textbf{Human check.} To test the Critic itself, the first author marked 50 randomly drawn final explanations (seed 0, from eval and natural\_test) as faithful or not, without seeing the Critic's verdict. A mark of ``faithful'' means every claim is in the review and the star is stated correctly; it does not mean the author agrees with the star. The author judged 80\% faithful against the Critic's 92\%, and the two agreed on 76\% of explanations: 9 passed the Critic but not the author, and 3 the reverse. The disagreements are not spread evenly (this split by agent agreement was chosen after the marks were in, so it is exploratory). When all agents agreed on the star (34 explanations), the author judged every explanation faithful and the Critic 91.2\%. When the agents disagreed (16 explanations), the author judged only 37.5\% faithful while the Critic passed 93.8\%. In these cases the Explainer adds statements about the system, such as attributing the system's star to the reviewer or quoting the Reflector's confidence, which none of the five checks catches. The Critic is therefore slightly too strict on easy cases and too lenient on contested ones, and the 90.5--91.6\% faithful rate above is optimistic for reviews on which the agents disagree. With one annotator and 50 items this is an indication rather than a measurement; a larger, multi-annotator check is future work.
 
 \subsection{The Hand-off agent}
 
@@ -428,7 +429,7 @@ Negative results are part of the evidence for the final design, and reporting th
 \toprule
 Candidate & Dev result & Lesson \\
 \midrule
-LLM adjudicator picks between two agents' stars (twice) & 54.2\% vs stack 73.3\% on 434 disagreements & LLM does not decide \\
+LLM adjudicator picks between two agents' stars (twice) & 54.2\% vs stack 73.3\% on the 371 disagreements where the truth is one of the two stars & LLM does not decide \\
 Instruct LLM re-rates unsure reviews & 76 fixed vs 89 broken ($p=.35$) & Third LLM-judge failure \\
 Visual Verifier (BLIP, moondream2, Qwen2-VL) & Constant output (always 3, then 5) & A photo shows no satisfaction \\
 LoRA on 10K instead of 2K reviews & dev 56.4\% $<$ gate 58\% & Not data-starved \\
@@ -452,7 +453,7 @@ Three lessons follow. First, an LLM asked to choose or revise the star did worse
 
 \textbf{Practical use.} For a retailer, the most useful output is probably the combination of the Hand-off agent and the checked explanation: more than half of real reviews receive an automatic star that is right 93\% of the time, with an explanation that quotes the review, and the rest receive a two-star range or go to a person.
 
-\textbf{Limitations.} (i) All main results use one dataset and one product category. (ii) The three-agent system depends on the review title (Section~\ref{sec:robust}). (iii) Part of the gain over the earliest stack comes from the larger Reflector fit set. (iv) The LLM judge in the Critic is the same model as the Explainer, about 9\% of explanations still fail a check, and a human check of 50 explanations found the Critic too lenient when the agents disagree (37.5\% judged faithful by the author against 93.8\% by the Critic). (v) Sarcasm was too rare in the test sets to measure. (vi) The 92.6\% of the reference paper and our numbers come from different protocols and are not directly comparable. (vii) Five candidate agent sets were compared on dev2 before the final choice, by a rule fixed beforehand.
+\textbf{Limitations.} (i) All main results use one dataset and one product category. (ii) The three-agent system depends on the review title (Section~\ref{sec:robust}). (iii) Part of the gain over the earliest stack comes from the larger Reflector fit set. (iv) The LLM judge in the Critic is the same model as the Explainer, about 9\% of explanations still fail a check, and a human check of 50 explanations found the Critic too lenient when the agents disagree (37.5\% judged faithful by the author against 93.8\% by the Critic). (v) Sarcasm was too rare in the test sets to measure. (vi) The 92.6\% of the reference paper and our numbers come from different protocols and are not directly comparable. (vii) Five candidate agent sets were compared on dev2 before the final choice, by a rule fixed beforehand. (viii) The agents are trained on 20--250 times more reviews than Phase~1, so part of the gain over Phase~1 may come from data size; a matched-data comparison is future work. (ix) The third agent was adopted after its test readout (Section~3). (x) ``Faithful'' is the Critic pass rate; the human check (one annotator, 50 items) is lower.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusion}
@@ -460,7 +461,7 @@ Three lessons follow. First, an LLM asked to choose or revise the star did worse
 
 We reproduced a fine-tuned LLaMA-3 review-rating method under leakage control and explored it, finding a one-shot example leak, a cleaning step that removes most negative reviews, and template justifications. Building on these findings, a system of three independent agents and a learned Reflector improves exact star accuracy from 54.0\% to 67.5\% on balanced reviews and from 53.4\% to 78.0\% on the natural mix (macro-F1 .488 to .634; part of the raw natural gain reflects the star mix, Section~\ref{sec:results}). An agentic layer makes the system's output checkable: a Critic loop raises faithful explanations from 62--64\% to 90.5--91.6\% without breaking any, the cited evidence passes a deletion test, and a Hand-off agent answers automatically only when confident. Three attempts to let an LLM decide the star failed, which suggests a division of labour: trained models decide, LLMs explain, and deterministic checks keep the explanations honest. Future work includes other product categories and datasets, an independent explanation judge with a check for statements about the system, and agents that do not depend on the review title.
 
-\subsubsection*{Acknowledgements.} This work was carried out as part of an M.Tech project at PES University. Code and results are available at\\ \url{https://github.com/kvarun314/pes-mtech-project}.
+\subsubsection*{Acknowledgements.} This work was carried out as part of an M.Tech project at PES University. Code and results are available at\\ \url{https://github.com/kvarun314/agentic-review-rating}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % REFERENCES. Every entry was checked on 2026-11-14 against the arXiv API or Crossref (title, authors, year, venue),

@@ -80,3 +80,4 @@ v2_reflective/e23/agents/deberta/
 
 # decks are never committed (CLAUDE.md)
 *.pptx
+paper/conference/overleaf/
