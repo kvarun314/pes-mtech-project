@@ -58,17 +58,17 @@ This paper is organised in two phases. In Phase~1 we reproduce the reference met
 \section{Related Work}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\textbf{Sentiment analysis and review rating.} Early work framed review sentiment as polarity or rating prediction over bag-of-words features \cite{pang2008}; term weighting such as TF-IDF \cite{salton1988} with a linear classifier remains a strong baseline. Sentiment benchmarks such as SST \cite{socher2013} and IMDB \cite{maas2011} drove the move to neural models, and fine-tuned encoders such as BERT \cite{devlin2019bert}, DistilBERT \cite{sanh2019distilbert} and DeBERTa \cite{he2021deberta,he2021debertav3} became the default. Zhang et al.\ \cite{zhang2023sentiment} find that LLMs are competitive on simple polarity tasks but lag fine-tuned models on fine-grained rating, which matches what we observe for zero-shot LLaMA-3. Large Amazon review corpora \cite{ni2019,hou2024} provide the data for this task; we use the 2023 release \cite{hou2024}.
+\textbf{Sentiment analysis and review rating.} Early work framed review sentiment as polarity or rating prediction over bag-of-words features \cite{pang2008}; term weighting such as TF-IDF \cite{salton1988} with a linear classifier remains a strong baseline. Sentiment benchmarks such as SST \cite{socher2013} and IMDB \cite{maas2011} drove the move to neural models, and fine-tuned encoders such as BERT \cite{devlin2019bert}, DistilBERT \cite{sanh2019distilbert} and DeBERTa \cite{he2021deberta,he2021debertav3} became the default. Zhang et al.\ \cite{zhang2023sentiment} find that LLMs are competitive on simple polarity tasks but lag fine-tuned models on fine-grained rating, which matches what we observe for zero-shot LLaMA-3. Large Amazon review corpora \cite{ni2019,hou2024} provide the data for this task; we use the 2023 release \cite{hou2024}. Because stars are ordered, ordinal methods such as CORAL \cite{cao2020coral} and CORN \cite{shi2023corn} are an alternative to plain five-class classification; we report ordinal metrics (MAE, quadratic weighted kappa) beside exact accuracy.
 
-\textbf{Fine-tuning and probing LLMs.} LoRA \cite{hu2022lora} trains low-rank update matrices on a frozen model, and QLoRA \cite{dettmers2023qlora} does so on a 4-bit quantised model. An alternative that needs no fine-tuning is a linear probe on a model's hidden states \cite{alain2016probes}; probes must be read with care \cite{hewitt2019control}, but they are a cheap way to extract what a frozen model already encodes. We use both: LoRA in Phase~1, as the reference paper does, and a probe in Phase~2.
+\textbf{Fine-tuning and probing LLMs.} LoRA \cite{hu2022lora} trains low-rank update matrices on a frozen model, and QLoRA \cite{dettmers2023qlora} does so on a 4-bit quantised model. An alternative that needs no fine-tuning is a linear probe on a model's hidden states \cite{alain2016probes}; probes must be read with care \cite{hewitt2019control}, but they are a cheap way to extract what a frozen model already encodes \cite{belinkov2022probing}; probes on LLM hidden states recover truthfulness and other latent properties that the generated text does not show \cite{azaria2023lying,burns2023latent}. We use both: LoRA in Phase~1, as the reference paper does, and a probe in Phase~2.
 
-\textbf{Combining models.} Stacked generalisation \cite{wolpert1992} trains a second-level model on the outputs of several first-level models; it works best when the first-level models make different errors. Our Reflector is a stacker in this sense. We report calibration with the expected calibration error \cite{guo2017calibration}.
+\textbf{Combining models.} Stacked generalisation \cite{wolpert1992} trains a second-level model on the outputs of several first-level models; it works best when the first-level models make different errors. Ensembles help because their members err differently \cite{dietterich2000ensemble}, and stacking with a simple, constrained combiner is robust \cite{breiman1996stacked}; LLM-Blender \cite{jiang2023llmblender} applies the idea to LLM outputs. Our Reflector is a stacker in this sense. We report calibration with the expected calibration error \cite{guo2017calibration}.
 
-\textbf{Self-correction, reflection and multi-agent LLM systems.} Chain-of-thought prompting \cite{wei2022cot,kojima2022zeroshot} and self-consistency \cite{wang2023selfconsistency} improve LLM reasoning; Self-Refine \cite{madaan2023selfrefine} and Reflexion \cite{shinn2023reflexion} let a model critique and revise its own output, Self-RAG \cite{asai2023selfrag} adds retrieval and self-critique, ReAct \cite{yao2023react} interleaves reasoning and tool use, and multi-agent frameworks \cite{du2023debate,wu2023autogen} let several LLM agents discuss or debate. Huang et al.\ \cite{huang2024cannot} show, however, that LLMs often cannot correct their own answers without external feedback, and LLM judges have known biases \cite{zheng2023judge}. Our findings agree: an LLM asked to decide or revise the star failed three times, so in our system the LLM explains and checks, while the star is decided by the Reflector, and every check uses external signals (the review text, the evidence model and the deletion test).
+\textbf{Self-correction, reflection and multi-agent LLM systems.} Chain-of-thought prompting \cite{wei2022cot,kojima2022zeroshot} and self-consistency \cite{wang2023selfconsistency} improve LLM reasoning; Self-Refine \cite{madaan2023selfrefine} and Reflexion \cite{shinn2023reflexion} let a model critique and revise its own output, Self-RAG \cite{asai2023selfrag} adds retrieval and self-critique, ReAct \cite{yao2023react} interleaves reasoning and tool use, and multi-agent frameworks \cite{du2023debate,wu2023autogen} let several LLM agents discuss or debate. Huang et al.\ \cite{huang2024cannot} show, however, that LLMs often cannot correct their own answers without external feedback, and LLM judges have known biases \cite{zheng2023judge,liu2023geval}. Our findings agree: an LLM asked to decide or revise the star failed three times, so in our system the LLM explains and checks, while the star is decided by the Reflector, and every check uses external signals (the review text, the evidence model and the deletion test).
 
-\textbf{Faithful explanations.} An explanation is faithful if it reflects the reasons the model actually used \cite{jacovi2020faithfulness}; LLM explanations are often plausible but unfaithful \cite{turpin2023unfaithful}. ERASER \cite{deyoung2020eraser} measures faithfulness by deleting the cited tokens (comprehensiveness) or keeping only them (sufficiency); post-hoc methods such as LIME \cite{ribeiro2016lime} attribute predictions to input features. We apply the ERASER deletion test to the phrases our explanations cite.
+\textbf{Faithful explanations.} An explanation is faithful if it reflects the reasons the model actually used \cite{jacovi2020faithfulness}; LLM explanations are often plausible but unfaithful \cite{turpin2023unfaithful}. ERASER \cite{deyoung2020eraser} measures faithfulness by deleting the cited tokens (comprehensiveness) or keeping only them (sufficiency); post-hoc methods such as LIME \cite{ribeiro2016lime}, SHAP \cite{lundberg2017shap} and integrated gradients \cite{sundararajan2017ig} attribute predictions to input features, and they often disagree with one another \cite{atanasova2020diagnostic}. Attention weights are not by themselves explanations \cite{jain2019attention}, free-text rationales need their own evaluation \cite{wiegreffe2021teach}, and the stated reasoning of LLMs can be unfaithful to what drives the answer \cite{lanham2023cotfaith}. We therefore do not trust the Explainer's text by itself: we check it against the review, against the evidence model's phrases, by the ERASER deletion test, and by a human reader.
 
-\textbf{Abstaining and uncertainty.} A classifier can abstain when unsure; the error--reject trade-off goes back to Chow \cite{chow1970}, and selective classification for neural networks is studied by Geifman and El-Yaniv \cite{geifman2017selective}. Conformal prediction \cite{angelopoulos2021conformal} turns scores into prediction sets with a coverage guarantee. LLMs can partly estimate their own uncertainty \cite{kadavath2022know}. Our Hand-off agent combines both ideas.
+\textbf{Abstaining and uncertainty.} A classifier can abstain when unsure; the error--reject trade-off goes back to Chow \cite{chow1970}, and selective classification for neural networks is studied by Geifman and El-Yaniv \cite{geifman2017selective}. Conformal prediction \cite{angelopoulos2021conformal} turns scores into prediction sets with a coverage guarantee. Selective prediction has been studied for NLP tasks \cite{varshney2022selective} and under domain shift \cite{kamath2020selective}. LLMs can partly estimate their own uncertainty \cite{kadavath2022know,xiong2024uncertainty}. Our Hand-off agent combines both ideas.
 
 \textbf{Evaluation and leakage.} Data leakage inflates many published machine-learning results \cite{kapoor2023leakage}; behavioural tests such as CheckList \cite{ribeiro2020checklist} probe robustness beyond accuracy. We use frozen, disjoint splits, declare every test before running it, and report robustness under controlled text changes.
 
@@ -269,7 +269,7 @@ LLaMA probe alone & +6.3, $p$=1.2e-5 (Holm 1e-4) & +3.7, $p$=9.9e-6 (Holm 9.9e-5
 
 \noindent{\footnotesize $^\dagger$ Exact McNemar test, outside the Holm family of 12.}
 
-\textbf{Natural test and the star mix.} The reproduced method was trained on balanced data, while 65\% of natural\_test reviews are 5-star, so part of its low natural\_test exact accuracy (53.4\%) comes from the star mix rather than from reading the review. Adjusting its probabilities to the star mix of natural\_dev raises it to 75.5\% exact, with macro-F1 .507. Against this adjusted version the full system's natural\_test gain is 2.5 exact points, while macro-F1, which the star mix cannot inflate, rises from .507 to .634. A second LoRA seed points the same way: it scores 53.7\% on eval but 74.8\% on natural\_test, so the raw natural\_test gain also depends on the Phase~1 seed. We therefore report the balanced eval gain (+13.5) and the natural\_test macro-F1 as the main comparison with Phase~1, and the raw +24.6 only alongside this caveat.
+\textbf{Natural test and the star mix.} The reproduced method was trained on balanced data, while 65\% of natural\_test reviews are 5-star, so part of its low natural\_test exact accuracy (53.4\%) comes from the star mix rather than from reading the review. Adjusting its probabilities to the star mix of natural\_dev, the standard prior correction under label shift \cite{saerens2002priors,lipton2018labelshift}, raises it to 75.5\% exact, with macro-F1 .507. Against this adjusted version the full system's natural\_test gain is 2.5 exact points, while macro-F1, which the star mix cannot inflate, rises from .507 to .634. A second LoRA seed points the same way: it scores 53.7\% on eval but 74.8\% on natural\_test, so the raw natural\_test gain also depends on the Phase~1 seed. We therefore report the balanced eval gain (+13.5) and the natural\_test macro-F1 as the main comparison with Phase~1, and the raw +24.6 only alongside this caveat.
 
 \textbf{Stability.} Results from one training run can be lucky. Over five seeds (bootstrapping the probe's fit set and dev2), the two-agent stack scores $65.8 \pm 0.6$ (eval) and $75.4 \pm 0.8$ (natural\_test), and its gain over each single agent is positive in 5 of 5 seeds on both test sets. With three DeBERTa seeds, the gain from adding DeBERTa is $+2.2 \pm 0.2$ points on natural\_test (stable) and $+0.1 \pm 0.3$ on eval (no gain), which confirms the pattern above.
 
@@ -312,17 +312,40 @@ When the probe and the Evidence model disagree on the star (36\% of eval reviews
 
 \subsection{Explanations and the Critic loop}
 
+\textbf{How an explanation is made and checked.} Explainability in this system has three parts, and each answers a different question. (1) \emph{Evidence}: the Evidence model's linear weights give, for every review, the phrases that push most towards the chosen star and those that push most against it (the evidence pack); this is what the decision core actually used. (2) \emph{Explanation}: the Explainer turns the star, the evidence pack and the review into two or three plain sentences for a reader. (3) \emph{Verification}: the Critic runs five checks (Table~\ref{tbl:checks}); four are deterministic string and label tests, and one is an LLM judge. Any failure returns a specific instruction to the Explainer, and the loop repeats at most four times. Independently of the Critic, the deletion test measures whether the cited phrases matter to the decision, and a human reader checks a random sample.
+
+\begin{table}[t]
+\centering
+\caption{The Critic's five checks and how often each failed on the first draft (all 3\,000 test reviews; a draft can fail several checks).}
+\label{tbl:checks}
+\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{clccc}
+\toprule
+\# & Check & Type & eval (1\,000) & natural\_test (2\,000) \\
+\midrule
+1 & Stated star equals the system's star & deterministic & 7 & 9 \\
+2 & Every quoted phrase occurs in the review or the evidence pack & deterministic & 194 & 367 \\
+3 & At least two of the top evidence phrases are quoted & deterministic & 183 & 289 \\
+4 & If the agents disagree, the explanation says so & deterministic & 0 & 0 \\
+5 & No claim the review does not support & LLM judge & 71 & 180 \\
+\midrule
+ & Drafts failing at least one check & & 377 (37.7\%) & 727 (36.4\%) \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
 We ran the Explainer and Critic on all 3\,000 test reviews. An explanation counts as \emph{faithful} when it passes all five checks; strictly this is the Critic pass rate, and because the loop rewrites until the checks pass, the rise is partly true by construction. The deletion test and the human check below are the independent measures. Table~\ref{tbl:faith} shows the effect of the loop.
 
 \begin{table}[t]
 \centering
-\caption{Explanations on all 3\,000 test reviews. Faithful = passes all five Critic checks. Fixed / broken = reviews whose explanation went from failing to passing, or from passing to failing, between the first draft and the final one. Deletion test: drop in the system's probability of its star when the cited phrases are removed (comprehensiveness), and probability when only they are kept (sufficiency), against the same number of random words.}
+\caption{Explanations on all 3\,000 test reviews. Pass = passes all five Critic checks (the Critic pass rate). Fixed / broken = reviews whose explanation went from failing to passing, or from passing to failing, between the first draft and the final one. Deletion test: drop in the system's probability of its star when the cited phrases are removed (comprehensiveness), and probability when only they are kept (sufficiency), against the same number of random words.}
 \label{tbl:faith}
 \small
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{lcccccc}
 \toprule
-Split & First draft & After loop & Fixed / broken & McNemar $p$ & Compr.\ cited / random & Suff.\ cited / random \\
+Split & Pass, first draft & Pass, after loop & Fixed / broken & McNemar $p$ & Compr.\ cited / random & Suff.\ cited / random \\
 \midrule
 eval & 62.3\% & 90.5\% & 282 / 0 & 2.6e-85 & .156 / .077 & .521 / .301 \\
 natural\_test & 63.7\% & 91.6\% & 559 / 0 & 1.1e-168 & .209 / .119 & .616 / .349 \\
@@ -332,9 +355,9 @@ natural\_test & 63.7\% & 91.6\% & 559 / 0 & 1.1e-168 & .209 / .119 & .616 / .349
 
 \textbf{The loop works and is safe.} About 37\% of first drafts fail at least one check. After at most four rewrites, 90.5\% (eval) and 91.6\% (natural\_test) of explanations are faithful. The loop never broke an explanation that was already faithful (0 of 3\,000), because a rewrite is only requested when a check fails. The cost is modest: 2.9--3.0 LLM calls per review on average, about 11 s for the Explainer and 2 s for the Critic per review on the M1. Allowing four rewrites instead of two passed its own gate and fixed 17 + 46 more explanations.
 
-\textbf{What the Critic catches.} On the first drafts, the most frequent failures are quotes that do not occur in the review or the evidence pack (194 on eval, 367 on natural\_test), missing top evidence phrases (183 and 289), and claims the judge finds unsupported (71 and 180). A wrong star is rare (7 and 9) and the agent-disagreement check never fired.
+\textbf{What the Critic catches.} Table~\ref{tbl:checks} shows that most first-draft failures are about grounding, not about the star: quotes that do not occur in the review or the evidence pack, and missing top evidence phrases. A wrong star is rare (7 and 9) and the agent-disagreement check never fired, which the human check below shows is a gap rather than a success.
 
-\textbf{A worked example.} One balanced-eval review used in the live demonstration is a 2-star review of a backpack: the reviewer likes the many pockets and the waterproof surface, but says the quality is questionable because a zipper broke within four months, and calls the purchase disappointing. The system rates it 2 stars. The evidence pack lists ``disappointing'', ``Poor'' and ``lacks'' as supporting the star and ``great'' and ``easy'' as arguing against it. The first draft attributes the words ``Poor quality'' to the reviewer, a phrase that does not occur in the review; the Critic replies ``Remove the unsupported claim''. The second draft removes it but quotes only one of the top evidence phrases; the Critic asks it to quote at least two. The third draft quotes ``questionable'', ``disappointing'', ``lacks space'' and ``Poor'' from the review and passes all five checks. This is what the move from 62\% to 91\% means for a single review.
+\textbf{A worked example.} One balanced-eval review used in the live demonstration is a 2-star review of a backpack: the reviewer likes the many pockets and the waterproof surface, but says the quality is questionable because a zipper broke within four months, and calls the purchase disappointing. The system rates it 2 stars. The review's title also calls the bag poor in quality and short of space, and the evidence pack, built from title and text, lists ``disappointing'', ``Poor'' and ``lacks'' as supporting the star and ``great'' and ``easy'' as arguing against it. The first draft quotes ``Poor quality'' as a phrase of the review body, where it does not occur; the Critic replies ``Remove the unsupported claim''. The second draft removes it but quotes only one of the top evidence phrases; the Critic asks it to quote at least two. The third draft quotes ``questionable'' and ``disappointing'' from the text and ``lacks space'' and ``Poor'' from the title, and passes all five checks. This is what the move from 62\% to 91\% means for a single review.
 
 \textbf{The cited phrases carry the decision.} A faithful explanation should cite what the decision actually depends on \cite{jacovi2020faithfulness}. Following ERASER \cite{deyoung2020eraser}, we removed the cited phrases from each review and re-ran the decision core, and compared this with removing the same number of random words (Figure~\ref{fig:deletion}). Removing the cited phrases lowers the system's probability of its star about twice as much as removing random words (.156 against .077 on eval, .209 against .119 on natural\_test), and keeping only the cited phrases preserves much more of it (.521 against .301; .616 against .349). All differences are significant (Wilcoxon \cite{wilcoxon1945} $p < 10^{-54}$).
 
@@ -345,11 +368,46 @@ natural\_test & 63.7\% & 91.6\% & 559 / 0 & 1.1e-168 & .209 / .119 & .616 / .349
 \label{fig:deletion}
 \end{figure}
 
-\textbf{Compared with Phase~1.} On the same 150 balanced reviews, judged by the same model, Phase~1's justification quotes the review in 0\% of cases and Phase~2's in 75.3\% ($p = 1.9\cdot10^{-34}$). Phase~1 produced only 5 distinct sentences (3.3\% distinct outputs) and repeated its template in 54.7\% of outputs; every Phase~2 explanation was distinct. The judge found no unsupported claim in 93.3\% of Phase~2 explanations, but also in 85.3\% of Phase~1's template sentences, so on its own it discriminates weakly; and in the 22 reviews where only one system passed, Phase~2 passed 17 times and Phase~1 5 times ($p=.017$).
+\begin{table}[t]
+\centering
+\caption{Explanations of Phase~1 and Phase~2 on the same 150 balanced reviews (\texttt{x1\_explain\_compare}). Grounded = quotes at least one phrase of the review. Judge = the LLM judge finds no unsupported claim.}
+\label{tbl:x1}
+\small
+\begin{tabular}{lccc}
+\toprule
+ & Phase~1 & Phase~2 & Paired test \\
+\midrule
+Grounded in the review & 0\% & 75.3\% & 113 vs 0, $p=1.9\cdot10^{-34}$ \\
+Distinct outputs & 3.3\% (5 sentences) & 100\% & -- \\
+Repeats a template & 54.7\% & 0\% & -- \\
+States the system's star & 100\% & 99.3\% & -- \\
+Judge: no unsupported claim & 85.3\% & 93.3\% & 17 vs 5, $p=.017$ \\
+Mean length (words) & 12.0 & 35.6 & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Compared with Phase~1.} Table~\ref{tbl:x1} compares the two systems' explanations. On the same 150 balanced reviews, judged by the same model, Phase~1's justification quotes the review in 0\% of cases and Phase~2's in 75.3\% ($p = 1.9\cdot10^{-34}$). Phase~1 produced only 5 distinct sentences (3.3\% distinct outputs) and repeated its template in 54.7\% of outputs; every Phase~2 explanation was distinct. The judge found no unsupported claim in 93.3\% of Phase~2 explanations, but also in 85.3\% of Phase~1's template sentences, so on its own it discriminates weakly; and in the 22 reviews where only one system passed, Phase~2 passed 17 times and Phase~1 5 times ($p=.017$).
 
 \textbf{Limits.} About 9\% of final explanations still fail a check, mostly the LLM judge (check 5). The judge is the same model that writes the explanation, so it is not an independent check; the deterministic checks, the deletion test and the comparison with Phase~1 are. A second judge (Qwen2.5-7B-Instruct) was tried and failed its gate: it rejected every explanation, whatever its content.
 
-\textbf{Human check.} To test the Critic itself, the first author marked 50 randomly drawn final explanations (seed 0, from eval and natural\_test) as faithful or not, without seeing the Critic's verdict. A mark of ``faithful'' means every claim is in the review and the star is stated correctly; it does not mean the author agrees with the star. The author judged 80\% faithful against the Critic's 92\%, and the two agreed on 76\% of explanations: 9 passed the Critic but not the author, and 3 the reverse. The disagreements are not spread evenly (this split by agent agreement was chosen after the marks were in, so it is exploratory). When all agents agreed on the star (34 explanations), the author judged every explanation faithful and the Critic 91.2\%. When the agents disagreed (16 explanations), the author judged only 37.5\% faithful while the Critic passed 93.8\%. In these cases the Explainer adds statements about the system, such as attributing the system's star to the reviewer or quoting the Reflector's confidence, which none of the five checks catches. The Critic is therefore slightly too strict on easy cases and too lenient on contested ones, and the 90.5--91.6\% faithful rate above is optimistic for reviews on which the agents disagree. With one annotator and 50 items this is an indication rather than a measurement; a larger, multi-annotator check is future work.
+\textbf{Human check.} To test the Critic itself, the first author marked 50 randomly drawn final explanations (seed 0, from eval and natural\_test) as faithful or not, without seeing the Critic's verdict. A mark of ``faithful'' means every claim is in the review and the star is stated correctly; it does not mean the author agrees with the star. The author judged 80\% faithful against the Critic's 92\%, and the two agreed on 76\% of explanations: 9 passed the Critic but not the author, and 3 the reverse. The disagreements are not spread evenly (this split by agent agreement was chosen after the marks were in, so it is exploratory). Table~\ref{tbl:human} gives the breakdown. When all agents agreed on the star (34 explanations), the author judged every explanation faithful and the Critic 91.2\%. When the agents disagreed (16 explanations), the author judged only 37.5\% faithful while the Critic passed 93.8\%. In these cases the Explainer adds statements about the system, such as attributing the system's star to the reviewer or quoting the Reflector's confidence, which none of the five checks catches. The Critic is therefore slightly too strict on easy cases and too lenient on contested ones, and the 90.5--91.6\% faithful rate above is optimistic for reviews on which the agents disagree. With one annotator and 50 items this is an indication rather than a measurement; a larger, multi-annotator check is future work.
+
+\begin{table}[t]
+\centering
+\caption{Human check of 50 random final explanations, marked by the first author blind to the Critic (\texttt{human\_check}). The split by agent agreement was chosen after marking.}
+\label{tbl:human}
+\small
+\begin{tabular}{lcccc}
+\toprule
+ & $n$ & Author: faithful & Critic: pass & Agreement \\
+\midrule
+All & 50 & 80.0\% & 92.0\% & 76.0\% \\
+Agents agreed on the star & 34 & 100\% & 91.2\% & 91.2\% \\
+Agents disagreed & 16 & 37.5\% & 93.8\% & 43.8\% \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{The Hand-off agent}
 
@@ -604,6 +662,67 @@ Holm, S.: A Simple Sequentially Rejective Multiple Test Procedure. Scandinavian 
 
 \bibitem{wilcoxon1945}
 Wilcoxon, F.: Individual Comparisons by Ranking Methods. Biometrics Bulletin \textbf{1}(6), 80--83 (1945). \doi{10.2307/3001968}
+
+
+\bibitem{breiman1996stacked}
+Breiman, L.: Stacked regressions. Machine Learning \textbf{24}(1), 49--64 (1996). \doi{10.1007/BF00117832}
+
+\bibitem{dietterich2000ensemble}
+Dietterich, T.G.: Ensemble Methods in Machine Learning. In: Multiple Classifier Systems, LNCS, vol.~1857, pp.~1--15. Springer (2000). \doi{10.1007/3-540-45014-9_1}
+
+\bibitem{jiang2023llmblender}
+Jiang, D., Ren, X., Lin, B.Y.: LLM-Blender: Ensembling Large Language Models with Pairwise Ranking and Generative Fusion. In: Proc.\ ACL (2023). arXiv:2306.02561, \url{https://arxiv.org/abs/2306.02561}
+
+\bibitem{belinkov2022probing}
+Belinkov, Y.: Probing Classifiers: Promises, Shortcomings, and Advances. Computational Linguistics \textbf{48}(1), 207--219 (2022). arXiv:2102.12452, \url{https://arxiv.org/abs/2102.12452}
+
+\bibitem{azaria2023lying}
+Azaria, A., Mitchell, T.: The Internal State of an LLM Knows When It's Lying. In: Findings of EMNLP (2023). arXiv:2304.13734, \url{https://arxiv.org/abs/2304.13734}
+
+\bibitem{burns2023latent}
+Burns, C., Ye, H., Klein, D., Steinhardt, J.: Discovering Latent Knowledge in Language Models Without Supervision. In: Proc.\ ICLR (2023). arXiv:2212.03827, \url{https://arxiv.org/abs/2212.03827}
+
+\bibitem{cao2020coral}
+Cao, W., Mirjalili, V., Raschka, S.: Rank consistent ordinal regression for neural networks with application to age estimation. Pattern Recognition Letters \textbf{140}, 325--331 (2020). \doi{10.1016/j.patrec.2020.11.008}
+
+\bibitem{shi2023corn}
+Shi, X., Cao, W., Raschka, S.: Deep Neural Networks for Rank-Consistent Ordinal Regression Based on Conditional Probabilities. Pattern Analysis and Applications (2023). \doi{10.1007/s10044-023-01181-9}
+
+\bibitem{saerens2002priors}
+Saerens, M., Latinne, P., Decaestecker, C.: Adjusting the Outputs of a Classifier to New a Priori Probabilities: A Simple Procedure. Neural Computation \textbf{14}(1), 21--41 (2002). \doi{10.1162/089976602753284446}
+
+\bibitem{lipton2018labelshift}
+Lipton, Z.C., Wang, Y.X., Smola, A.: Detecting and Correcting for Label Shift with Black Box Predictors. In: Proc.\ ICML (2018). arXiv:1802.03916, \url{https://arxiv.org/abs/1802.03916}
+
+\bibitem{atanasova2020diagnostic}
+Atanasova, P., Simonsen, J.G., Lioma, C., Augenstein, I.: A Diagnostic Study of Explainability Techniques for Text Classification. In: Proc.\ EMNLP (2020). arXiv:2009.13295, \url{https://arxiv.org/abs/2009.13295}
+
+\bibitem{jain2019attention}
+Jain, S., Wallace, B.C.: Attention is not Explanation. In: Proc.\ NAACL (2019). arXiv:1902.10186, \url{https://arxiv.org/abs/1902.10186}
+
+\bibitem{wiegreffe2021teach}
+Wiegreffe, S., Marasovi\'{c}, A.: Teach Me to Explain: A Review of Datasets for Explainable Natural Language Processing. In: Proc.\ NeurIPS Datasets and Benchmarks (2021). arXiv:2102.12060, \url{https://arxiv.org/abs/2102.12060}
+
+\bibitem{sundararajan2017ig}
+Sundararajan, M., Taly, A., Yan, Q.: Axiomatic Attribution for Deep Networks. In: Proc.\ ICML (2017). arXiv:1703.01365, \url{https://arxiv.org/abs/1703.01365}
+
+\bibitem{lundberg2017shap}
+Lundberg, S.M., Lee, S.I.: A Unified Approach to Interpreting Model Predictions. In: Proc.\ NeurIPS (2017). arXiv:1705.07874, \url{https://arxiv.org/abs/1705.07874}
+
+\bibitem{lanham2023cotfaith}
+Lanham, T., Chen, A., Radhakrishnan, A., Steiner, B., et al.: Measuring Faithfulness in Chain-of-Thought Reasoning. arXiv preprint (2023). arXiv:2307.13702, \url{https://arxiv.org/abs/2307.13702}
+
+\bibitem{liu2023geval}
+Liu, Y., Iter, D., Xu, Y., Wang, S., et al.: G-Eval: NLG Evaluation using GPT-4 with Better Human Alignment. In: Proc.\ EMNLP (2023). arXiv:2303.16634, \url{https://arxiv.org/abs/2303.16634}
+
+\bibitem{varshney2022selective}
+Varshney, N., Mishra, S., Baral, C.: Investigating Selective Prediction Approaches Across Several Tasks in IID, OOD, and Adversarial Settings. In: Findings of ACL (2022). arXiv:2203.00211, \url{https://arxiv.org/abs/2203.00211}
+
+\bibitem{kamath2020selective}
+Kamath, A., Jia, R., Liang, P.: Selective Question Answering under Domain Shift. In: Proc.\ ACL (2020). arXiv:2006.09462, \url{https://arxiv.org/abs/2006.09462}
+
+\bibitem{xiong2024uncertainty}
+Xiong, M., Hu, Z., Lu, X., Li, Y., et al.: Can LLMs Express Their Uncertainty? An Empirical Evaluation of Confidence Elicitation in LLMs. In: Proc.\ ICLR (2024). arXiv:2306.13063, \url{https://arxiv.org/abs/2306.13063}
 
 \end{thebibliography}
 
