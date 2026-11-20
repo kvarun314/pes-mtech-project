@@ -30,9 +30,9 @@ Do not add new top-level files to the repo or to `PES_Project_Phase1/`. If somet
 
 ## Deck
 
-- One deck only: `../Agentic_LLaMA3_Presentation.pptx`. Rebuild it in place with `/opt/homebrew/bin/python3 v2_reflective/build_deck_e23.py`. Never create v7/v8 copies.
+- One deck only: `../Agentic_LLaMA3_Presentation.pptx`. Rebuild it in place with `/opt/homebrew/bin/python3 v2_reflective/build_deck_clean.py`. Never create v7/v8 copies. The previous builder is `docs/archive/build_deck_e23_2026-11-20.py`.
 - Old decks stay in `../old_decks/` and are never deleted.
-- **Deck structure (user, 2026-10-25): at most 25 slides.** Flow: intro → Phase 1, the baseline paper (what it does) → its shortcomings → Phase 2 intro → in depth → how it solves the problem → results of Phase 1 → results of Phase 2 → in depth → conclusions. Order is the `MAIN` list in `build_deck_e23.py`; references use `§key§` tokens; every build writes `presentation/deck_slide_map.md`. Keep `Presenter_Notes.md` Part 0 in the same order.
+- **Deck structure: at most 25 slides (user, 2026-10-25); since 2026-11-20 a clean deck (user: "more clean, more straightforward and simple, showcasing the analysis, same colour palette"; "don't cram info into slides, make it flow naturally").** One message per slide, big numbers, native charts; details go in the speaker notes. Flow: intro → Phase 1, the reference paper (what it does, what we found, its result) → Phase 2 (principle, system) → results → conclusions. Order is the order of the slides in `build_deck_clean.py`; every build writes `presentation/deck_slide_map.md`. Keep `Presenter_Notes.md` Part 0 in the same order.
 - After a deck change, update `presentation/Presenter_Notes.md` Part 0 (slide map and scripts), then render the changed slides with `soffice` and check them visually.
 
 ## Experiment discipline
@@ -55,6 +55,6 @@ Do not add new top-level files to the repo or to `PES_Project_Phase1/`. If somet
 - Commit review text, data `.jsonl`, `.pptx`, `.tar.gz`, or any file over 100 MB. `kaggle_json.py` is a secret and is gitignored.
 - Leave paper drafts unmarked. Since 2026-11-14 (user's decision) Claude writes full draft content for the papers and the user rewrites it in their own words before submission (plagiarism and AI-content each under 5%). Every draft file says at the top that it is Claude-drafted, and every number in it traces to a `.out` file.
 - Do anything in Google Drive except copy (`cp -n`) into `My Drive/PES_backups/`. No sync tools, moves or deletes.
-  - One exception, approved by the user on 2026-10-25: `build_deck_e23.py` overwrites `My Drive/PES_backups/current_deck/Agentic_LLaMA3_Presentation.pptx` on every build, so the copy opened in Google Slides is always current.
+  - One exception, approved by the user on 2026-10-25: the deck builder (`build_deck_clean.py`) overwrites `My Drive/PES_backups/current_deck/Agentic_LLaMA3_Presentation.pptx` on every build, so the copy opened in Google Slides is always current.
 - Delete old material. Archive it instead.
 - Rewrite git history or force-push. The user decided against it on 2026-10-25; see `docs/maintenance/git_history_dev2_purge.md`.
