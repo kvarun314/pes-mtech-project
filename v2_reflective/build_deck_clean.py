@@ -12,7 +12,7 @@ from pptx.chart.data import CategoryChartData
 from pptx.enum.chart import XL_CHART_TYPE, XL_LEGEND_POSITION, XL_LABEL_POSITION
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); OUTER = os.path.dirname(ROOT)
-DST = os.path.join(OUTER, "Agentic_LLaMA3_Presentation.pptx")
+DST = os.path.join(ROOT, "presentation", "Agentic_LLaMA3_Presentation.pptx")  # gitignored (*.pptx)
 FIG = os.path.join(ROOT, "paper", "figures", "e23")
 FONT = "Arial"
 C = lambda h: RGBColor.from_string(h)

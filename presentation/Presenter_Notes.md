@@ -2,7 +2,7 @@
 
 ## Part 0 — Current deck (21 slides, clean version). READ THIS FIRST
 
-Deck: `PES_Project_Phase1/Agentic_LLaMA3_Presentation.pptx`, the only current deck, built by `v2_reflective/build_deck_clean.py` (2026-11-20, user: "more clean, more straightforward and simple, showcasing the analysis, same colour palette"). The previous 25-slide dense deck is in `old_decks/Agentic_LLaMA3_Presentation_dense_2026-11-20.pptx`; its Part 0 is in `docs/archive/Presenter_Notes_Part0_2026-11-20.md`.
+Deck: `presentation/Agentic_LLaMA3_Presentation.pptx`, the only current deck, built by `v2_reflective/build_deck_clean.py` (2026-11-20, user: "more clean, more straightforward and simple, showcasing the analysis, same colour palette"). The previous 25-slide dense deck is in `old_decks/Agentic_LLaMA3_Presentation_dense_2026-11-20.pptx`; its Part 0 is in `docs/archive/Presenter_Notes_Part0_2026-11-20.md`.
 
 **Slide numbers and short scripts:** `deck_slide_map.md`, next to this file, regenerated on every build from the speaker notes. Each note names the `.out` file its numbers come from.
 
