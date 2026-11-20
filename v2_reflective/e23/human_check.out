@@ -1,0 +1,3 @@
+marked 50/50  human faithful 0.800  Critic faithful 0.920  agreement 0.760  Critic pass but human fail 9  Critic fail but human pass 3
+agents agreed: n 34  human faithful 1.000  Critic faithful 0.912  agreement 0.912
+agents disagreed: n 16  human faithful 0.375  Critic faithful 0.938  agreement 0.438

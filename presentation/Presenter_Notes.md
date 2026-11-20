@@ -156,7 +156,7 @@ Start with the data line in the subtitle. It answers any leakage question:
 - **Deletion test (right):** removing the cited phrases lowers the stack's confidence by .156 vs .077 for random words (eval) and .209 vs .119 (natural); keeping only the cited phrases holds .521 vs .301 and .616 vs .349. p < 1e-54 everywhere.
 - **Phase 1 comparison (left, small text):** same 150 reviews, same judge: Phase 1's justification never quotes the review (0% vs 75%), is one of 5 stock sentences (3% distinct vs 100%), and Phase 2 is judged free of unsupported claims 93% of the time (17 vs 5 cases where only one passes, p .017).
 - **Worked example (bottom strip, from the live demo):** a 2★ backpack review, rated 2★. Walk it left to right: the evidence pack (for: "disappointing", "Poor", "lacks"; against: "great", "easy"); draft 1 claims "Poor quality", which the review does not say, so the Critic asks to remove it; draft 2 drops it but quotes too few key phrases, so the Critic asks for at least 2; draft 3 quotes the review and passes. Say: "This is what the 62% to 91% means for one review." The demo (section 4) shows the same example live.
-- **Be open:** about 9% of final explanations still fail a check (mostly the LLM judge); they are labelled, not hidden. The judge is the same Llama-3-8B-Instruct model that writes the explanation; the deletion test and the Phase 1 comparison are the independent checks. A human check of 50 is under way (new sheet for the three-agent stack).
+- **Be open:** about 9% of final explanations still fail a check (mostly the LLM judge); they are labelled, not hidden. The judge is the same Llama-3-8B-Instruct model that writes the explanation; the deletion test and the Phase 1 comparison are the independent checks. A human check of 50 explanations (Nov 20, blind to the Critic): author 80% faithful vs Critic 92%, agreement 76%. When the agents agreed the author passed all 34; when they disagreed only 6 of 16 (Critic 15 of 16). So the Critic is too lenient on contested reviews: it misses statements about the system such as "the reviewer gave N stars".
 
 ### 8. Build schedule and conclusions (slides 24–25)
 **Say:** "Every row had its rule written first and is logged. The bigger probe failed its check (120K reviews gave +0.3 on dev2), so the 40K probe stays. Explanations and the Critic loop ran on all 3,000 test reviews, then the deletion test. The extra specialist became DeBERTa: it passed its dev2 check, was stable over 3 seeds, and was adopted. Every Phase 2 result was then rerun with three agents on Nov 11–12; the Router failed its check with three agents and is off."
@@ -167,7 +167,7 @@ Start with the data line in the subtitle. It answers any leakage question:
 - The agentic layer is measured on 3,000 reviews: the Critic loop makes 91–92% of explanations faithful with none broken; the Hand-off agent is right 93% of the time on the 56% it answers; the Router helped with two agents but not with three. LLM re-rating was tested and dropped (third LLM-judge failure).
 - **Limits, said plainly:** one dataset (but the gain holds in every year band); the main stack needs the review title (16% of stars change without it); part of the gain comes from the larger Reflector fit set; explicit sarcasm is too rare in the data to measure.
 
-End with the dates: human check of 50 explanations, paper by Nov 20, final presentation in December with a live demo.
+End with the dates: human check of 50 explanations done (Critic too lenient when agents disagree), paper by Nov 20, final presentation in December with a live demo.
 
 ### New questions to expect
 - **"Are these results good or bad?"** Good, and they hold up. Exact five-star rating is hard, because 4★ vs 5★ is often a judgement call.
@@ -626,7 +626,7 @@ Phase 2 is slower (3.7 times in Run 1). The next design only reflects on uncerta
 Different dataset, different baseline behaviour, and the Run 2 pipeline had the defects described on slide 18. Run 1's baseline had collapsed, which exaggerated the gain.
 
 **Is your LLM judge too strict? Did you try a second judge?**
-Yes. Qwen2.5-7B-Instruct as a second judge rejected every explanation, under two prompts, so it could not referee (logged as a failure, no test read). It flags the stated star and the agent shares as "not in the review", which shows the judge prompt does not say those parts come from the system. Whether our Llama judge is too strict is being settled by a human check of 50 explanations.
+Yes. Qwen2.5-7B-Instruct as a second judge rejected every explanation, under two prompts, so it could not referee (logged as a failure, no test read). It flags the stated star and the agent shares as "not in the review", which shows the judge prompt does not say those parts come from the system. The human check of 50 explanations settled it: the judge is not too strict overall (Critic 92% vs author 80% faithful). It is too lenient when the agents disagree (author 37.5%, Critic 93.8%).
 
 **What are the limits of your evidence?**
 Small test sets for some checks (96 and 300 rows), a community 4-bit base, a one-shot example chosen with the true rating, unrecorded training rows, and no ablations of VGST or the quality filter.

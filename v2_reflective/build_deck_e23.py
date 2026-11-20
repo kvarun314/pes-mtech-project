@@ -489,7 +489,7 @@ cards(con, [("PHASE 1", "Reference paper reproduced and explored", ["— Paper's
             ("AGENTIC LAYER", "Measured on 3,000 reviews", ["— Critic loop: faithful explanations 62–64% → 91–92%, 0 broken", "— Hand-off: 93% right on the 56% it answers; star ranges leave 2% for a person (natural test)", "— Router: worked with two agents, failed with three: off"]),
             ("LIMITS", "Stated plainly", ["— One dataset (Electronics 2023); gain holds in every year band", "— Needs the review title (16% of stars change without it)", "— Part of the gain is the larger Reflector fit set", "— Explicit sarcasm too rare to measure"])],
       1.82, 3.4)
-band(con, 5.45, "Next", "Human check of 50 explanations → paper prose and supervisor review → submission by Nov 20 → final presentation in December with a live demo of Phase 1 and Phase 2.", h=0.9)
+band(con, 5.45, "Next", "Human check done: Critic too lenient when agents disagree → paper prose and supervisor review → submission by Nov 20 → final presentation in December with a live demo of Phase 1 and Phase 2.", h=0.9)
 
 # NSV how Phase 2 answers each shortcoming (replaces the repetitive "Agents That Route..." slide in the talk)
 sv = new_slide("PHASE 2 · HOW IT SOLVES THE PROBLEM", "How Phase 2 Answers Each Shortcoming",

@@ -57,6 +57,7 @@ R = [
  ("07_phase2_v3", "handoff_agent_selective_prediction.json", E + "s1_selective.json", "Numbers for the above", "—"),
  ("07_phase2_v3", "explanations_report.out", E + "b2_report.out", "Explanation faithfulness, Critic loop (SC3), deletion test", "SH3, max 4 rewrites: faithful 62.3→90.5% eval, 63.65→91.6% natural; 841 fixed, 0 broken; cited > random"),
  ("07_phase2_v3", "explanations_report.json", E + "b2_report.json", "Numbers for the above", "—"),
+ ("07_phase2_v3", "human_check_50.out", E + "human_check.out", "Human check: author marks 50 SH3 explanations, blind to the Critic", "human 80% vs Critic 92% faithful, agreement 76%; disagreement explanations 37.5% human"),
  ("07_phase2_v3", "explanations_phase1_vs_phase2_X1.out", E + "x1_explain_compare.out", "Phase 1 justification vs Phase 2 explanation (150 eval, same judge)", "SH3: grounded 0% vs 75%; distinct 3% vs 100%; judge OK 17 vs 5"),
  ("07_phase2_v3", "hard_cases_H1.out", E + "hard_cases.out", "Hard cases: Phase 1 vs main stack on negative-sounding positives, ironic negatives, mixed reviews", "SH3: negative-sounding positives +32.5 / +35.2 pts"),
  ("07_phase2_v3", "hard_cases_H1.json", E + "hard_cases.json", "Numbers for the above", "—"),

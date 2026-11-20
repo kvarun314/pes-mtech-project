@@ -100,6 +100,7 @@ Numbers freeze on Nov 1. The paper is due Nov 21–22.
 | Evidence learning curve (Phase G) | 11K .535 → 90K .568: still rising, which led to G2/E6b |
 | SH variance (5 seeds, E6b fixed) | SH − E6b +3.3 ± 0.6 / +5.2 ± 0.8; SH − P3 +5.2 ± 0.9 / +2.4 ± 1.2; SH − old stack on dev2 +0.7 ± 1.2 / +1.0 ± 0.6 |
 | Phase 1 vs Phase 2 explanations (X1, 150 eval) | SH3: grounded in the review 0% vs 75% (113 vs 0, p 1.9e-34); distinct outputs 100%; judge pass 17 vs 5 Phase 2-only (p .017) |
+| Human check (50 SH3 explanations, author, blind to the Critic, Nov 20) | Human faithful 80% vs Critic 92%, agreement 76% (9 Critic-only passes, 3 Critic-only fails). Agents agreed (n 34): human 100%, Critic 91.2%. Agents disagreed (n 16): human 37.5%, Critic 93.8%: the Critic misses system-side statements in disagreement explanations |
 | Hard cases (H1) | SH3: negative-sounding positives +32.5 / +35.2 over Phase 1 (p .0023 / 5e-16); positive-sounding negatives +11.1 / +10.3 (ns); mixed reviews +10.0 (p .003) / +3.2 (ns); sarcasm cues too rare (n 6 / 1) |
 | Star ranges (Q1, conformal, 90% target) | SH3: coverage 91.6 / 90.05%; mean range 1.77 / 1.44 stars vs Phase 1 2.40 / 2.08; single star 34% / 58% vs 5% / 11%; with ranges, a person is needed for 11% / 2% of reviews |
 | Text changes (Q4, 300 eval) | SH3 star flips: flat text 9.3% vs Phase 1 29.7% (p 3e-11); typos 0.7% vs 2.0% (ns); **no title 15.7% vs 0%** (two-agent SH 8.0%; Evidence and DeBERTa both read the title) |

@@ -18,3 +18,6 @@ else:
     h = np.array([r[[k for k in r if k.startswith("faithful")][0]].strip().upper().startswith("Y") for r in rows]); c = np.array([K[r["review_id"]] for r in rows])
     print(f"marked {len(rows)}/50  human faithful {h.mean():.3f}  Critic faithful {c.mean():.3f}  agreement {(h == c).mean():.3f}  "
           f"Critic pass but human fail {int((c & ~h).sum())}  Critic fail but human pass {int((~c & h).sum())}")
+    d = np.array([r["explanation"].startswith("The agents disagreed") for r in rows])  # split added 2026-11-20, after scoring
+    for name, m in (("agents agreed", ~d), ("agents disagreed", d)):
+        print(f"{name}: n {m.sum()}  human faithful {h[m].mean():.3f}  Critic faithful {c[m].mean():.3f}  agreement {(h[m] == c[m]).mean():.3f}")
