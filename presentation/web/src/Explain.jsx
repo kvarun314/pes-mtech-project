@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Highlight, Reveal, Step, ease, pct } from "./ui.jsx";
 
-const CHECKS = {
+export const CHECKS = {
   1: ["Right star", "States the same star the system chose."],
   2: ["Real quotes", "Every quoted phrase appears in the review."],
   3: ["Key evidence", "Uses at least two of the strongest phrases."],
@@ -10,34 +10,8 @@ const CHECKS = {
   5: ["Nothing made up", "A second LLaMA-3 finds no unsupported claim."],
 };
 
-/** Reads a POST text/event-stream response and calls onEvent for every `data:` line. */
-async function stream(url, payload, onEvent) {
-  const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-  const rd = r.body.getReader(), dec = new TextDecoder(); let buf = "";
-  for (;;) {
-    const { value, done } = await rd.read(); if (done) break;
-    buf += dec.decode(value, { stream: true }); const parts = buf.split("\n\n"); buf = parts.pop();
-    for (const p of parts) if (p.startsWith("data: ")) onEvent(JSON.parse(p.slice(6)));
-  }
-}
-
-export default function Explain({ res, inp, state, setState }) {
-  const [phase, setPhase] = useState(null);           // which box of the process is live
-  const s = state || { drafts: [], critic: [], pack: null, done: false };
-  const run = async () => {
-    let cur = { drafts: [], critic: [], pack: null, done: false, running: true, t0: Date.now() }; setState(cur); setPhase("evidence");
-    const up = (patch) => { cur = { ...cur, ...patch }; setState(cur); };
-    try {
-      await stream("/api/explain", { title: inp.title, text: inp.text, id: inp.id, res }, (e) => {
-        if (e.type === "pack") { up({ pack: e.pack }); setPhase("explainer"); }
-        if (e.type === "draft") { up({ drafts: [...cur.drafts, e.text] }); setPhase("critic"); }
-        if (e.type === "critic") { up({ critic: [...cur.critic, { feedback: e.feedback, failed: e.failed }] }); if (e.feedback?.length) setPhase("explainer"); }
-        if (e.type === "warning") up({ warning: e.text });
-        if (e.type === "error") up({ error: e.text, running: false });
-        if (e.type === "done") { up({ done: true, running: false, seconds: e.seconds }); setPhase(null); }
-      });
-    } catch (ex) { up({ error: String(ex), running: false }); setPhase(null); }
-  };
+export default function Explain({ res, state, run }) {
+  const s = state || { drafts: [], critic: [], pack: null, done: false }; const phase = s.phase;
   const pk = s.pack || { for: res.pos, against: res.neg };
   const last = s.critic.length ? s.critic[s.critic.length - 1] : null; const passed = last && !last.feedback?.length;
   const boxes = [["evidence", "1 · Evidence", "The star, its confidence and the strongest phrases for and against it."],

@@ -9,14 +9,14 @@ export const AGENTS = {
 export const STARS = [1, 2, 3, 4, 5];
 export const pct = (v, d = 0) => `${(v * 100).toFixed(d)}%`;
 export const argmax = (a) => a.indexOf(Math.max(...a));
-export const ease = [0.22, 1, 0.36, 1];
+export const ease = [0.16, 1, 0.3, 1];          // soft ease-out used everywhere
 
 /** Number that counts up when it scrolls into view. */
 export function Num({ value, decimals = 0, suffix = "", prefix = "" }) {
   const ref = useRef(null); const inView = useInView(ref, { once: true }); const [v, setV] = useState(0);
   useEffect(() => {
     if (!inView) return;
-    const c = animate(0, value, { duration: 1.1, ease, onUpdate: setV }); return () => c.stop();
+    const c = animate(0, value, { duration: 1.6, ease, onUpdate: setV }); return () => c.stop();
   }, [inView, value]);
   return <span ref={ref} style={{ fontVariantNumeric: "tabular-nums" }}>{prefix}{v.toFixed(decimals)}{suffix}</span>;
 }
@@ -25,15 +25,15 @@ export const Stars = ({ n, grey }) => <span className={`stars${grey ? " grey" : 
 
 export function Step({ n, title, children }) {
   return (
-    <motion.div className="step" initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} transition={{ duration: .5, ease }}>
+    <motion.div className="step" initial={{ opacity: 0, y: 16, filter: "blur(6px)" }} whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }} viewport={{ once: true, margin: "-60px" }} transition={{ duration: .8, ease }}>
       <div className="num">{n}</div><div><h3>{title}</h3><p>{children}</p></div>
     </motion.div>
   );
 }
 
 export const Reveal = ({ children, delay = 0, className = "", style }) => (
-  <motion.div className={className} style={style} initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true, margin: "-40px" }} transition={{ duration: .55, ease, delay }}>{children}</motion.div>
+  <motion.div className={className} style={style} initial={{ opacity: 0, y: 20, filter: "blur(6px)" }} whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+    viewport={{ once: true, margin: "-40px" }} transition={{ duration: .8, ease, delay }}>{children}</motion.div>
 );
 
 /** Five animated bars, one per star; the top star is coloured. */

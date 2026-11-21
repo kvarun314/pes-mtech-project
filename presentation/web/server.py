@@ -53,7 +53,7 @@ def rate(title, text):
     with LOCK:
         L, probe = llama()
         t0 = time.time(); p1 = phase1_probs(L, text); T["phase1"] = time.time() - t0
-        t0 = time.time(); pp = probe.probs(text); T["probe"] = time.time() - t0
+        t0 = time.time(); h = probe.hidden(text); pp = probe.clf.predict_proba(probe.scaler.transform(h[None]))[0]; T["probe"] = time.time() - t0   # same as probe.probs
     t0 = time.time(); ep = ev.probs(title, text); T["evidence"] = time.time() - t0
     t0 = time.time(); dp = deb.probs(title, text); T["deberta"] = time.time() - t0
     star, P, shares = rf.combine(pp, np.array(ep), np.array(dp))
@@ -68,7 +68,8 @@ def rate(title, text):
     votes = {k: int(np.argmax(v)) + 1 for k, v in agents.items()}
     return {"p1": fl(p1), "agents": agents, "votes": votes, "agreed": len(set(votes.values())) == 1, "star": int(star), "P": fl(P),
             "shares": {k: float(v) for k, v in shares.items()}, "push": push, "base": fl(base), "decision": decision, "range": [int(lo), int(hi)],
-            "htau": float(htau), "pos": pos, "neg": neg, "times": {k: round(v * 1000) for k, v in T.items()}}
+            "htau": float(htau), "pos": pos, "neg": neg, "times": {k: round(v * 1000) for k, v in T.items()},
+            "hidden": {"n": int(h.shape[0]), "sample": fl(h[:64])}}
 
 
 def cached_rate(rid):
@@ -163,7 +164,9 @@ def frozen_table(split):
 
 async def api_results(req):
     B = json.load(open(PT.D + "b2_report.json")); Q = json.load(open(PT.D + "q4_robustness.json")); HC = json.load(open(PT.D + "hard_cases.json"))
-    hum = float(re.search(r"human faithful ([\d.]+)", open(PT.D + "human_check.out").read()).group(1))
+    hc = open(PT.D + "human_check.out").read(); hum = float(re.search(r"human faithful ([\d.]+)", hc).group(1))
+    split = {m.group(1): {"n": int(m.group(2)), "human": float(m.group(3)) * 100, "critic": float(m.group(4)) * 100}
+             for m in re.finditer(r"agents (agreed|disagreed): n (\d+)\s+human faithful ([\d.]+)\s+Critic faithful ([\d.]+)", hc)}
     E, N = frozen_table("eval"), frozen_table("natural_test")
     main = next(k for k in E if "(main)" in k); p1 = next(k for k in E if k.startswith("Phase 1"))
     auto = [x for x in SEL["SH"]["natural_test"] if x["target"] == 0.4][0]
@@ -177,7 +180,7 @@ async def api_results(req):
         "critic": {"bal": [B["eval"]["faithful_first"] * 100, B["eval"]["faithful_final"] * 100], "nat": [B["natural_test"]["faithful_first"] * 100, B["natural_test"]["faithful_final"] * 100]},
         "hard": {"bal": [hcs["eval"]["p1_exact"] * 100, hcs["eval"]["sh_exact"] * 100], "nat": [hcs["natural_test"]["p1_exact"] * 100, hcs["natural_test"]["sh_exact"] * 100],
                  "n": [hcs["eval"]["n"], hcs["natural_test"]["n"]]},
-        "human": hum * 100, "main": main,
+        "human": hum * 100, "human_split": split, "main": main,
         "models": [{"name": n, "be": E[n][0], "bf": E[n][1], "ne": N[n][0], "nf": N[n][1]} for n in E if n in N]})
 
 
