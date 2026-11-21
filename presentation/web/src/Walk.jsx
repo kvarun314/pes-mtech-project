@@ -9,15 +9,15 @@ import Explainability from "./WalkExplain.jsx";
 const EPS = 1e-6;
 const scores = (p) => { const l = p.map((v) => Math.log(Math.max(v, EPS))); const m = l.reduce((a, b) => a + b, 0) / l.length; return l.map((v) => v - m); };
 const sg = (v, d = 1) => `${v >= 0.5 * 10 ** -d ? "+" : v <= -0.5 * 10 ** -d ? "−" : ""}${Math.abs(v).toFixed(d)}`;
-const D = (i, base = 0) => ({ initial: { opacity: 0, y: 16, filter: "blur(6px)" }, animate: { opacity: 1, y: 0, filter: "blur(0px)" }, transition: { duration: .8, ease, delay: base + i * .3 } });
+export const D = (i, base = 0) => ({ initial: { opacity: 0, y: 16, filter: "blur(6px)" }, animate: { opacity: 1, y: 0, filter: "blur(0px)" }, transition: { duration: .8, ease, delay: base + i * .3 } });
 
 /* ------------------------------------------------------------------ building blocks */
-const Box = ({ title, sub, i, hi, color, children, w }) => (
+export const Box = ({ title, sub, i, hi, color, children, w }) => (
   <motion.div className="wbox" {...D(i)} style={{ borderColor: color || undefined, background: hi ? "#2C5AA0" : undefined, color: hi ? "white" : undefined, flex: w || 1 }}>
     <b style={{ color: hi ? "white" : undefined }}>{title}</b>{sub && <span>{sub}</span>}{children}
   </motion.div>
 );
-const Arr = ({ i, label }) => <motion.div className="warr" {...D(i)}>{label && <small>{label}</small>}→</motion.div>;
+export const Arr = ({ i, label }) => <motion.div className="warr" {...D(i)}>{label && <small>{label}</small>}→</motion.div>;
 
 function ScoreBars({ s, color, delay = 0 }) {
   const M = Math.max(...s.map(Math.abs)) || 1;
@@ -179,9 +179,14 @@ function slides(res, inp, X) {
 export default function Walk({ res, inp, expl, runExplain }) {
   const [R, setR] = useState(null);
   useEffect(() => { fetch("/api/results").then((r) => r.json()).then(setR).catch(() => {}); }, []);
-  const S = slides(res, inp, { expl, runExplain, R }); const [i, setI] = useState(0); const [play, setPlay] = useState(false);
+  return <Slideshow S={slides(res, inp, { expl, runExplain, R })} reset={res} part="Part 1 · How it rates" />;
+}
+
+/** Slide deck with dots, keys, play and a progress bar. Slides: {t, s, body, part?}. */
+export function Slideshow({ S, reset, part }) {
+  const [i, setI] = useState(0); const [play, setPlay] = useState(false);
   const go = (n) => setI(Math.max(0, Math.min(S.length - 1, n)));
-  useEffect(() => { setI(0); }, [res]);
+  useEffect(() => { setI(0); }, [reset]);
   useEffect(() => {
     const k = (e) => { if (e.target.tagName === "TEXTAREA" || e.target.tagName === "INPUT") return; if (e.key === "ArrowRight") go(i + 1); if (e.key === "ArrowLeft") go(i - 1); };
     window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k);
@@ -191,7 +196,7 @@ export default function Walk({ res, inp, expl, runExplain }) {
   return (
     <div style={{ marginTop: 18 }}>
       <div className="wnav">
-        <div className="wdots">{S.map((x, j) => <React.Fragment key={j}>{x.part && !S[j - 1]?.part && <span className="wsep" />}<button className={`wdot${j === i ? " on" : j < i ? " done" : ""}`} onClick={() => go(j)} title={x.t} /></React.Fragment>)}</div>
+        <div className="wdots">{S.map((x, j) => <React.Fragment key={j}>{j > 0 && x.part !== S[j - 1].part && <span className="wsep" />}<button className={`wdot${j === i ? " on" : j < i ? " done" : ""}`} onClick={() => go(j)} title={x.t} /></React.Fragment>)}</div>
         <span className="note">Step {i + 1} of {S.length} · use ← → keys</span>
         <div style={{ flex: 1 }} />
         <button className="lg" onClick={() => setPlay(!play)}>{play ? "❚❚ Pause" : "▶ Play"}</button>
@@ -202,7 +207,7 @@ export default function Walk({ res, inp, expl, runExplain }) {
       <AnimatePresence mode="wait">
         <motion.div key={i} className="card wslide" initial={{ opacity: 0, x: 40, filter: "blur(8px)" }} animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
           exit={{ opacity: 0, x: -40, filter: "blur(8px)" }} transition={{ duration: .55, ease }}>
-          <div className="lab">{s.part || "Part 1 · How it rates"} · step {i + 1}</div>
+          <div className="lab">{s.part || part} · step {i + 1}</div>
           <h2>{s.t}</h2>
           <p className="sub wsub">{s.s}</p>
           {s.body}

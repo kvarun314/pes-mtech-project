@@ -163,7 +163,7 @@ def frozen_table(split):
 
 
 async def api_results(req):
-    B = json.load(open(PT.D + "b2_report.json")); Q = json.load(open(PT.D + "q4_robustness.json")); HC = json.load(open(PT.D + "hard_cases.json"))
+    B = json.load(open(PT.D + "b2_report.json")); Q = json.load(open(PT.D + ("q4_robustness_1k.json" if os.path.exists(PT.D + "q4_robustness_1k.json") else "q4_robustness.json"))); HC = json.load(open(PT.D + "hard_cases.json"))
     hc = open(PT.D + "human_check.out").read(); hum = float(re.search(r"human faithful ([\d.]+)", hc).group(1))
     split = {m.group(1): {"n": int(m.group(2)), "human": float(m.group(3)) * 100, "critic": float(m.group(4)) * 100}
              for m in re.finditer(r"agents (agreed|disagreed): n (\d+)\s+human faithful ([\d.]+)\s+Critic faithful ([\d.]+)", hc)}
@@ -175,12 +175,13 @@ async def api_results(req):
     return JSONResponse({
         "exact": {"bal": [E[p1][0], E[main][0]], "nat": [N[p1][0], N[main][0]]},
         "f1": {"bal": [E[p1][1], E[main][1]], "nat": [N[p1][1], N[main][1]]},
-        "auto": {"coverage": auto["coverage"] * 100, "acc": auto["acc_auto"] * 100}, "curve": {"p1": curve("Phase1_LoRA"), "p2": curve("SH")},
+        "auto": {"coverage": auto["coverage"] * 100, "acc": auto["acc_auto"] * 100},
+        "sure": {s: {m: [x for x in SEL[k][s] if x["target"] == 0.4][0] for m, k in (("p1", "Phase1_LoRA"), ("p2", "SH"))} for s in ("eval", "natural_test")}, "curve": {"p1": curve("Phase1_LoRA"), "p2": curve("SH")},
         "robust": {k: [Q[v]["P1_flip"] * 100, Q[v]["SH_flip"] * 100] for k, v in (("Typos", "typos"), ("No punctuation", "flat"), ("No title", "no_title"))},
         "critic": {"bal": [B["eval"]["faithful_first"] * 100, B["eval"]["faithful_final"] * 100], "nat": [B["natural_test"]["faithful_first"] * 100, B["natural_test"]["faithful_final"] * 100]},
         "hard": {"bal": [hcs["eval"]["p1_exact"] * 100, hcs["eval"]["sh_exact"] * 100], "nat": [hcs["natural_test"]["p1_exact"] * 100, hcs["natural_test"]["sh_exact"] * 100],
                  "n": [hcs["eval"]["n"], hcs["natural_test"]["n"]]},
-        "human": hum * 100, "human_split": split, "main": main,
+        "human": hum * 100, "human_split": split, "robust_n": Q.get("_n", 300), "main": main,
         "models": [{"name": n, "be": E[n][0], "bf": E[n][1], "ne": N[n][0], "nf": N[n][1]} for n in E if n in N]})
 
 

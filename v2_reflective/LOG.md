@@ -1366,3 +1366,16 @@ User asked for a more interactive, professional UI ("maybe with react"); npm dow
 ## 2026-11-21: React demo, step-by-step walkthrough (user: "step by step demonstration how the result is concluded, how probabilities are generated"; "do it for the explainability part also"; "more smooth")
 
 New first tab "Step by step": 16 slides on the live review. Part 1 (10): review in; each agent from input to raw scores to softmax probabilities (probe slide shows the first 64 of 4,096 real layer-20 hidden-state values); Reflector log-probability grid, weighted pushes plus bias to total score, softmax table; star; hand-off; Phase 1. Raw scores are centred log-probabilities, which equal centred logits exactly for softmax models. Part 2 (6): evidence pack with weights; Explainer draft (typed in); Critic five checks with rule/judge labels; rewrite chain with Critic instructions; final explanation; how Evidence and Critic help (b2_report pass rates, human check 80%, agreed 100% vs disagreed 37.5% read from human_check.out). Explanation run moved to App so the tab and the walkthrough share it. Softer easing and blur-fade transitions throughout. Chrome check: Demo 2 rated 2 stars; live loop took 3 drafts in 36 s (draft 1 failed check 5, draft 2 failed check 3, draft 3 passed).
+
+### 2026-11-21 — Q4b DECLARED: robustness extended from 300 to all 1,000 eval reviews (user: "Stress test can we increase the data?")
+- Same variants (original, typos seed 0, flat, no title), same systems (SH3 main stack vs Phase 1 arm R), same metrics and exact McNemar as Q4. Reported analysis, no selection; nothing is chosen from it.
+- Sample: all 1,000 eval reviews (200 per star). The 300 already scored (`q4/robustness_sh3.jsonl`) are reused unchanged; 700 new reviews × 4 variants.
+- Script `e23/q4_robustness_1k.py` (resumable) → `q4/robustness_1k.jsonl` (gitignored), `q4_robustness_1k.out` / `.json`. The 300-review files stay as they are.
+- Run locally on the charger with the demo server stopped (swap 7.7 of 9 GB used before stopping it). Estimate ~2.5 h (~13 s per review).
+- The demo reads `q4_robustness_1k.json` once it exists; deck and paper keep the 300-review figures until the user decides.
+
+### 2026-11-21 — React demo: "How it was built" tab, simpler Results, Inter font, stress test on all demos
+- New first tab "How it was built" (`presentation/web/src/Build.jsx`, 16 slides): data splits; Phase 1 data preparation, LoRA training, prompting, findings; Phase 2 agents (probe, Evidence, DeBERTa) and how each is trained, Reflector fit on dev2, Hand-off and ranges, Explainer and Critic, what was dropped, honesty rules, end result. Numbers copied from results_frozen.md, LOG.md, s1_selective / q1_conformal / b2_report outputs and the deck notes.
+- Results tab rewritten (user: "make it speak more with less"): seven rows, each one claim, Phase 1 vs Phase 2 numbers and one sentence on why; the worse case (needs the title) shown plainly; every-model table behind a button. `/api/results` adds `sure` (hand-off accuracy at target 0.4 for both phases) and `robust_n`.
+- Stress tab: "Test all demo reviews" rates every demo in all four versions and counts star changes per phase.
+- Font: Inter (npm `@fontsource-variable/inter` 5.1.0, bundled for offline use; user approved the download). The walkthrough's slide shell is now a shared `Slideshow` in `Walk.jsx`.

@@ -1,87 +1,70 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Bars, Legend, Num, Reveal, ease } from "./ui.jsx";
+import { Num, ease } from "./ui.jsx";
 
-const GREY = "#C7C7CC", BLUE = "#2C5AA0";
-const PP = [["Phase 1", GREY], ["Phase 2", BLUE]];
-
-/** Coverage vs accuracy curves with a hover crosshair. */
-function Curve({ curve, auto }) {
-  const W = 520, H = 260, L = 46, R = 16, T = 14, B = 40;
-  const ys = [...curve.p1, ...curve.p2].map((p) => p[1]); const y0 = Math.floor(Math.min(...ys) / 10) * 10;
-  const X = (v) => L + (v / 100) * (W - L - R), Y = (v) => T + (1 - (v - y0) / (100 - y0)) * (H - T - B);
-  const path = (pts) => [...pts].sort((a, b) => a[0] - b[0]).map((p, i) => `${i ? "L" : "M"}${X(p[0])},${Y(p[1])}`).join(" ");
-  const [hx, setHx] = useState(null);
-  const near = (pts, x) => pts.reduce((a, p) => (Math.abs(p[0] - x) < Math.abs(a[0] - x) ? p : a));
-  const move = (e) => { const r = e.currentTarget.getBoundingClientRect(); const x = ((e.clientX - r.left) / r.width) * W; setHx(Math.max(0, Math.min(100, ((x - L) / (W - L - R)) * 100))); };
-  const a = hx != null && near(curve.p1, hx), b = hx != null && near(curve.p2, hx);
+/** One result = one claim, two numbers, one reason. */
+function Claim({ i, title, why, a, b, al = "Phase 1", bl = "Phase 2", dec = 1, suf = "%", max = 100, lower, worse, src }) {
+  const d = b - a, good = worse ? false : lower ? d < 0 : d > 0;
+  const fmtD = `${d > 0 ? "+" : "−"}${Math.abs(d).toFixed(dec)}${suf === "%" ? " pts" : ""}`;
   return (
-    <div className="chart rel">
-      <svg viewBox={`0 0 ${W} ${H}`} onMouseMove={move} onMouseLeave={() => setHx(null)}>
-        {[y0, (y0 + 100) / 2, 100].map((v) => <g key={v}><line x1={L} x2={W - R} y1={Y(v)} y2={Y(v)} stroke="var(--tint)" /><text x={L - 8} y={Y(v) + 4} textAnchor="end" fontSize="12" fill="var(--muted)">{v}%</text></g>)}
-        {[0, 25, 50, 75, 100].map((v) => <text key={v} x={X(v)} y={H - 20} textAnchor="middle" fontSize="12" fill="var(--muted)">{v}%</text>)}
-        <text x={(L + W - R) / 2} y={H - 2} textAnchor="middle" fontSize="12.5" fill="var(--body)">reviews answered automatically</text>
-        {[["p1", GREY], ["p2", BLUE]].map(([k, c], i) => (
-          <motion.path key={k} d={path(curve[k])} fill="none" stroke={c} strokeWidth="4" strokeLinecap="round" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 1.4, ease, delay: i * .2 }} />
+    <motion.div className={`claim${worse ? " worse" : ""}`} initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-40px" }} transition={{ duration: .7, ease }}>
+      <div className="cnum">{String(i + 1).padStart(2, "0")}</div>
+      <div className="ctext"><h3>{title}</h3><p>{why}</p>{src && <small>{src}</small>}</div>
+      <div className="cvals">
+        {[[al, a, "#C7C7CC"], [bl, b, worse ? "#A93636" : "#2C5AA0"]].map(([l, v, c], j) => (
+          <div key={l} className="crow">
+            <span className="cl">{l}</span>
+            <div className="ctrack"><motion.div style={{ background: c }} initial={{ width: 0 }} whileInView={{ width: `${(v / max) * 100}%` }} viewport={{ once: true }} transition={{ duration: 1.1, ease, delay: .2 + j * .15 }} /></div>
+            <b className={j ? (worse ? "bad" : "blue") : ""}><Num value={v} decimals={dec} suffix={suf === "%" ? "%" : ""} /></b>
+          </div>
         ))}
-        <motion.circle cx={X(auto.coverage)} cy={Y(auto.acc)} r="7" fill={BLUE} stroke="white" strokeWidth="3" initial={{ scale: 0 }} whileInView={{ scale: 1 }} viewport={{ once: true }} transition={{ delay: 1.5 }} />
-        <motion.text x={X(auto.coverage) + 12} y={Y(auto.acc) - 10} fontSize="13" fontWeight="700" fill={BLUE} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 1.6 }}>
-          {auto.acc.toFixed(1)}% right on {auto.coverage.toFixed(0)}%</motion.text>
-        {hx != null && <g><line x1={X(hx)} x2={X(hx)} y1={T} y2={H - B} stroke="var(--muted)" strokeDasharray="3 4" />
-          <circle cx={X(a[0])} cy={Y(a[1])} r="5" fill={GREY} /><circle cx={X(b[0])} cy={Y(b[1])} r="5" fill={BLUE} /></g>}
-      </svg>
-      {hx != null && <div className="tt" style={{ left: `${(X(hx) / W) * 100}%`, top: `${(T / H) * 100}%`, transform: "translate(-50%, 0)" }}>
-        answering {b[0].toFixed(0)}%: Phase 2 {b[1].toFixed(1)}% right · Phase 1 {near(curve.p1, b[0])[1].toFixed(1)}%</div>}
-    </div>
+        <span className={`delta ${good ? "up" : "down"}`}>{fmtD}{lower && !worse ? " (lower is better)" : ""}</span>
+      </div>
+    </motion.div>
   );
 }
 
-const Chart = ({ title, sub, children, delay }) => (
-  <Reveal className="card ch" delay={delay}><h4>{title}</h4><div className="sub">{sub}</div>{children}</Reveal>
-);
-
 export default function Results() {
-  const [d, setD] = useState(null);
+  const [d, setD] = useState(null); const [more, setMore] = useState(false);
   useEffect(() => { fetch("/api/results").then((r) => r.json()).then(setD); }, []);
   if (!d) return <div className="empty"><span className="spin" /> Loading the frozen results…</div>;
-  const tiles = [
-    ["Exact star · balanced", d.exact.bal[1], 1, "%", `vs ${d.exact.bal[0].toFixed(1)}% for Phase 1 (+${(d.exact.bal[1] - d.exact.bal[0]).toFixed(1)} points)`],
-    ["Macro-F1 · natural", d.f1.nat[1], 3, "", `vs ${d.f1.nat[0].toFixed(3)} for Phase 1; fair to every star`],
-    ["Right when it answers alone", d.auto.acc, 1, "%", `on the ${d.auto.coverage.toFixed(0)}% of natural reviews it is sure about`],
-    ["Explanations that pass", d.critic.nat[1], 1, "%", `Critic pass rate, from ${d.critic.nat[0].toFixed(1)}% at first draft; human check ${d.human.toFixed(0)}%`],
+  const s = d.sure.eval;
+  const C = [
+    { title: "Gets the exact star more often", why: "Three agents read meaning, key words and wording; the Reflector learns which one to trust for each review. One model alone cannot do that.",
+      a: d.exact.bal[0], b: d.exact.bal[1], src: "Balanced test, 1,000 reviews, 200 per star · p = 6.7e-14" },
+    { title: "Fair to every star, not just 5★", why: "Macro-F1 scores each star equally, so the common 5★ cannot hide mistakes on the rare 2★ and 3★.",
+      a: d.f1.nat[0], b: d.f1.nat[1], dec: 3, suf: "", max: 1, src: "Natural test, 2,000 reviews in their real mix" },
+    { title: "Not fooled by negative words", why: "“Not bad at all” sounds negative to a single reader. The Evidence model weighs phrases, and the probe reads meaning, so happy reviews stay happy.",
+      a: d.hard.bal[0], b: d.hard.bal[1], src: `Happy reviews that use negative words, balanced test (n ${d.hard.n[0]})` },
+    { title: "Knows when it is sure", why: "Its confidence means something. When it answers alone it is right far more often, and the hard cases go to a person.",
+      a: s.p1.acc_auto * 100, b: s.p2.acc_auto * 100, src: `Accuracy on the ${(s.p2.coverage * 100).toFixed(0)}% of balanced reviews each system is most sure about` },
+    { title: "Steadier on messy text", why: "Remove all punctuation and capitals and Phase 1 changes its mind three times as often. Phase 2 has three readers to fall back on.",
+      a: d.robust["No punctuation"][0], b: d.robust["No punctuation"][1], lower: true, max: 40, src: `Stars that changed, ${d.robust_n.toLocaleString()} balanced reviews` },
+    { title: "Explanations get checked and fixed", why: "The Critic catches wrong stars, invented quotes and hidden doubt, and sends the draft back. 0 drafts were made worse.",
+      a: d.critic.nat[0], b: d.critic.nat[1], al: "First draft", bl: "After Critic", src: `Natural test, all five checks · a person agreed on ${d.human.toFixed(0)}%` },
+    { title: "One thing is worse: it needs the title", why: "Two agents read the title, so deleting it changes the star more often. Phase 1 never reads the title.",
+      a: d.robust["No title"][0], b: d.robust["No title"][1], lower: true, worse: true, max: 40, src: `Stars that changed, ${d.robust_n.toLocaleString()} balanced reviews` },
   ];
   return (
     <div style={{ marginTop: 18 }}>
-      <p className="sub" style={{ fontSize: 16 }}>Frozen results on two test sets the system never trained on: <b>balanced</b> (1,000 reviews, 200 per star) and <b>natural</b> (2,000 reviews in their real mix, 65% five-star).</p>
-      <div className="grid g4">
-        {tiles.map(([l, v, dec, suf, sub], i) => (
-          <Reveal key={l} className="card" delay={i * .08}><div className="lab">{l}</div><div className="big blue"><Num value={v} decimals={dec} suffix={suf} /></div><div className="sub">{sub}</div></Reveal>
-        ))}
+      <div className="rhead">
+        <div><div className="lab">The result in one line</div>
+          <h2>+{(d.exact.bal[1] - d.exact.bal[0]).toFixed(1)} points on the exact star, and every explanation is checked.</h2></div>
+        <p className="sub">Phase 1 is the reference method (one fine-tuned LLaMA-3). Phase 2 is our agent system. Both are scored once on test reviews neither ever saw.</p>
       </div>
-      <div className="grid g2" style={{ marginTop: 16 }}>
-        <Chart title="More stars exactly right" sub="Exact-star accuracy (%)."><Legend items={PP} />
-          <Bars groups={["Balanced test", "Natural test"]} series={["Phase 1", "Phase 2"]} values={[d.exact.bal, d.exact.nat]} colors={[GREY, BLUE]} max={100} /></Chart>
-        <Chart title="Fairer to every star" sub="Macro-F1 weighs all five stars equally, so the common 5★ cannot hide mistakes." delay={.08}><Legend items={PP} />
-          <Bars groups={["Balanced test", "Natural test"]} series={["Phase 1", "Phase 2"]} values={[d.f1.bal, d.f1.nat]} colors={[GREY, BLUE]} fmt={(v) => v.toFixed(2)} max={1} /></Chart>
-        <Chart title="Knows when it is unsure" sub="Answer only the reviews it is most sure of; accuracy on those (natural test). Hover the chart."><Legend items={PP} />
-          <Curve curve={d.curve} auto={d.auto} /></Chart>
-        <Chart title="Steadier on messy text" sub="Stars that changed when the review was altered (%, lower is better). Phase 1 never reads the title." delay={.08}><Legend items={PP} />
-          <Bars groups={Object.keys(d.robust)} series={["Phase 1", "Phase 2"]} values={Object.values(d.robust)} colors={[GREY, BLUE]} max={36} /></Chart>
-        <Chart title="The Critic loop repairs explanations" sub="Share of explanations that pass all five checks (%)."><Legend items={[["First draft", GREY], ["After the loop", BLUE]]} />
-          <Bars groups={["Balanced test", "Natural test"]} series={["First draft", "After the loop"]} values={[d.critic.bal, d.critic.nat]} colors={[GREY, BLUE]} max={100} /></Chart>
-        <Chart title="Not fooled by negative words" sub={`Happy reviews that use negative words: exact star (%, n = ${d.hard.n[0]} / ${d.hard.n[1]}).`} delay={.08}><Legend items={PP} />
-          <Bars groups={["Balanced test", "Natural test"]} series={["Phase 1", "Phase 2"]} values={[d.hard.bal, d.hard.nat]} colors={[GREY, BLUE]} max={100} /></Chart>
-      </div>
-      <p className="note" style={{ marginTop: 16 }}>Read with care: on the natural test 65% of reviews are 5★, so raw exact accuracy flatters Phase 2. Against Phase 1 adjusted to that mix the gain is +2.5 points,
-        which is why macro-F1 is the headline there. The two-agent system fixed before any test read scores 67.5% / 75.7%.</p>
-      <Reveal className="card" style={{ marginTop: 16 }}>
-        <h4 style={{ margin: "0 0 8px" }}>Every model on the test sets</h4>
-        <table className="t">
-          <thead><tr><th>Model</th><th>Balanced exact %</th><th>Balanced macro-F1</th><th>Natural exact %</th><th>Natural macro-F1</th></tr></thead>
-          <tbody>{d.models.map((m) => <tr key={m.name} className={m.name === d.main ? "main" : ""}><td>{m.name}</td><td>{m.be.toFixed(1)}</td><td>{m.bf.toFixed(3)}</td><td>{m.ne.toFixed(1)}</td><td>{m.nf.toFixed(3)}</td></tr>)}</tbody>
-        </table>
-      </Reveal>
-      <footer>Sources: results_frozen.md, s1_selective.json, b2_report.json, q4_robustness.json, hard_cases.json, human_check.out (v2_reflective/e23/).</footer>
+      <div className="claims">{C.map((c, i) => <Claim key={i} i={i} {...c} />)}</div>
+      <button className="lg" style={{ marginTop: 18 }} onClick={() => setMore(!more)}>{more ? "Hide" : "Show"} every model and the fine print</button>
+      {more && (
+        <motion.div className="card" style={{ marginTop: 12 }} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .4, ease }}>
+          <p className="note" style={{ marginTop: 0 }}>On the natural test 65% of reviews are 5★, so raw exact accuracy flatters Phase 2 ({d.exact.nat[0].toFixed(1)}% to {d.exact.nat[1].toFixed(1)}%).
+            Against Phase 1 adjusted to that mix the gain is +2.5 points, which is why macro-F1 is used there. The two-agent system fixed before any test read scores 67.5% / 75.7%.</p>
+          <table className="t">
+            <thead><tr><th>Model</th><th>Balanced exact %</th><th>Balanced macro-F1</th><th>Natural exact %</th><th>Natural macro-F1</th></tr></thead>
+            <tbody>{d.models.map((m) => <tr key={m.name} className={m.name === d.main ? "main" : ""}><td>{m.name}</td><td>{m.be.toFixed(1)}</td><td>{m.bf.toFixed(3)}</td><td>{m.ne.toFixed(1)}</td><td>{m.nf.toFixed(3)}</td></tr>)}</tbody>
+          </table>
+        </motion.div>
+      )}
+      <footer>Sources: results_frozen.md, s1_selective.json, b2_report.json, q4_robustness(_1k).json, hard_cases.json, human_check.out (v2_reflective/e23/).</footer>
     </div>
   );
 }

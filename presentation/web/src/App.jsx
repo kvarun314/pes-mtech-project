@@ -5,6 +5,7 @@ import Explain from "./Explain.jsx";
 import Stress from "./Stress.jsx";
 import Results from "./Results.jsx";
 import Walk from "./Walk.jsx";
+import Build from "./Build.jsx";
 import { ease } from "./ui.jsx";
 
 /** Reads a POST text/event-stream response and calls onEvent for every `data:` line. */
@@ -18,7 +19,8 @@ async function stream(url, payload, onEvent) {
   }
 }
 
-const TABS = ["Step by step", "How it rates", "How it explains", "Stress test", "Results"];
+const TABS = ["How it was built", "Step by step", "How it rates", "How it explains", "Stress test", "Results"];
+const FREE = [0, 5];   // tabs that need no rated review
 
 export default function App() {
   const [demos, setDemos] = useState([]); const [pick, setPick] = useState(null);
@@ -51,7 +53,7 @@ export default function App() {
     try {
       const r = await fetch("/api/rate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); const d = await r.json();
       if (d.error) setErr(d.error);
-      else { setRes(d); setInp({ ...payload, truth: demo && demo.text === text ? demo.truth : null }); setExpl(null); setStress(null); if (tab === 4) setTab(0); }
+      else { setRes(d); setInp({ ...payload, truth: demo && demo.text === text ? demo.truth : null }); setExpl(null); setStress(null); if (FREE.includes(tab)) setTab(1); }
     } catch (e) { setErr(String(e)); }
     setBusy(false);
   };
@@ -93,8 +95,8 @@ export default function App() {
 
         <AnimatePresence mode="wait">
           <motion.div key={tab + (res ? "r" : "")} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: .3, ease }}>
-            {tab === 4 ? <Results /> : !res ? <div className="card empty" style={{ marginTop: 18 }}>Pick a demo review or write your own, then press <b>Rate this review</b>.</div>
-              : tab === 0 ? <Walk res={res} inp={inp} expl={expl} runExplain={runExplain} /> : tab === 1 ? <Rate res={res} inp={inp} /> : tab === 2 ? <Explain res={res} state={expl} run={runExplain} /> : <Stress inp={inp} data={stress} setData={setStress} />}
+            {tab === 0 ? <Build /> : tab === 5 ? <Results /> : !res ? <div className="card empty" style={{ marginTop: 18 }}>Pick a demo review or write your own, then press <b>Rate this review</b>.</div>
+              : tab === 1 ? <Walk res={res} inp={inp} expl={expl} runExplain={runExplain} /> : tab === 2 ? <Rate res={res} inp={inp} /> : tab === 3 ? <Explain res={res} state={expl} run={runExplain} /> : <Stress inp={inp} demos={demos} data={stress} setData={setStress} />}
           </motion.div>
         </AnimatePresence>
         <footer>Phase 1: LLaMA-3-8B + LoRA (reference method, Wang 2025). Phase 2: LLaMA probe, Evidence model and DeBERTa-v3, combined by a Reflector, with a Hand-off agent and an Explainer–Critic loop. Data: Amazon Reviews 2023, Electronics.</footer>
