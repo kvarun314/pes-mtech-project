@@ -81,3 +81,7 @@ v2_reflective/e23/agents/deberta/
 # decks are never committed (CLAUDE.md)
 *.pptx
 paper/conference/overleaf/
+
+# React demo (presentation/web): dependencies and build output are local only
+presentation/web/node_modules/
+presentation/web/dist/
