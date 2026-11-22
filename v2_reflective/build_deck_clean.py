@@ -196,34 +196,25 @@ dark_slide("title", "Agentic Self-Correction in LLaMA-3",
            "Title. Say: we take a published LLM method for rating product reviews, rebuild it and study it, then build our own agent-based approach on top of what we learn.")
 
 # ======================================================================= PART 1: reference paper
-sl = slide("paper", "Part 1 · Reference paper", "The reference paper in a nutshell",
-           "The reference paper. Wang et al. (2025), ITM Web of Conferences 70, 04021. Say: we chose this paper as our reference. Task: rate an Amazon product review 1-5 stars with a short justification. Approach: one fine-tuned LLaMA-3-8B reads the review once. Data: Kaggle Amazon reviews, about 500K. It reports 92.6% accuracy and 93.3% F1 with 5-fold cross-validation and a 40K-review test set, and beats SVM, Naive Bayes, Decision Tree and XLNet.",
-           sub="Wang et al. (2025), “Sentiment Analysis of Product Reviews Using Fine-Tuned LLaMA-3”")
-rows(sl, [("Task", "Rate an Amazon product review from 1 to 5 stars, with a short justification"),
-          ("Approach", "One fine-tuned LLaMA-3-8B reads the review once and answers"),
-          ("Data", "Kaggle Amazon reviews (about 500K), cleaned and balanced before training")],
-     [1.7, 5.9], y=2.4, size=17, rh=0.95, tw=7.4)
-rect(sl, 8.6, 2.4, 0.015, 2.85, RULE)
-stat(sl, 9.0, 2.45, 3.6, "92.6%", "accuracy reported (93.3% F1), 5-fold cross-validation on its own Kaggle data; beats SVM, Naive Bayes, Decision Tree and XLNet", size=60)
-text(sl, M, 5.6, CW, 0.6, "Why it matters: shoppers and sellers act on star ratings, so the star must be right and its reason checkable.", size=17, color=INK)
-foot(sl, "Wang, ITM Web of Conferences 70, 04021 (2025). Our data: Amazon Reviews 2023 (Hou et al. 2024).")
-
-sl = slide("stack", "Part 1 · Reference paper", "Its stack",
-           "The paper's stack. Data: TextBlob quality control drops reviews whose tone contradicts the star; stratified sampling balances the stars; VGST, a greedy diversity search, prefers reviews with new words; 3-star reviews are doubled. Model: LLaMA-3-8B in 4-bit, LoRA rank 4, alpha 64 on the last 3 layers, 3 epochs; fits one 16 GB GPU. Prompt: a 1-5 star rubric, one worked example and a step-by-step cue. Output: a star and a justification.",
-           sub="A data pipeline, then one fine-tuned model")
-text(sl, M, 2.3, 4, 0.3, "DATA", size=11, color=BLUE, bold=True)
-flow(sl, 2.65, [("TextBlob filter", "drop reviews whose tone contradicts the star"), ("Balance", "equal reviews per star"),
-                ("VGST", "prefer reviews with new words"), ("Neutral ×2", "double the 3-star reviews")])
-text(sl, M, 4.3, 4, 0.3, "MODEL", size=11, color=BLUE, bold=True)
-flow(sl, 4.65, [("LLaMA-3-8B", "4-bit, one 16 GB GPU"), ("LoRA fine-tuning", "rank 4, α 64, last 3 layers"),
+sl = slide("paper", "Part 1 · Reference paper", "The reference paper and its stack",
+           "The reference paper. Wang et al. (2025), ITM Web of Conferences 70, 04021. Task: rate an Amazon product review 1-5 stars with a short justification. One fine-tuned LLaMA-3-8B reads the review once. Data: Kaggle Amazon reviews, about 500K. It reports 92.6% accuracy and 93.3% F1 with 5-fold cross-validation and a 40K-review test set, and beats SVM, Naive Bayes, Decision Tree and XLNet. Its stack. Data: TextBlob quality control drops reviews whose tone contradicts the star; stratified sampling balances the stars; VGST, a greedy diversity search, prefers reviews with new words; 3-star reviews are doubled. Model: LLaMA-3-8B in 4-bit, LoRA rank 4, alpha 64 on the last 3 layers, 3 epochs; fits one 16 GB GPU. Prompt: a 1-5 star rubric, one worked example and a step-by-step cue. Output: a star and a justification.",
+           sub="Wang et al. (2025): one fine-tuned LLaMA-3 rates a product review from 1 to 5 stars")
+text(sl, M, 2.2, 4, 0.3, "DATA", size=11, color=BLUE, bold=True)
+flow(sl, 2.5, [("TextBlob filter", "drop reviews whose tone contradicts the star"), ("Balance", "equal reviews per star"),
+               ("VGST", "prefer reviews with new words"), ("Neutral ×2", "double the 3-star reviews")])
+text(sl, M, 3.95, 4, 0.3, "MODEL", size=11, color=BLUE, bold=True)
+flow(sl, 4.25, [("LLaMA-3-8B", "4-bit, one 16 GB GPU"), ("LoRA fine-tuning", "rank 4, α 64, last 3 layers"),
                 ("Prompt", "rubric, one example, step by step"), ("Output", "star + justification")], dark=1)
+hline(sl, M, 5.6, CW)
+stat(sl, M, 5.7, 2.6, "92.6%", "reported accuracy", size=36)
+text(sl, 3.6, 5.8, 9, 0.8, "93.3% F1, 5-fold cross-validation on its own Kaggle data (about 500K reviews); beats SVM, Naive Bayes, Decision Tree and XLNet. Wang, ITM Web of Conferences 70, 04021 (2025).", size=15, color=INK)
 
 sl = slide("implement", "Part 1 · Our implementation", "How we implemented it",
-           "Implementation. We rebuilt the pipeline with the paper's Table 1 settings. As a check, on the paper's own data source (Kaggle, its protocol, no leak) it reaches 69.1%; always guessing 5 stars already gives 63.8% there. Then a clean benchmark: Amazon Reviews 2023 Electronics, splits drawn once and kept disjoint (train about 497K, development, balanced test 1,000, natural test 2,000); every choice made on development data; test sets read once.",
+           "Implementation. We rebuilt the pipeline with the paper's Table 1 settings. As a check, on the paper's own data source (Kaggle, its protocol, no leak) it reaches 69.1%; always guessing 5 stars already gives 63.8% there. Then a clean benchmark: Amazon Reviews 2023 Electronics, splits drawn once and kept disjoint (train about 497K, development, balanced test 1,000, natural test 2,000); every choice made on development data; test sets read once. Protocol: splits kept disjoint by review id and exact text; every candidate had a written pass rule (gate) checked on dev sets only. Metrics: exact star (main), macro-F1, within one star, MAE; 95% bootstrap CIs (3,000 resamples); paired McNemar tests, Holm-corrected over 12 comparisons. Disclose the exception: DeBERTa passed its dev2 gate, was then read on the test sets, and adopted; the strictly held-out system is the two-agent one, 67.5 / 75.7.",
            sub="Same pipeline and settings, on a clean benchmark with a fair test")
 cols(sl, [("", "Rebuild", "The paper's settings (LoRA rank 4, α 64, 3 epochs) on 2,000 reviews, 400 per star; raw balanced data, because the filter hurt."),
-          ("", "Clean benchmark", "Amazon Reviews 2023 Electronics. Train, development and test sets kept apart."),
-          ("", "Fair test", "No hinting example. Rules set before runs, on dev sets. One disclosed exception: the third agent was added after its test readout.")], y=2.2, th=2.75)
+          ("", "Clean benchmark", "Amazon Reviews 2023 Electronics, split once: train ≈497K; dev sets 500 / 2,000 / 500; tests 1,000 balanced and 2,000 natural."),
+          ("", "Fair test", "No hinting example. Pass rules written before each run, checked on dev only; tests read once. Exact star and macro-F1, bootstrap CIs, McNemar.")], y=2.2, th=2.75)
 hline(sl, M, 5.2, CW)
 stat(sl, M, 5.4, 3.2, "69.1%", "check on the paper's own data", size=40)
 text(sl, 4.4, 5.55, 8, 1.2, "Leak-free on the paper's kind of data: 69.1%, only 5 points above always guessing 5 stars (63.8%). The reported 92.6% used a different protocol, so we moved to a balanced benchmark.", size=16, color=INK)
@@ -261,7 +252,7 @@ sl = dark_slide("approach", "", [], "Our approach. Say: from Part 1 we need a se
 SLIDES[-1] = ("approach", "Four research questions", sl)
 text(sl, M, 1.3, CW, 0.4, "PART 2  \u00b7  FOUR RESEARCH QUESTIONS", size=14, color=SKY, bold=True, align=PP_ALIGN.CENTER)
 text(sl, M, 1.75, CW, 0.8, "Models decide. LLMs explain. Checks keep it honest.", size=30, color=WHITE, bold=True, align=PP_ALIGN.CENTER)
-for i, (q, t, wh) in enumerate([("RQ1", "Does the reference method hold up under a leak-free protocol?", "Part 1"), ("RQ2", "Do independent agents with a learned Reflector beat one fine-tuned LLM?", "accuracy results"), ("RQ3", "Can a Critic loop make explanations checkable without breaking good ones?", "Critic, example, human check"), ("RQ4", "Can the system know when to hand a review to a person?", "Hand-off")]):
+for i, (q, t, wh) in enumerate([("RQ1", "Does the reference method hold up under a leak-free protocol?", "Part 1"), ("RQ2", "Do independent agents with a learned Reflector beat one fine-tuned LLM?", "accuracy results"), ("RQ3", "Can a Critic loop make explanations checkable without breaking good ones?", "Critic, example"), ("RQ4", "Can the system know when to hand a review to a person?", "Hand-off")]):
     y = 2.95 + i * 0.95
     text(sl, M + 1.0, y, 1.0, 0.6, q, size=24, color=SKY, bold=True)
     text(sl, M + 2.1, y + 0.02, 7.6, 0.6, t, size=20, color=WHITE)
@@ -293,54 +284,24 @@ bars(sl, M, 2.35, 7.3, 4.4, ["Shortest", "Short", "Long", "Longest"], [("Evidenc
 text(sl, 8.5, 2.1, 4, 0.3, "PROBE AND EVIDENCE MODEL DISAGREE", size=11, color=MUTED, bold=True)
 bars(sl, 8.5, 2.35, 4.03, 4.4, ["Balanced", "Natural"], [("Evidence", (42.7, 35.7)), ("Probe", (39.1, 50.1)), ("Reflector", (57.8, 62.0))], [GREY, SKY, BLUE], maxv=85, fmt='0', lsize=12)
 
-sl = slide("tried", "Part 2 · Approaches we took", "What we tried and dropped",
-           "Approaches tried (EXPERIMENTS_SUMMARY.md, section 3). Every idea had a pass/fail rule written before it ran and was checked on development data only; none touched the test sets. LLM deciding the star: 54.2% vs 73.3% on disagreement rows, and later 76 fixed vs 89 broken. Product-photo agent: constant output. More views of the same text (MiniLM, character n-grams, NB-SVM): no gain. Bigger LLaMA probe (120K): +0.3, saturated. Gradient-boosted Reflector: overfits (.621 vs .642). Second LLM judge: rejects everything.",
+sl = slide("tried", "Part 2 · How we improved it", "What we tried, what we kept",
+           "Approaches tried (EXPERIMENTS_SUMMARY.md, sections 2 and 3; LOG). Every idea had a pass/fail rule written before it ran and was checked on development data only; none touched the test sets. Kept: leak-free zero-shot protocol (the leak was 7.7 points); raw balanced data (TextBlob filtering cost 2.5-3.5 points); LLaMA probe + Evidence model (+3.9 [+2.4, +5.8] on dev2); DeBERTa-v3 as third agent (+2.0 [+0.6, +3.4] on dev2, adopted after its test readout, disclosed); Critic loop and Hand-off agent (841 explanations fixed, 0 broken). Dropped: LLM deciding the star (54.2% vs 73.3% on disagreement rows, later 76 fixed vs 89 broken); product-photo agent (constant output); more views of the same text (MiniLM, character n-grams, NB-SVM: no gain); bigger LLaMA probe (120K: +0.3, saturated); gradient-boosted Reflector (overfits, .621 vs .642); second LLM judge (rejects everything).",
            sub="Every idea had a pass/fail rule written before it ran, checked on development data only")
-D = ("Dropped", {"color": NEG, "bold": True})
-rows(sl, [("LLM decides the star (3 attempts)", "LLM 54.2% vs stack 73.3% when agents disagree; later 76 fixed, 89 broken", D),
-          ("Product-photo agent (BLIP, Qwen2-VL)", "Same answer for every review", D),
-          ("More views of the same words", "MiniLM, character n-grams, NB-SVM: no gain", D),
-          ("Bigger LLaMA probe (120K reviews)", "+0.3 points: already saturated at 40K", D),
-          ("Non-linear Reflector", "Overfits: .621 vs .642 on development data", D),
-          ("Second LLM judge (Qwen2.5-7B)", "Rejects every explanation", D)],
-     [4.6, 5.9, 1.2], y=2.3, head=["Approach", "Result", "Verdict"], size=15, rh=0.62)
-
-sl = slide("kept", "Part 2 · What we stuck to", "What we kept, and why",
-           "What we kept (EXPERIMENTS_SUMMARY.md, section 2; LOG). Leak-free zero-shot protocol (the leak was 7.7 points). Raw balanced data: TextBlob filtering cost 2.5-3.5 points. LLaMA probe on 40K reviews: +3.9 on dev2. Evidence model on about 497K reviews. DeBERTa-v3: +2.3 on the natural test, stable over 3 seeds. Logistic-regression Reflector. Critic loop up to four rewrites: 0 broken. Hand-off agent.",
-           sub="Each part passed its own check before it was kept")
-K = ("Kept", {"color": POS, "bold": True})
-rows(sl, [("Leak-free protocol", "The example leak was worth 7.7 points; test sets read once", K),
-          ("Raw balanced data", "The TextBlob filter cost 2.5–3.5 points", K),
+K = ("Kept", {"color": POS, "bold": True}); D = ("Dropped", {"color": NEG, "bold": True})
+rows(sl, [("Leak-free protocol, raw balanced data", "Example leak worth 7.7 points; filter cost 2.5–3.5", K),
           ("LLaMA probe + Evidence model", "+3.9 [+2.4, +5.8] on dev2", K),
-          ("DeBERTa-v3 as third agent", "+2.0 [+0.6, +3.4] on dev2; adopted after test readout (disclosed)", K),
-          ("Simple Reflector (logistic regression)", "Beats every single agent; does not overfit", K),
-          ("Critic loop and Hand-off agent", "841 explanations fixed, 0 broken; 93% right when sure", K)],
-     [4.6, 5.9, 1.2], y=2.3, head=["Choice", "Evidence", "Verdict"], size=15, rh=0.62)
+          ("DeBERTa-v3 as third agent", "+2.0 on dev2; adopted after its test readout (disclosed)", K),
+          ("Critic loop and Hand-off agent", "841 explanations fixed, 0 broken; 93% right when sure", K),
+          ("LLM decides the star (3 attempts)", "Fixed 76, broke 89 reviews", D),
+          ("Product photos; more views of the words", "Same answer for every review; no gain", D),
+          ("Bigger probe; non-linear Reflector", "+0.3 (saturated); overfits, .621 vs .642", D),
+          ("Second LLM judge (Qwen2.5-7B)", "Rejects every explanation", D)],
+     [4.6, 5.9, 1.2], y=2.15, head=["Approach", "Result", "Verdict"], size=15, rh=0.54)
 
 # ======================================================================= results
-sl = slide("protocol", "Results", "How we test: frozen splits, rules before runs",
-           "Evaluation protocol (Section 3 of the paper; results_frozen.md). Splits drawn once from Amazon Reviews 2023 Electronics and kept disjoint by review id and exact text. Every candidate had a written pass rule (gate) checked on dev sets only. Disclose the exception: DeBERTa passed its dev2 gate, was then read on the test sets, and adopted; the strictly held-out system is the two-agent one, 67.5 / 75.7.",
-           sub="Amazon Reviews 2023 Electronics; splits drawn once and kept disjoint by review id and text")
-rows(sl, [("train", "~497K reviews", "fits the agents"),
-          ("dev / dev2 / natural_dev", "500 / 2,000 / 500", "choices and gates; dev2 fits the Reflector"),
-          ("eval (balanced)", "1,000, 200 per star", "test: chance 20%"),
-          ("natural_test", "2,000, 65% five-star", "test: the real star mix")],
-     [3.6, 3.4, 4.7], y=2.15, head=["Split", "Size", "Role"], size=16, rh=0.55)
-text(sl, M, 5.15, CW, 1.3, ["Metrics: exact star (main), macro-F1, within one star, MAE. 95% bootstrap CIs (3,000 resamples); paired McNemar tests, Holm-corrected over 12 comparisons.",
-     ("Disclosed exception: DeBERTa was added after its test readout; the strictly held-out system (two agents) scores 67.5% / 75.7%.", {"color": INK, "bold": True})], size=15)
-
-hero("hero", "+13.5", ["points of exact-star accuracy over the reference method, on balanced reviews.", ("54.0% to 67.5%, the same 1,000 reviews. 29% fewer errors.", {"size": 18, "color": SOFT})],
-     "Hero moment. Pause on the number. Say: on balanced reviews (200 per star, so the star mix gives no free points) the three-agent system gets the exact star 13.5 points more often than the reference method, 54.0% to 67.5% (results_frozen.md); McNemar p 6.7e-14 (hard_cases.out). Then go to the chart, which also shows the natural test.",
+hero("hero", "+13.5", ["points of exact-star accuracy over the reference method, on balanced reviews.", ("54.0% to 67.5%, the same 1,000 reviews. On the real star mix, macro-F1 .488 to .634.", {"size": 18, "color": SOFT})],
+     "Hero moment. Pause on the number. Say: on balanced reviews (200 per star, so the star mix gives no free points) the three-agent system gets the exact star 13.5 points more often than the reference method, 54.0% to 67.5% (results_frozen.md); McNemar p 6.7e-14 (hard_cases.out), Δ +13.5 [+9.9, +16.8], 232 fixed, 97 broken. Natural test caveat, say it yourself: raw exact 53.4 to 78.0, but 65% of natural reviews are 5-star; adjusted to that mix Phase 1 gets 75.5%, so the fair natural gain is +2.5 exact. Macro-F1, which ignores the star mix, rises from .488 (.507 adjusted) to .634. Within one star 97.3 / 97.4. If asked whether 67.5 is good: random is 20%, and neighbouring stars are ambiguous.",
      "+13.5 points")
-sl = slide("headline", "Results", "Phase 2 is better on both test sets",
-           "Headline (results_frozen.md, hard_cases.out, prior_baseline.out). Exact star: Phase 1 54.0 / 53.4, Phase 2 67.5 / 78.0: +13.5 and +24.6 points, McNemar p 6.7e-14 and 3.7e-84 (this comparison is not part of the 12-comparison Holm set). Say the natural-test caveat yourself: Phase 1 was trained on balanced data, and 65% of natural reviews are 5-star; adjusted to the real star mix Phase 1 gets 75.5%, so the fair natural gain is +2.5 exact. Macro-F1, which ignores the star mix, still rises from .488 (.507 adjusted) to .634. Within one star 97.3 / 97.4. If asked whether 67.5 is good: random is 20%, and neighbouring stars are ambiguous. Caveat if asked: on balanced eval the three-agent stack ties the previous two-agent stack; DeBERTa's +2.3 is on the natural mix.",
-           sub="Balanced test: exact star. Natural test: macro-F1, which the star mix cannot inflate")
-bars(sl, M, 2.2, 7.4, 4.5, ["Exact star, balanced test", "Macro-F1 (x100), natural test"], [("Phase 1", (54.0, 48.8)), ("Phase 2", (67.5, 63.4))], [GREY, BLUE], fmt='0.0')
-stat(sl, 8.9, 2.3, 3.7, "+13.5", "points on balanced reviews", color=POS)
-stat(sl, 8.9, 3.85, 3.7, "97%", "of stars within one of the truth")
-text(sl, 8.9, 5.45, 3.7, 1.3, "Raw natural exact: 53.4% to 78.0%. 65% of natural reviews are 5-star; against Phase 1 adjusted to that mix the gain is +2.5.", size=14, color=INK)
-foot(sl, "Δ +13.5 [+9.9, +16.8], McNemar p = 6.7e-14 (232 fixed, 97 broken); 67.5 [64.5, 70.5]. Phase 1 seed 2 on natural: 74.8% exact, macro-F1 .545.")
-
 sl = slide("gains", "Results", "Where the gain comes from",
            "Baselines and ablation (results_frozen.md). Every agent alone beats Phase 1; the combination beats every agent. DeBERTa alone is close on eval (66.5); the stack adds on the natural mix (+2.2 +/- 0.2 over 3 seeds). Data-size caveat: Phase 1 sees 2K reviews, the agents 40K-497K; LoRA on 10K failed its gate (dev 56.4 vs 58 required).",
            sub="Exact star accuracy (%), same test sets; training reviews in brackets")
@@ -353,13 +314,6 @@ foot(sl, "Phase 1 uses 2K training reviews, the agents 40K-497K. LoRA on 10K rev
 
 
 
-sl = slide("hard", "Results", "Negative words, happy reviewer",
-           "Hard cases (hard_cases.out). Reviews whose words sound negative but whose star is 4 or 5. Phase 1: 35.0% (balanced, n 40), 43.0% (natural, n 193). Phase 2: 67.5% and 78.2%. p 0.0023 and 5.4e-16.",
-           sub="Exact star accuracy on 4- and 5-star reviews whose words sound negative (n = 40 / 193)")
-bars(sl, M, 2.2, 7.4, 4.5, ["Balanced test (40)", "Natural test (193)"], [("Phase 1", (35.0, 43.0)), ("Phase 2", (67.5, 78.2))], [GREY, BLUE])
-stat(sl, 8.9, 2.5, 3.7, "+33 / +35", "points over Phase 1 on the hardest kind of review", color=POS, size=44)
-foot(sl, "Δ +32.5 [+15.0, +50.0], p = .0023 (n = 40, wide CI); +35.2 [+28.0, +43.0], p = 5.4e-16 (n = 193).")
-
 sl = slide("handoff", "Results", "It knows when it is unsure",
            "Hand-off agent (s1_selective.out). Threshold fixed on dev2 before the tests. Natural test: answers 56% of reviews automatically, 92.8% right. Balanced test: 86.9% on 41%; Phase 1 with the same rule 66.9%. What it hands to a person is only 54-59% right: those are the hard ones. Native chart from s1_selective.out (natural test). Star ranges (q1_conformal.out): over all reviews the answer covers the true star 90% of the time; for the unsure reviews that get a range, coverage is 86% (natural) and 91% (balanced). Ranges are 1.44 stars wide on average on natural (Phase 1 2.08).",
            sub="The Hand-off agent answers alone only when confident, otherwise it asks a person")
@@ -371,12 +325,12 @@ stat(sl, 8.9, 4.3, 3.7, "86.9%", "right on the 41% of balanced reviews it answer
 foot(sl, "Chart: natural test. Threshold fixed on dev2; 92.8% [91.3, 94.3]. Selective prediction: Geifman & El-Yaniv 2017.")
 
 sl = slide("critic", "Results", "The Critic loop repairs explanations",
-           "Critic loop (b2_report.out). The Critic checks five things: the star matches, every quote is in the review, it uses the key phrases, it mentions disagreement, and an LLM judge finds no invented claim. Faithful first drafts 62.3% / 63.7%; after up to four rewrites 90.5% / 91.6%; 841 fixed, 0 broken. Deletion test: removing the cited words lowers confidence about twice as much as removing random words (0.156 vs 0.077 balanced).",
-           sub="Pass rate of the Critic's own checks (the loop optimises them; see the human check)")
+           "Critic loop (b2_report.out). The Critic checks five things: the star matches, every quote is in the review, it uses the key phrases, it mentions disagreement, and an LLM judge finds no invented claim. Faithful first drafts 62.3% / 63.7%; after up to four rewrites 90.5% / 91.6%; 841 fixed, 0 broken. Deletion test: removing the cited words lowers confidence about twice as much as removing random words (0.156 vs 0.077 balanced). Human check (human_check.out, LOG 2026-11-20): the author marked 50 random explanations, blind to the Critic: 80% faithful vs the Critic's 92%, agreement 76%. When all agents agreed (34) the author passed every one; when they disagreed (16) only 37.5%, while the Critic passed 93.8%. There the Explainer says things about the system (\"the reviewer gave N stars\", a confidence %) that no check catches. One annotator, 50 items: an indication.",
+           sub="Pass rate of the Critic's five checks; a blind human check shows where it is still lenient")
 bars(sl, M, 2.2, 7.4, 4.5, ["Balanced test", "Natural test"], [("First draft", (62.3, 63.7)), ("After the Critic loop", (90.5, 91.6))], [GREY, BLUE])
 stat(sl, 8.9, 2.3, 3.7, "0", "good explanations broken (841 fixed)", color=POS, size=60)
-stat(sl, 8.9, 4.3, 3.7, "2×", "confidence drop when the cited words are removed, vs random words", size=44)
-foot(sl, "McNemar p = 2.6e-85 / 1.1e-168. Deletion test after ERASER (DeYoung et al. 2020).")
+stat(sl, 8.9, 4.3, 3.7, "80%", "faithful in a blind human check of 50; only 37.5% when the agents disagreed", size=44)
+foot(sl, "McNemar p = 2.6e-85 / 1.1e-168. Cited words matter: deleting them drops confidence 2× more than random words (ERASER, DeYoung et al. 2020).")
 
 sl = slide("example", "Results", "One review, three drafts",
            "Worked example from the live demo (presentation/demo_cache.json, balanced test). Read the review, then the drafts: the Critic names what is wrong (an invented phrase, too few key phrases) and draft 3 passes all checks. Phase 1's justification for comparison is a template that never quotes the review.")
@@ -400,13 +354,6 @@ if EX:
         text(sl, x, 5.55, cw, 1.1, "✓ Passes all checks" if ok else "Critic: " + " ".join(f), size=11.5, color=POS if ok else NEG, bold=True)
 else:
     print("WARNING: presentation/demo_cache.json missing; example slide left empty (record the demo first)")
-
-sl = slide("human", "Results", "A person checked the Critic",
-           "Human check (human_check.out, LOG 2026-11-20). The author marked 50 random explanations, blind to the Critic: 80% faithful vs the Critic's 92%, agreement 76%. When all agents agreed (34) the author passed every one; when they disagreed (16) only 37.5%, while the Critic passed 93.8%. There the Explainer says things about the system (\"the reviewer gave N stars\", a confidence %) that no check catches. One annotator, 50 items: an indication.",
-           sub="50 random explanations; one annotator (the author), blind to the Critic's verdict")
-bars(sl, M, 2.2, 7.4, 4.5, ["Agents agreed (34)", "Agents disagreed (16)"], [("Author: faithful", (100.0, 37.5)), ("Critic: pass", (91.2, 93.8))], [BLUE, GREY])
-stat(sl, 8.9, 2.3, 3.7, "76%", "agreement between the author and the Critic")
-text(sl, 8.9, 4.2, 3.7, 2, "When the agents disagree, the Critic misses statements about the system. Next: a check for those.", size=16, color=INK)
 
 sl = slide("robust", "Results", "Stable on messy text, but it needs the title",
            "Robustness (q4_robustness.out, 300 balanced reviews). Share of reviews whose star changes when the text is changed. Typos: 0.7% vs 2.0% (ns). No punctuation or capitals: 9.3% vs 29.7%. Title removed: 15.7% vs 0%, because the Evidence model and DeBERTa read the title. Say the limitation plainly.",
@@ -445,24 +392,24 @@ dark_slide("thanks", "Live demo", ["Five test reviews: Phase 1 vs Phase 2. Star,
 
 SAY = {
  "title": "Three agents rate the star, LLaMA-3 explains it, and a Critic checks it. First the paper we started from.",
- "paper": "We chose this paper as our reference: one fine-tuned LLaMA rates a review and justifies it, and it reports 92.6%.",
+ "paper": "Our reference paper: a cleaning pipeline and one fine-tuned LLaMA that rates a review and justifies it, reporting 92.6%.",
  "stack": "Its stack is a cleaning pipeline and one fine-tuned model that answers in a single pass.",
- "implement": "We rebuilt it exactly and tested it fairly, on a clean benchmark with no hints in the prompt.",
+ "implement": "We rebuilt it exactly and tested it fairly: a clean benchmark split once, rules written before runs, no hints in the prompt.",
  "p1result": "It reads the direction well, 94% within one star, but gets the exact star only about half the time.",
  "found": "Four things hold it back; the leak was in our first reproduction's example choice, not a claim about the authors.",
  "novelty_paper": "Here is what the paper does, what is missing, and what our project adds. That is Part 2.",
  "approach": "Part 2 answers four research questions; each results slide maps back to one. Our principle: trained models decide the star, the LLM explains it, and checks keep it honest.",
  "arch": "Three agents read each review, a Reflector combines them, and the agentic layer answers, explains and checks.",
  "complement": "It works because each agent is strong where another is weak, and the Reflector learns whom to trust.",
- "tried": "Every idea had a rule written before it ran. These six failed and were dropped.",
+ "tried": "Every idea had a rule written before it ran. The top four passed and were kept; the bottom four failed and were dropped.",
  "kept": "These passed their own checks, so we kept them.",
  "protocol": "Before results, how we test: frozen splits, rules written before runs, and one exception I disclose.",
  "gains": "Where the gain comes from: every agent beats Phase 1, the combination beats every agent, and note the data-size caveat.",
- "hero": "On balanced reviews, Phase 2 gets the exact star 13.5 points more often.",
+ "hero": "On balanced reviews, Phase 2 gets the exact star 13.5 points more often; on the real mix, macro-F1 rises from .49 to .63.",
  "headline": "Better on both test sets: exact star on balanced reviews, and macro-F1 on the real mix.",
  "hard": "The biggest gain is on reviews that sound negative but are rated 4 or 5 stars.",
  "handoff": "It answers alone only when it is confident, and then it is right 93% of the time.",
- "critic": "The Critic loop repairs explanations: 91% pass all checks after rewrites, and none got worse.",
+ "critic": "The Critic loop repairs explanations: 91% pass after rewrites, none got worse. A blind human check agrees on 80%, less when the agents disagree.",
  "example": "Here is one review: the Critic names what is wrong, and the third draft passes.",
  "human": "I checked the Critic myself: it is too lenient when the agents disagree. That is the next fix.",
  "robust": "It is stable on messy text, but it depends on the review title. That is a limitation.",

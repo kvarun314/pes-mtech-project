@@ -1379,3 +1379,9 @@ New first tab "Step by step": 16 slides on the live review. Part 1 (10): review 
 - Results tab rewritten (user: "make it speak more with less"): seven rows, each one claim, Phase 1 vs Phase 2 numbers and one sentence on why; the worse case (needs the title) shown plainly; every-model table behind a button. `/api/results` adds `sure` (hand-off accuracy at target 0.4 for both phases) and `robust_n`.
 - Stress tab: "Test all demo reviews" rates every demo in all four versions and counts star changes per phase.
 - Font: Inter (npm `@fontsource-variable/inter` 5.1.0, bundled for offline use; user approved the download). The walkthrough's slide shell is now a shared `Slideshow` in `Walk.jsx`.
+
+### 2026-11-22 — Deck cut from 25 to 19 slides (user: "some parts can be merged into one. some metrics are not needed ... 20 slides should be enough")
+- Merged: paper + its stack; implementation + test protocol (DeBERTa exception disclosed there); tried + kept (one table, 4 kept, 4 dropped); +13.5 hero + headline (natural macro-F1 on the hero, star-mix caveat in the note); Critic loop + human check (80%, 37.5% when agents disagree).
+- Dropped as separate slides: negative-words hard cases and the headline chart; both numbers remain in "Phase 1 vs Phase 2, side by side". All speaker notes kept, merged into the surviving slides.
+- Previous builder archived as `docs/archive/build_deck_clean_2026-11-22.py`. CLAUDE.md deck limit now 20; Presenter_Notes Part 0 updated. Rendered with soffice and checked.
+- Q4b (robustness on 1,000 reviews) paused at 847 / 1,000 reviews (3,390 of 4,000 rows): the laptop went on battery. Resumes on the charger with the same command; nothing is lost.

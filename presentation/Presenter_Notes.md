@@ -1,6 +1,6 @@
 # Presenter Notes — Agentic Self-Correction in LLaMA-3
 
-## Part 0 — Current deck (25 slides, academic revision). READ THIS FIRST
+## Part 0 — Current deck (19 slides since 2026-11-22). READ THIS FIRST
 
 Deck: `presentation/Agentic_LLaMA3_Presentation.pptx`, the only current deck, built by `v2_reflective/build_deck_clean.py` (2026-11-20, user: "more clean, more straightforward and simple, showcasing the analysis, same colour palette"). The previous 25-slide dense deck is in `old_decks/Agentic_LLaMA3_Presentation_dense_2026-11-20.pptx`; its Part 0 is in `docs/archive/Presenter_Notes_Part0_2026-11-20.md`.
 
@@ -14,32 +14,27 @@ Deck: `presentation/Agentic_LLaMA3_Presentation.pptx`, the only current deck, bu
 
 **Rule for every slide:** say the title first, then point at the big number. Details live in the speaker note. No results on the cover.
 
-### Slide by slide (25 slides; full speaker notes in deck_slide_map.md)
+### Slide by slide (19 slides since 2026-11-22; full speaker notes in deck_slide_map.md)
+User, 2026-11-22: "some parts can be merged into one. some metrics are not needed ... show what we implemented with the baseline, what we explored, found and what we tried to improve. what is the improvement ... 20 slides should be enough." Merged: paper + stack; implementation + test protocol; tried + kept; +13.5 hero + headline; Critic + human check. Dropped as separate slides: negative-words hard cases and the headline chart (both rows stay in "side by side"). The 25-slide builder is `docs/archive/build_deck_clean_2026-11-22.py`.
 1. **Agentic Self-Correction in LLaMA-3.** Three agents rate the star, LLaMA-3 explains it, and a Critic checks it. First the paper we started from.
-2. **The reference paper in a nutshell.** We chose this paper as our reference: one fine-tuned LLaMA rates a review and justifies it, and it reports 92.6%.
-3. **Its stack.** Its stack is a cleaning pipeline and one fine-tuned model that answers in a single pass.
-4. **How we implemented it.** We rebuilt it exactly and tested it fairly, on a clean benchmark with no hints in the prompt.
-5. **Right direction, wrong star.** It reads the direction well, 94% within one star, but gets the exact star only about half the time.
-6. **What the rebuild revealed.** Four things hold it back; the leak was in our first reproduction's example choice, not a claim about the authors.
-7. **Its novelty: what is missing.** Here is what the paper does, what is missing, and what our project adds. That is Part 2.
-8. **Four research questions.** Part 2 answers four research questions; each results slide maps back to one. Our principle: trained models decide the star, the LLM explains it, and checks keep it honest.
-9. **Our stack.** Three agents read each review, a Reflector combines them, and the agentic layer answers, explains and checks.
-10. **Why it works.** It works because each agent is strong where another is weak, and the Reflector learns whom to trust.
-11. **What we tried and dropped.** Every idea had a rule written before it ran. These six failed and were dropped.
-12. **What we kept, and why.** These passed their own checks, so we kept them.
-13. **How we test: frozen splits, rules before runs.** Before results, how we test: frozen splits, rules written before runs, and one exception I disclose.
-14. **+13.5 points.** On balanced reviews, Phase 2 gets the exact star 13.5 points more often.
-15. **Phase 2 is better on both test sets.** Better on both test sets: exact star on balanced reviews, and macro-F1 on the real mix.
-16. **Where the gain comes from.** Where the gain comes from: every agent beats Phase 1, the combination beats every agent, and note the data-size caveat.
-17. **Negative words, happy reviewer.** The biggest gain is on reviews that sound negative but are rated 4 or 5 stars.
-18. **It knows when it is unsure.** It answers alone only when it is confident, and then it is right 93% of the time.
-19. **The Critic loop repairs explanations.** The Critic loop repairs explanations: 91% pass all checks after rewrites, and none got worse.
-20. **One review, three drafts.** Here is one review: the Critic names what is wrong, and the third draft passes.
-21. **A person checked the Critic.** I checked the Critic myself: it is too lenient when the agents disagree. That is the next fix.
-22. **Stable on messy text, but it needs the title.** It is stable on messy text, but it depends on the review title. That is a limitation.
-23. **Phase 1 vs Phase 2, side by side.** Side by side, Phase 2 is better on every row but one, and I show that one in red.
-24. **What the project shows.** Three takeaways and the limits. Then the live demo.
-25. **Live demo.** Now the live demo: five test reviews, Phase 1 next to Phase 2.
+2. **The reference paper and its stack.** Our reference paper: a cleaning pipeline and one fine-tuned LLaMA that rates a review and justifies it, reporting 92.6%.
+3. **How we implemented it.** We rebuilt it exactly and tested it fairly: a clean benchmark split once, rules written before runs, no hints in the prompt. Disclose the DeBERTa exception here.
+4. **Right direction, wrong star.** It reads the direction well, 94% within one star, but gets the exact star only about half the time.
+5. **What the rebuild revealed.** Four things hold it back; the leak was in our first reproduction's example choice, not a claim about the authors.
+6. **Its novelty: what is missing.** Here is what the paper does, what is missing, and what our project adds. That is Part 2.
+7. **Four research questions.** Our principle: trained models decide the star, the LLM explains it, and checks keep it honest.
+8. **Our stack.** Three agents read each review, a Reflector combines them, and the agentic layer answers, explains and checks.
+9. **Why it works.** Each agent is strong where another is weak, and the Reflector learns whom to trust.
+10. **What we tried, what we kept.** Every idea had a rule written before it ran. The top four passed and were kept; the bottom four failed and were dropped.
+11. **+13.5 points.** On balanced reviews, Phase 2 gets the exact star 13.5 points more often; on the real mix, macro-F1 rises from .49 to .63. Say the natural-test star-mix caveat (+2.5 adjusted).
+12. **Where the gain comes from.** Every agent beats Phase 1, the combination beats every agent, and note the data-size caveat.
+13. **It knows when it is unsure.** It answers alone only when it is confident, and then it is right 93% of the time.
+14. **The Critic loop repairs explanations.** 91% pass after rewrites, none got worse. A blind human check agrees on 80%, only 37.5% when the agents disagree.
+15. **One review, three drafts.** The Critic names what is wrong, and the third draft passes.
+16. **Stable on messy text, but it needs the title.** Stable on messy text, but it depends on the review title. That is a limitation.
+17. **Phase 1 vs Phase 2, side by side.** Phase 2 is better on every row but one (includes the negative-words row, 35.0 to 67.5), and I show that one in red.
+18. **What the project shows.** Three takeaways and the limits. Then the live demo.
+19. **Live demo.** Five test reviews, Phase 1 next to Phase 2.
 
 ### Panel questions (from the academic deck review, 2026-11-20)
 1. **Isn't the gain just more data?** Partly possible, disclosed: Phase 1 sees 2K reviews, the agents 40K-497K. LoRA on 10K failed its gate (dev 56.4 vs 58); DistilBERT on 2K (52.8) matches Phase 1. Matched-data comparison is future work.
