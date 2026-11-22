@@ -144,11 +144,14 @@ function slides(res, inp, X) {
                 <span className="sbv" style={{ marginLeft: 8 }}>{pct(res.P[i], 1)}</span></td>
             </motion.tr>))}</tbody>
         </table>) },
-    { t: `The star: ${res.star}★`, s: "The system picks the star with the highest probability. That probability is its confidence.",
+    { t: conf < (res.htau ?? 0) ? `Best guess: ${res.star}★` : `The star: ${res.star}★`, s: "The system picks the star with the highest probability. That probability is its confidence.",
       body: (
         <div className="wbig">
           <motion.div initial={{ scale: .6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 200, damping: 16 }} className="wstar">{res.star}★</motion.div>
           <motion.div {...D(1)} className="sub" style={{ fontSize: 20 }}>{pct(conf)} confident · {res.agreed ? "all three agents agreed" : "the agents disagreed; the Reflector settled it"}</motion.div>
+          {res.htau != null && conf < res.htau && <motion.div {...D(2)} className="warnbar" style={{ marginTop: 16, fontSize: 16 }}>
+            This is only the Reflector's best guess. {pct(conf)} is below the {pct(res.htau)} confidence bar, so the system does <b>not</b> give this star on its own: see the next step.
+            {!res.agreed && " When the agents split like this, the top star is often wrong (sarcasm is a known example)."}</motion.div>}
         </div>) },
     { t: "Hand-off: answer, give a range, or ask a person", s: "The confidence is compared with a bar fixed on development data before testing. Above the bar it answers alone. Below it, it gives a narrow range of stars if one is likely enough, or passes the review to a person.",
       body: (
@@ -158,7 +161,7 @@ function slides(res, inp, X) {
             <div className="tick" style={{ left: `${res.htau * 100}%` }} /><div className="tlab" style={{ left: `${res.htau * 100}%` }}>bar {pct(res.htau)}</div></div>}
           <motion.p {...D(2)} style={{ fontSize: 20 }}>
             {res.decision === "auto" ? <>Confidence {pct(conf)} is above the bar: it <b className="blue">answers {res.star}★</b> on its own.</>
-              : res.decision === "range" ? <>Confidence {pct(conf)} is below the bar, so it answers with a range: <b className="blue">{res.range[0]}–{res.range[1]}★</b>. Ranges like this hold the true star about 90% of the time.</>
+              : res.decision === "range" ? <>Confidence {pct(conf)} is below the bar, so it answers with a range: <b className="blue">{res.range[0] === res.range[1] ? `${res.range[0]}★ only` : `${res.range[0]}–${res.range[1]}★`}</b>. Ranges like this hold the true star about 90% of the time{res.range[0] === res.range[1] ? "; a one-star range means the other stars were too unlikely to include, so it can still be wrong" : ""}.</>
               : <>Confidence {pct(conf)} is below the bar and no narrow range is likely enough: it <b className="bad">passes the review to a person</b>.</>}
           </motion.p>
         </div>) },
