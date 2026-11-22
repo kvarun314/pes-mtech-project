@@ -203,3 +203,29 @@ body { text-rendering: optimizeLegibility; }
 .drop { background: var(--tint); border-radius: 18px; padding: 16px 18px; border-left: 4px solid var(--grey); display: flex; flex-direction: column; gap: 4px; }
 .drop b { font-size: 16px; } .drop span { color: var(--muted); font-size: 14px; }
 @media (max-width: 860px) { .drops { grid-template-columns: 1fr; } }
+
+/* Results: one finding per section, text left, chart right */
+.rsec { display: grid; grid-template-columns: 0.85fr 1.15fr; gap: 28px; align-items: start; margin-top: 34px; }
+.rtext { position: sticky; top: 20px; padding-top: 8px; }
+.rtext h3 { margin: 6px 0 0; font-size: 26px; letter-spacing: -0.025em; font-weight: 700; line-height: 1.2; }
+.rtext p { margin: 10px 0 0; color: var(--body); font-size: 15.5px; line-height: 1.55; }
+.rbig { margin-top: 18px; font-size: 30px; font-weight: 700; letter-spacing: -0.03em; color: var(--blue); font-variant-numeric: tabular-nums; }
+.rbig span { display: block; font-size: 13px; font-weight: 500; color: var(--muted); letter-spacing: 0; margin-top: 2px; }
+.rbig.bad { color: var(--red); }
+.rvis h4 { margin: 0 0 6px; font-size: 14px; font-weight: 600; color: var(--body); }
+.stk { display: grid; grid-template-columns: 70px 1fr; gap: 12px; align-items: center; margin-top: 10px; }
+.stk .cl { font-size: 13px; color: var(--muted); }
+.stkb { display: flex; height: 30px; border-radius: 10px; overflow: hidden; background: var(--tint); }
+.stkb > div { display: flex; align-items: center; justify-content: center; color: white; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.cms { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.cmt { font-weight: 700; font-size: 15px; margin-bottom: 8px; }
+.cmg { display: grid; grid-template-columns: 34px repeat(5, 1fr); gap: 3px; align-items: center; }
+.cmh { font-size: 12px; color: var(--muted); text-align: center; }
+.cmax { grid-column: 1 / -1; font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+.cmc { aspect-ratio: 1; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: default; }
+.cmc.diag { outline: 1.5px solid rgba(0,0,0,.08); }
+.cmn { margin-top: 8px; min-height: 20px; }
+.ladder { display: flex; flex-direction: column; gap: 7px; margin-top: 8px; }
+.lrow { display: grid; grid-template-columns: 1.3fr 1fr 40px; gap: 10px; align-items: center; font-size: 13px; }
+.lrow b { text-align: right; font-variant-numeric: tabular-nums; }
+@media (max-width: 860px) { .rsec, .cms { grid-template-columns: 1fr; } .rtext { position: static; } }

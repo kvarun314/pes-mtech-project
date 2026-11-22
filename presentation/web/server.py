@@ -181,7 +181,7 @@ async def api_results(req):
         "critic": {"bal": [B["eval"]["faithful_first"] * 100, B["eval"]["faithful_final"] * 100], "nat": [B["natural_test"]["faithful_first"] * 100, B["natural_test"]["faithful_final"] * 100]},
         "hard": {"bal": [hcs["eval"]["p1_exact"] * 100, hcs["eval"]["sh_exact"] * 100], "nat": [hcs["natural_test"]["p1_exact"] * 100, hcs["natural_test"]["sh_exact"] * 100],
                  "n": [hcs["eval"]["n"], hcs["natural_test"]["n"]]},
-        "human": hum * 100, "human_split": split, "robust_n": Q.get("_n", 300), "main": main,
+        "human": hum * 100, "human_split": split, "breakdown": json.load(open(PT.D + "demo_breakdown.json")) if os.path.exists(PT.D + "demo_breakdown.json") else None, "robust_n": Q.get("_n", 300), "main": main,
         "models": [{"name": n, "be": E[n][0], "bf": E[n][1], "ne": N[n][0], "nf": N[n][1]} for n in E if n in N]})
 
 
