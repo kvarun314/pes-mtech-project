@@ -1385,3 +1385,8 @@ New first tab "Step by step": 16 slides on the live review. Part 1 (10): review 
 - Dropped as separate slides: negative-words hard cases and the headline chart; both numbers remain in "Phase 1 vs Phase 2, side by side". All speaker notes kept, merged into the surviving slides.
 - Previous builder archived as `docs/archive/build_deck_clean_2026-11-22.py`. CLAUDE.md deck limit now 20; Presenter_Notes Part 0 updated. Rendered with soffice and checked.
 - Q4b (robustness on 1,000 reviews) paused at 847 / 1,000 reviews (3,390 of 4,000 rows): the laptop went on battery. Resumes on the charger with the same command; nothing is lost.
+
+### 2026-11-22 — Deck: 19-slide merge reverted; 25 slides with story titles (user: "whatever we had is good. make it more intuitive")
+- The 25-slide builder is restored; the 19-slide version is archived as `docs/archive/build_deck_clean_2026-11-22_19slides.py`.
+- Content unchanged. Only the titles changed, so each one reads as the next step: "Where we started: a published LLaMA-3 rater" → "How the reference method works" → "We rebuilt it on a clean benchmark" → "It finds the direction, not the exact star" → "Four things hold it back" → "What is missing, and what we add" → "Our idea and four questions" → "Our system: three agents, then checks" → "Why three agents beat one" → "Ideas that did not work" → "Ideas that worked, and stayed" → "How we test it fairly" → results ("Better on both test sets", "Not fooled by negative words", "The Critic fixes the explanations", "Steady on messy text, but it needs the title").
+- Rendered with soffice (all 25); every title fits on one line. CLAUDE.md and Presenter_Notes Part 0 updated.
