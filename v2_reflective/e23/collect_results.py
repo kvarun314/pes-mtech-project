@@ -68,6 +68,8 @@ R = [
  ("07_phase2_v3", "handoff_learned_I2.json", E + "i2_handoff_learned.json", "Numbers for the above", "—"),
  ("07_phase2_v3", "conformal_ranges_Q1.out", E + "q1_conformal.out", "Q1: star ranges with a 90% coverage guarantee (Hand-off agent)", "SH3 PASS: 1.77 / 1.44 stars vs Phase 1 2.40 / 2.08 at 91.6 / 90.05% coverage"),
  ("07_phase2_v3", "conformal_ranges_Q1.json", E + "q1_conformal.json", "Numbers for the above", "—"),
+ ("07_phase2_v3", "disagree_guard_Q6.out", E + "q6_disagree_guard.out", "Q6: send strong agent splits (probe >= 2 stars away, below the bar) to a person", "PASS: natural_test person 1.6 -> 2.75%, range coverage 86.0 -> 86.3%; answers unchanged"),
+ ("07_phase2_v3", "disagree_guard_Q6.json", E + "q6_disagree_guard.json", "Numbers for the above", "—"),
  ("02_gates", "gate_readout_deberta_D1.out", E + "deb_gate.out", "D1: DeBERTa-v3 as a third agent, gate and readout", "gate PASS; eval +0.0, natural_test +2.3"),
  ("02_gates", "gate_readout_deberta_D1.json", E + "deb_gate.json", "Numbers for the above", "—"),
  ("02_gates", "training_log_deberta_D1.txt", E + "deb3_train_log.txt", "D1: Colab training log (T4 epoch 1, L4 epoch 2)", "—"),

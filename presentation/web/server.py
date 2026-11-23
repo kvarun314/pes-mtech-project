@@ -62,12 +62,13 @@ def rate(title, text):
     push = {k: fl(v - v.mean()) for k, v in push.items()}                                       # centred per agent: softmax unchanged
     base = rf.full.intercept_ - rf.full.intercept_.mean()
     lo, hi = star_range(P, q)
-    decision = "auto" if max(P) >= htau else ("range" if hi - lo <= 1 else "person")
+    split = max(P) < htau and abs(int(np.argmax(pp)) + 1 - int(star)) >= 2                         # Q6 (LOG.md 2026-11-23): probe >= 2 stars away
+    decision = "auto" if max(P) >= htau else ("person" if split else ("range" if hi - lo <= 1 else "person"))
     pos, neg = ev.phrases(title, text, star)
     agents = {"probe": fl(pp), "evidence": fl(ep), "deberta": fl(dp)}
     votes = {k: int(np.argmax(v)) + 1 for k, v in agents.items()}
     return {"p1": fl(p1), "agents": agents, "votes": votes, "agreed": len(set(votes.values())) == 1, "star": int(star), "P": fl(P),
-            "shares": {k: float(v) for k, v in shares.items()}, "push": push, "base": fl(base), "decision": decision, "range": [int(lo), int(hi)],
+            "shares": {k: float(v) for k, v in shares.items()}, "push": push, "base": fl(base), "decision": decision, "split": bool(split), "range": [int(lo), int(hi)],
             "htau": float(htau), "pos": pos, "neg": neg, "times": {k: round(v * 1000) for k, v in T.items()},
             "hidden": {"n": int(h.shape[0]), "sample": fl(h[:64])}}
 

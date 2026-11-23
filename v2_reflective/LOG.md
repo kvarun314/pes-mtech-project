@@ -1395,3 +1395,19 @@ New first tab "Step by step": 16 slides on the live review. Part 1 (10): review 
 - New descriptive script `e23/demo_breakdown.py` → `demo_breakdown.out` / `.json`: per-star recall, per-star F1, confusion matrices and error distance for Phase 1 (arm R) and the main stack (SH3, Reflector refit on dev2 exactly as in freeze_tables.py). Exact matches results_frozen.md (54.0 / 67.5 balanced, 53.4 / 78.0 natural). No selection.
 - Results tab: eight sections, text left, chart right: where each answer lands (exact / one off / further) and per-star accuracy; confusion matrices; per-star F1 on the natural test; every model ranked; accuracy vs coverage curve; negative-word reviews; robustness; Critic pass rate and the blind human check split.
 - Balanced test: misses by two or more stars 6.3% → 2.7%; 2★ recall 39.0 → 57.5; 4★ recall 63.5 vs 63.0 (tie, said on the page). Natural test F1 higher for Phase 2 on every star.
+
+### 2026-11-23 — Q6 DECLARED: disagreement guard on the hand-off (user: a sarcastic review got a confident-looking "5★ only" range; "this will be embarrassing if i present, do something")
+- Problem: a sarcastic 1★ review ("Five stars, perfect, fantastic…") was rated 5★ at 68% confidence, below the 71% bar, and handed off as a one-star range [5, 5]. The probe said 1★ and was outvoted by Evidence and DeBERTa.
+- Rule: if the Reflector is below the bar AND the probe's top star is 2 or more stars from the Reflector's star, the review goes to a person instead of a range. Answers above the bar are never touched, so auto share and auto accuracy cannot change.
+- Exploratory look (dev, natural_dev; no test data): the rule fires on 1.6% / 0.8% of reviews, all already below the bar.
+- Gate (dev2 out-of-fold Reflector probabilities as in Q1, and natural_dev with the dev2-fit Reflector; conformal quantile from the same split): PASS if on both splits (a) ranges where the rule fires hold the true star less often than the other ranges, and (b) the person share rises by at most 3 points.
+- Script `e23/q6_disagree_guard.py` → `q6_disagree_guard.out` / `.json`. Test readout (eval, natural_test; same calibration as Q1) only on PASS. On PASS the demo server applies the rule; on FAIL the demo stays as it is and sarcasm is presented as a limitation.
+
+### 2026-11-23 — Q6 RESULT: disagreement guard PASS; demo applies it
+- Gate PASS on both splits. dev2 (out-of-fold): fires on 1.7%; fired ranges held the star 80% vs 88.7% for other ranges; person 13.5% → 14.0%. natural_dev: fires 0.8%; fired ranges 33% vs 87.0%; person 0.4% → 1.0%.
+- Test readout (q6_disagree_guard.out). Answers alone and their accuracy are unchanged by construction.
+  - eval: fires 1.5%; range 47.7% → 47.0%, coverage 90.8% → 90.6%; person 11.2% → 11.9%. The 7 fired ranges were all right here (honest: the guard cost nothing in accuracy but did not help on eval).
+  - natural_test: fires 1.5%; range 42.25% → 41.1%, coverage 86.0% → 86.3%; person 1.6% → 2.75%. Fired ranges held the star 78.3% (23).
+  - When it fires, the Reflector is right 53% / 47% and the probe 7% / 23%: the probe is not trusted, the review is just escalated.
+- Demo: `server.py` returns `split` and sends these reviews to a person; Walk, Rate and Build explain why ("agents strongly disagree… possible sarcasm"). The sarcastic earbuds review (probe 1★, Evidence 5★, DeBERTa 5★, Reflector 5★ at 68%) now ends at "passes the review to a person" instead of "5★ only".
+- Build tab hand-off facts now 41% · 86% range, 2.8% person. Deck hand-off speaker note and paper FACT comment updated; slide text unchanged (it does not show these shares).

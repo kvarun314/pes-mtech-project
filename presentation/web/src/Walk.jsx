@@ -153,7 +153,7 @@ function slides(res, inp, X) {
             This is only the Reflector's best guess. {pct(conf)} is below the {pct(res.htau)} confidence bar, so the system does <b>not</b> give this star on its own: see the next step.
             {!res.agreed && " When the agents split like this, the top star is often wrong (sarcasm is a known example)."}</motion.div>}
         </div>) },
-    { t: "Hand-off: answer, give a range, or ask a person", s: "The confidence is compared with a bar fixed on development data before testing. Above the bar it answers alone. Below it, it gives a narrow range of stars if one is likely enough, or passes the review to a person.",
+    { t: "Hand-off: answer, give a range, or ask a person", s: "The confidence is compared with a bar fixed on development data before testing. Above the bar it answers alone. Below it, it gives a narrow range of stars if one is likely enough, or passes the review to a person. It also asks a person when the agents are 2 or more stars apart.",
       body: (
         <div style={{ padding: "10px 0" }}>
           {res.htau != null && <div className="gauge" style={{ height: 22 }}>
@@ -162,6 +162,7 @@ function slides(res, inp, X) {
           <motion.p {...D(2)} style={{ fontSize: 20 }}>
             {res.decision === "auto" ? <>Confidence {pct(conf)} is above the bar: it <b className="blue">answers {res.star}★</b> on its own.</>
               : res.decision === "range" ? <>Confidence {pct(conf)} is below the bar, so it answers with a range: <b className="blue">{res.range[0] === res.range[1] ? `${res.range[0]}★ only` : `${res.range[0]}–${res.range[1]}★`}</b>. Ranges like this hold the true star about 90% of the time{res.range[0] === res.range[1] ? "; a one-star range means the other stars were too unlikely to include, so it can still be wrong" : ""}.</>
+              : res.split ? <>Confidence {pct(conf)} is below the bar, and the agents <b>strongly disagree</b>: the LLaMA probe says {res.votes.probe}★, the Reflector {res.star}★. A split this wide often means sarcasm or mixed feelings, so it <b className="bad">passes the review to a person</b> instead of guessing.</>
               : <>Confidence {pct(conf)} is below the bar and no narrow range is likely enough: it <b className="bad">passes the review to a person</b>.</>}
           </motion.p>
         </div>) },

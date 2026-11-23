@@ -298,6 +298,8 @@ Explainer + Critic loop (new) & Faithful 62.3--63.7\% $\to$ 90.5--91.6\% (max 4 
 % FACT (Q1, q1_conformal.out, rerun for SH3 2026-11-12): dev2 gate (5-fold, out-of-fold): main stack coverage .902, mean size 1.82 vs Phase 1 2.45: PASS.
 %   Three-way Hand-off (answer if confidence >= S1 threshold; else range if <= 2 stars; else person): eval answer 41.1% (86.9% exact), range 47.7% (90.8% covered),
 %   person 11.2%; natural_test answer 56.15% (92.8%), range 42.25% (86.0%), person 1.6%.
+% FACT (Q6, q6_disagree_guard.out, 2026-11-23): below the bar and probe >= 2 stars from the Reflector -> person. Gate PASS (dev2, natural_dev).
+%   eval range 47.0% (90.6%), person 11.9%; natural_test range 41.1% (86.3%), person 2.75%; answers unchanged. Fired ranges held the star 100% (7) eval, 78.3% (23) natural.
 % FACT (S1, s1_selective.out, SH3): 70% coverage target: eval auto exact 75.8 at 71.4% coverage, natural_test 84.4 at 82.6%.
 \label{tab:e23conformal}
 \small

@@ -143,7 +143,7 @@ export default function Rate({ res, inp }) {
   const dec = {
     auto: ["okc", "Answers automatically", `Confidence ${pct(conf)} is above the bar of ${pct(res.htau || 0)}.`],
     range: ["warn", `Gives a range: ${res.range[0]}–${res.range[1]}★`, `Confidence ${pct(conf)} is below the bar, but the likely stars sit close together. Ranges like this hold the true star about 90% of the time.`],
-    person: ["badc", "Hands it to a person", `Confidence ${pct(conf)} is below the bar and the likely stars are far apart.`],
+    person: ["badc", "Hands it to a person", res.split ? `Confidence ${pct(conf)} is below the bar and the agents strongly disagree (probe ${res.votes.probe}★, Reflector ${res.star}★): possible sarcasm.` : `Confidence ${pct(conf)} is below the bar and the likely stars are far apart.`],
   }[res.decision];
   const fig = useMemo(() => STARS.map((_, i) => [res.p1[i], res.P[i]]), [res]);
   return (

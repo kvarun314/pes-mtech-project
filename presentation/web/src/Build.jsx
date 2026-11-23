@@ -61,8 +61,8 @@ const S = [
     body: <><Flow items={[["dev2 · 2,000", "unseen by the agents"], ["3 × 5 probabilities", "log taken: 15 numbers"], ["Logistic regression", "C = 1, 15 × 5 weights"], ["Final star", "and its confidence"]]} />
       <Facts start={5} items={[["Short reviews", "the Evidence model is best"], ["Long reviews", "the LLaMA probe is best"], ["58–62% vs 36–50%", "right when probe and Evidence disagree: combined vs either alone"]]} /></> },
 
-  { part: P2, t: "Hand-off and star ranges", s: "Both are set on dev2 before testing. A confidence bar decides when the system answers alone. Below the bar, split conformal prediction gives a range of stars that holds the true star 90% of the time.",
-    body: <Facts items={[["71%", "confidence bar, fixed on dev2"], ["56% · 92.8%", "natural test: answered alone, and right"], ["42% · 86%", "given a range, and the range held the star"], ["1.6%", "passed to a person"]]} /> },
+  { part: P2, t: "Hand-off and star ranges", s: "Both are set on dev2 before testing. A confidence bar decides when the system answers alone. Below the bar, split conformal prediction gives a range of stars that holds the true star 90% of the time. If the probe is 2 or more stars away from the final star, the review goes to a person instead.",
+    body: <Facts items={[["71%", "confidence bar, fixed on dev2"], ["56% · 92.8%", "natural test: answered alone, and right"], ["41% · 86%", "given a range, and the range held the star"], ["2.8%", "passed to a person, incl. strong agent splits (e.g. sarcasm)"]]} /> },
 
   { part: P2, t: "Explainer and Critic: prompts and rules, no training", s: "Llama-3-8B-Instruct (4-bit, MLX) writes one or two sentences from the evidence pack. The Critic runs four fixed rules and one LLM judge, and sends a failed draft back, up to four times.",
     body: <><Flow items={[["Evidence pack", "star, confidence, phrases"], ["Explainer", "Llama-3-8B-Instruct"], ["Critic", "4 rules + LLM judge"], ["Rewrite", "with the Critic's instruction"]]} />

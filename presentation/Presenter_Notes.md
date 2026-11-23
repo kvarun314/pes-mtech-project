@@ -53,6 +53,7 @@ Titles reworded 2026-11-22 (user: keep the content, make the flow more intuitive
 8. **Phase 2 reads the title, Phase 1 doesn't.** Without the title Phase 2 still scores 63.7% vs 50.0% (300 reviews); title dependence disclosed (15.7% of stars change).
 9. **Garden of forking paths?** Every candidate had a gate before it ran, on dev sets only; six agent-set candidates on dev2 disclosed; failures reported; Holm-corrected p-values.
 10. **Is it agentic or an ensemble?** The rating core is a stacked ensemble on purpose (LLM deciding the star failed three times: 76 fixed vs 89 broken). The agentic parts are the Explainer-Critic loop with external checks and the Hand-off decision (Huang et al. 2024: LLMs rarely self-correct without external feedback).
+11. **What about sarcasm?** Praise words fool the Evidence model and DeBERTa; the LLaMA probe often still reads it as negative. When the probe is 2 or more stars from the final star and confidence is below the bar, the review goes to a person (Q6, q6_disagree_guard.out): fires on 1.5% of reviews, answers unchanged, person share on the natural test 1.6% → 2.75%. The system does not claim to detect sarcasm; it notices the agents disagree and does not guess.
 
 ### Key terms (for you; not on the slides)
 Use these when explaining or when someone asks what a word means.
