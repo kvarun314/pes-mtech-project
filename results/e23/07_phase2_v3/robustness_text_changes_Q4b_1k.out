@@ -1,0 +1,44 @@
+50/1000 0s
+100/1000 0s
+150/1000 0s
+200/1000 0s
+250/1000 0s
+300/1000 119s
+350/1000 647s
+400/1000 1310s
+450/1000 1964s
+500/1000 2575s
+550/1000 3254s
+600/1000 3848s
+650/1000 4527s
+700/1000 29973s
+750/1000 51661s
+800/1000 78454s
+/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/multiprocessing/resource_tracker.py:276: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown: {'/loky-18846-d943du4z'}
+  warnings.warn(
+2026-11-22 22:48:04 paused: on battery (70%), 3,390 of 4,000 rows; resume on charger with the same command
+2026-11-23 12:11:40 resumed on charger (44%, AC), 3,390 of 4,000 rows; demo server stopped; memory free 68%, swap 9.6 of 10 GB used (stale)
+50/1000 0s
+100/1000 0s
+150/1000 0s
+200/1000 0s
+250/1000 0s
+300/1000 0s
+350/1000 0s
+400/1000 0s
+450/1000 0s
+500/1000 0s
+550/1000 0s
+600/1000 0s
+650/1000 0s
+700/1000 0s
+750/1000 0s
+800/1000 0s
+850/1000 28s
+900/1000 744s
+950/1000 1471s
+1000/1000 2100s
+original  exact SH 0.673 P1 0.540 | flips SH 0.000 P1 0.000 | only-SH 0 only-P1 0 p 1
+typos     exact SH 0.677 P1 0.546 | flips SH 0.005 P1 0.018 | only-SH 5 only-P1 18 p 0.011
+flat      exact SH 0.682 P1 0.467 | flips SH 0.104 P1 0.288 | only-SH 61 only-P1 245 p 2.8e-27
+no_title  exact SH 0.626 P1 0.540 | flips SH 0.149 P1 0.000 | only-SH 149 only-P1 0 p 2.8e-45

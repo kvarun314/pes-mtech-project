@@ -90,6 +90,8 @@ R = [
  ("07_phase2_v3", "breakdown_year_popularity_Q5.json", E + "q5_breakdown.json", "Numbers for the above", "—"),
  ("07_phase2_v3", "robustness_text_changes_Q4.out", E + "q4_robustness.out", "Q4: flips under typos / flat text / no title, main stack vs Phase 1 (300 eval)", "SH3 flips: flat text 9.3% vs 29.7%; typos 0.7% vs 2.0%; no title 15.7% vs 0% (two-agent 8.0%)"),
  ("07_phase2_v3", "robustness_text_changes_Q4.json", E + "q4_robustness.json", "Numbers for the above", "—"),
+ ("07_phase2_v3", "robustness_text_changes_Q4b_1k.out", E + "q4_robustness_1k.out", "Q4b: same robustness test on all 1,000 eval reviews", "SH3 flips: flat 10.4% vs 28.8%; typos 0.5% vs 1.8% (p .011); no title 14.9% vs 0%"),
+ ("07_phase2_v3", "robustness_text_changes_Q4b_1k.json", E + "q4_robustness_1k.json", "Numbers for the above", "—"),
  ("07_phase2_v3", "second_judge_Q3_dev2.out", E + "q3_second_judge_gate.out", "Q3: Qwen2.5-7B-Instruct as a second judge (dev2 gate)", "FAIL: rejects every explanation (0/38 accepted, 60/60 rejected)"),
  ("07_phase2_v3", "second_judge_Q3_diagnostic.out", E + "q3_second_judge_diag.out", "Q3 diagnostic: raw Qwen replies on 3 dev2 rows", "flags the stated star and agent shares as unsupported"),
  ("07_phase2_v3", "second_judge_Q3b_dev2.out", E + "q3b_second_judge_gate.out", "Q3b: same with a prompt that excludes system statements", "FAIL: same constant verdict"),

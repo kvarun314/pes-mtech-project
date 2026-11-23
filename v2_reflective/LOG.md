@@ -1411,3 +1411,12 @@ New first tab "Step by step": 16 slides on the live review. Part 1 (10): review 
   - When it fires, the Reflector is right 53% / 47% and the probe 7% / 23%: the probe is not trusted, the review is just escalated.
 - Demo: `server.py` returns `split` and sends these reviews to a person; Walk, Rate and Build explain why ("agents strongly disagree… possible sarcasm"). The sarcastic earbuds review (probe 1★, Evidence 5★, DeBERTa 5★, Reflector 5★ at 68%) now ends at "passes the review to a person" instead of "5★ only".
 - Build tab hand-off facts now 41% · 86% range, 2.8% person. Deck hand-off speaker note and paper FACT comment updated; slide text unchanged (it does not show these shares).
+
+### 2026-11-23 — Q4b RESULT: robustness on all 1,000 eval reviews (q4_robustness_1k.out)
+- Resumed on the charger from 3,390 / 4,000 rows; finished 4,000 rows. The run was slow after review 650 the first time (memory swap); this time the last 153 reviews took 35 min.
+- Flips (star changes vs the original text), SH3 main stack vs Phase 1 (arm R), exact McNemar on reviews that flip for one system only:
+  - typos: 0.5% vs 1.8% (5 vs 18, p = .011; at 300 reviews 0.7% vs 2.0%, p = .29, not significant).
+  - flat text (no case or punctuation): 10.4% vs 28.8% (61 vs 245, p = 2.8e-27; at 300: 9.3% vs 29.7%).
+  - no title: 14.9% vs 0% (149 vs 0; Phase 1 never reads the title; at 300: 15.7%).
+- Exact on these 1,000 reviews: original SH 67.3% (frozen table 67.5%: the robustness script rescores each review live, small numeric difference), P1 54.0%. Flat SH 68.2% vs P1 46.7%; no title SH 62.6%.
+- Same conclusion as Q4, now with the typo difference also significant. The demo reads the 1,000-review file. Deck and paper keep the 300-review figures until the user decides.
