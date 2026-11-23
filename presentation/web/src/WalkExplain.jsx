@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Highlight, ease, pct } from "./ui.jsx";
-import { CHECKS } from "./Explain.jsx";
+import { CHECKS, HandoffNote } from "./Explain.jsx";
 
 const PART = "Part 2 · How it explains";
 const sg2 = (v) => `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(2)}`;
@@ -15,7 +15,8 @@ function Typed({ text, pos, neg, speed = 14 }) {
 }
 
 /** Live run status shown inside a slide while the Explainer and Critic work. */
-function RunBox({ expl, runExplain, label }) {
+function RunBox({ expl, runExplain, label, res }) {
+  if (res?.split && !expl?.running && !expl?.drafts?.length && !expl?.error) return <HandoffNote res={res} onRun={runExplain} />;
   if (expl?.running) {
     const msg = { evidence: "Collecting the evidence…", explainer: `Explainer writing draft ${(expl.drafts?.length || 0) + 1}…`, critic: `Critic checking draft ${expl.drafts.length}…` }[expl.phase] || "Working…";
     return <div className="runbox"><span className="spin" /> {msg} <span className="note">Live on this laptop, about 15–60 s.</span></div>;
@@ -67,16 +68,16 @@ export default function Explainability({ res, D, expl, runExplain, R }) {
     { part: PART, t: "The Explainer writes a draft", s: "Llama-3-8B-Instruct gets the evidence pack and the review, with one instruction: explain the star to a non-expert in one or two sentences, using only this evidence.",
       body: n ? (
         <motion.div className="card final" {...D(0)}><div className="lab" style={{ marginBottom: 8 }}>Draft 1</div><Typed text={e.drafts[0]} pos={pk.for} neg={pk.against} /></motion.div>
-      ) : <RunBox expl={expl} runExplain={runExplain} label="Write the explanation live" /> },
+      ) : <RunBox res={res} expl={expl} runExplain={runExplain} label="Write the explanation live" /> },
     { part: PART, t: "The Critic checks the draft", s: "Five checks. The first four are plain rules that compare the draft with the evidence and the review. The fifth asks a second LLaMA-3 whether anything is claimed that the review does not support; it runs only once the rules pass.",
       body: e.critic[0] ? (
         <div>
           <CheckRows c={e.critic[0]} D={D} />
           {e.critic[0].feedback?.map((f, j) => <motion.div key={j} className="ask" {...D(4 + j)}>Critic → Explainer: “{f}”</motion.div>)}
         </div>
-      ) : <RunBox expl={expl} runExplain={runExplain} label="Write and check the explanation live" /> },
+      ) : <RunBox res={res} expl={expl} runExplain={runExplain} label="Write and check the explanation live" /> },
     { part: PART, t: n > 1 ? `Rewrite until it passes: ${n} drafts` : "Rewrite until it passes", s: "A failed check is not just a red mark. The Critic turns it into a precise instruction, for example “quote at least 2 of these phrases” or “you said 5 stars; the final rating is 4 stars”, and the Explainer rewrites. At most four rewrites.",
-      body: !n ? <RunBox expl={expl} runExplain={runExplain} label="Write and check the explanation live" />
+      body: !n ? <RunBox res={res} expl={expl} runExplain={runExplain} label="Write and check the explanation live" />
         : n === 1 ? (
           <motion.div className="wbox" {...D(0)}>
             <b>{passed ? "Draft 1 passed every check, so no rewrite was needed." : "Waiting for the Critic…"}</b>
@@ -97,7 +98,7 @@ export default function Explainability({ res, D, expl, runExplain, R }) {
           <motion.div className="card final" style={{ fontSize: 22 }} {...D(0)}><Highlight text={e.drafts[n - 1]} pos={pk.for} neg={pk.against} /></motion.div>
           <motion.p className="sub" {...D(1)} style={{ marginTop: 14 }}>{passed ? `Passed all five checks after ${n} draft${n > 1 ? "s" : ""}.` : "Best draft after four rewrites; it still fails a check, so it would be flagged."}{e.seconds != null ? ` Written and checked in ${e.seconds} s.` : ""}</motion.p>
         </div>
-      ) : <RunBox expl={expl} runExplain={runExplain} label="Write and check the explanation live" /> },
+      ) : <RunBox res={res} expl={expl} runExplain={runExplain} label="Write and check the explanation live" /> },
     { part: PART, t: "How the Evidence model and the Critic help", s: "Evidence keeps the explanation tied to the review. The Critic catches the usual failures of a language model: wrong star, invented quotes, hiding doubt, unsupported claims.",
       body: R ? (
         <div className="grid g2" style={{ alignItems: "start" }}>

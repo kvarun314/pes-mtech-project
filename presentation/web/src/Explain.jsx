@@ -10,6 +10,21 @@ export const CHECKS = {
   5: ["Nothing made up", "A second LLaMA-3 finds no unsupported claim."],
 };
 
+/** For a review passed to a person because the agents split, a hand-off note replaces the star explanation. */
+export function HandoffNote({ res, onRun }) {
+  const q = (ps) => ps.slice(0, 3).map((p) => `“${p.display}”`).join(", ");
+  return (
+    <div className="card final" style={{ marginTop: 18 }}>
+      <div className="lab" style={{ marginBottom: 6 }}>Hand-off note · no star is explained, because none is given</div>
+      <p style={{ margin: 0, fontSize: 18, lineHeight: 1.5 }}>The agents strongly disagree: the LLaMA probe says {res.votes.probe}★, the Evidence model {res.votes.evidence}★ and DeBERTa {res.votes.deberta}★.
+        {res.pos?.length ? <> Words such as {q(res.pos)} point to {res.star}★</> : null}{res.neg?.length ? <>, while {q(res.neg)} point the other way</> : null}.
+        {" "}A split like this often means sarcasm or mixed feelings, so the review goes to a person instead of being explained as {res.star}★.</p>
+      {onRun && <div style={{ marginTop: 12 }}><button className="btn inline" onClick={onRun}>Run the Explainer anyway</button>
+        <span className="note"> It would explain the {res.star}★ the agents leaned to, which the system does not give.</span></div>}
+    </div>
+  );
+}
+
 export default function Explain({ res, state, run }) {
   const s = state || { drafts: [], critic: [], pack: null, done: false }; const phase = s.phase;
   const pk = s.pack || { for: res.pos, against: res.neg };
@@ -29,8 +44,9 @@ export default function Explain({ res, state, run }) {
           </React.Fragment>
         ))}
       </div>
+      {res.split && <HandoffNote res={res} />}
       <div style={{ marginTop: 18, display: "flex", gap: 14, alignItems: "center" }}>
-        <button className="btn inline" onClick={run} disabled={s.running}>{s.running ? "Working…" : s.drafts.length ? "Run again" : "Write and check the explanation"}</button>
+        <button className="btn inline" onClick={run} disabled={s.running}>{s.running ? "Working…" : s.drafts.length ? "Run again" : res.split ? "Run the Explainer anyway" : "Write and check the explanation"}</button>
         <span className="note">{s.running ? `Live on this laptop · ${s.drafts.length} draft${s.drafts.length === 1 ? "" : "s"} so far` : s.done && s.seconds != null ? `Done in ${s.seconds} s` : "Takes about 15–60 s, depending on rewrites."}</span>
       </div>
       {s.warning && <div className="warnbar">{s.warning}</div>}

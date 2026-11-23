@@ -15,7 +15,7 @@ function Flow({ res, p1s }) {
     ...Object.fromEntries(ag.map((k) => [k, { x: 360, y: ay[k], t: AGENTS[k].name, s: `${res.votes[k]}★ · ${pct(Math.max(...res.agents[k]))} sure`, c: AGENTS[k].hex, tip: AGENTS[k].what, to: "s2" }])),
     reflector: { x: 620, y: 140, t: "Reflector", s: `${res.star}★ · ${pct(Math.max(...res.P))}`, hi: true, tip: "Combines the three votes. Line thickness = how much each agent counted for this star.", to: "s3" },
     handoff: { x: 800, y: 140, t: "Hand-off", s: { auto: "answers alone", range: `range ${res.range[0]}–${res.range[1]}★`, person: "to a person" }[res.decision], tip: "Answers alone only when confident enough; otherwise a range or a person.", to: "s4" },
-    answer: { x: 935, y: 140, t: "Answer", s: `${res.star}★`, hi: true, w: 110, tip: "What the system returns.", to: "s4" },
+    answer: { x: 935, y: 140, t: "Answer", s: res.decision === "auto" ? `${res.star}★` : res.decision === "range" ? `${res.range[0]}–${res.range[1]}★?` : "a person", hi: true, w: 110, tip: "What the system returns.", to: "s4" },
     p1: { x: 620, y: 318, t: "Phase 1", s: "LLaMA-3 + LoRA", grey: true, tip: "The reference method: one fine-tuned LLaMA-3 reads the text and answers in one step.", to: "s5" },
     p1a: { x: 935, y: 318, t: "Answer", s: `${p1s}★`, grey: true, w: 110, tip: "Phase 1's star, for comparison.", to: "s5" },
   };
@@ -149,8 +149,13 @@ export default function Rate({ res, inp }) {
   return (
     <div>
       <div className="grid g3" style={{ marginTop: 18 }}>
-        <Reveal className="card tile main"><div className="lab">Phase 2 · our system</div><div className="big blue">{res.star}★</div>
-          <div className="sub"><Stars n={res.star} /><br /><Num value={conf * 100} suffix="%" /> confident{verdict(res.star)}</div></Reveal>
+        {res.decision === "person" ? (
+          <Reveal className="card tile main"><div className="lab">Phase 2 · our system</div><div className="big bad" style={{ fontSize: 40, lineHeight: 1.15 }}>To a person</div>
+            <div className="sub">{res.split ? <>Agents strongly disagree (probe {res.votes.probe}★, Evidence {res.votes.evidence}★, DeBERTa {res.votes.deberta}★). No star given.</> : <>Not sure enough to answer. No star given.</>}<br />It leaned {res.star}★ at {pct(conf)}{verdict(res.star)}.</div></Reveal>
+        ) : (
+          <Reveal className="card tile main"><div className="lab">Phase 2 · our system</div><div className="big blue">{res.decision === "range" && res.range[0] !== res.range[1] ? `${res.range[0]}–${res.range[1]}★` : `${res.star}★`}</div>
+            <div className="sub"><Stars n={res.star} /><br /><Num value={conf * 100} suffix="%" /> confident{res.decision === "range" ? " · below the bar, so a range" : ""}{verdict(res.star)}</div></Reveal>
+        )}
         <Reveal className="card tile" delay={.08}><div className="lab">Phase 1 · reference method</div><div className="big">{p1s}★</div>
           <div className="sub"><Stars n={p1s} grey /><br /><Num value={Math.max(...res.p1) * 100} suffix="%" /> confident{verdict(p1s)}</div></Reveal>
         <Reveal className="card tile" delay={.16}><div className="lab">True star</div><div className="big">{truth ? `${truth}★` : "—"}</div>

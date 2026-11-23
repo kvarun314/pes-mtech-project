@@ -1420,3 +1420,8 @@ New first tab "Step by step": 16 slides on the live review. Part 1 (10): review 
   - no title: 14.9% vs 0% (149 vs 0; Phase 1 never reads the title; at 300: 15.7%).
 - Exact on these 1,000 reviews: original SH 67.3% (frozen table 67.5%: the robustness script rescores each review live, small numeric difference), P1 54.0%. Flat SH 68.2% vs P1 46.7%; no title SH 62.6%.
 - Same conclusion as Q4, now with the typo difference also significant. The demo reads the 1,000-review file. Deck and paper keep the 300-review figures until the user decides.
+
+### 2026-11-23 — Demo: a review passed to a person is shown as "To a person", and gets a hand-off note instead of a star explanation (user: "cant afford to make a mockery of this")
+- "How it rates": the Phase 2 tile showed the leaned star in large type (5★ for the sarcastic review) even when the system gives no star. Now it reads "To a person", with the agents' votes and "It leaned N★ at X%" (and whether that lean matches the true star for demo reviews). A range decision shows the range. The flow diagram's Answer box shows the decision too.
+- "How it explains" and the walkthrough's Part 2: for reviews sent to a person because the agents split (Q6), the Explainer would otherwise justify the leaned star from praise words. A fixed hand-off note is shown instead (agents' votes, top phrases for and against, "possible sarcasm or mixed feelings"); "Run the Explainer anyway" stays available. Demo display only: no model, threshold or reported number changes; the explanation figures (b2_report) were measured on all reviews as before.
+- Chrome check: sarcastic earbuds review shows "To a person" and the hand-off note; Demo 1 (DOA, 50%, already a person case) shows "It leaned 1★ at 50% · ✓ matches the true star".
