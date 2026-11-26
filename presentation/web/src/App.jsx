@@ -76,7 +76,10 @@ export default function App() {
           <div>
             <label>Start from</label>
             <div className="demos">
-              {demos.map((d, i) => <button key={d.id} className={`demo${pick === d.id ? " on" : ""}`} onClick={() => choose(d)}>Demo {i + 1} · {d.truth}★</button>)}
+              {[["showcase", "Where they differ"], ["own", "Hard case"], ["typical", "Typical"]].map(([g, lab]) => demos.some((d) => d.group === g) && (
+                <div key={g} className="dgroup"><span className="dlab">{lab}</span>
+                  {demos.filter((d) => d.group === g).map((d) => <button key={d.id} className={`demo${pick === d.id ? " on" : ""}`} onClick={() => choose(d)}>{g === "own" ? "Sarcasm · 1★" : `${d.truth}★`}</button>)}</div>))}
+              <div className="note dnote">“Where they differ”: balanced-test reviews chosen to show where the two systems disagree. “Sarcasm” was written by us. Overall numbers: Results tab.</div>
               <button className={`demo${pick === null ? " on" : ""}`} onClick={() => choose(null)}>Write my own</button>
             </div>
             <button className="btn" onClick={rate} disabled={busy || !text.trim()}>{busy ? <>Reading the review… <span className="spin" style={{ borderTopColor: "white" }} /></> : "Rate this review"}</button>

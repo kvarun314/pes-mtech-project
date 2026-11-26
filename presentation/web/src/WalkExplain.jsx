@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Highlight, ease, pct } from "./ui.jsx";
-import { CHECKS, HandoffNote } from "./Explain.jsx";
+import { CHECKS, HandoffNote, RangeLine } from "./Explain.jsx";
 
 const PART = "Part 2 · How it explains";
 const sg2 = (v) => `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(2)}`;
@@ -95,7 +95,7 @@ export default function Explainability({ res, D, expl, runExplain, R }) {
     { part: PART, t: "The final explanation", s: "This is what a shopper or seller would read. Each highlighted phrase is evidence quoted from the review; hover one to see its weight.",
       body: n && e.done ? (
         <div>
-          <motion.div className="card final" style={{ fontSize: 22 }} {...D(0)}><Highlight text={e.drafts[n - 1]} pos={pk.for} neg={pk.against} /></motion.div>
+          <motion.div className="card final" style={{ fontSize: 22 }} {...D(0)}><RangeLine res={res} /><Highlight text={e.drafts[n - 1]} pos={pk.for} neg={pk.against} /></motion.div>
           <motion.p className="sub" {...D(1)} style={{ marginTop: 14 }}>{passed ? `Passed all five checks after ${n} draft${n > 1 ? "s" : ""}.` : "Best draft after four rewrites; it still fails a check, so it would be flagged."}{e.seconds != null ? ` Written and checked in ${e.seconds} s.` : ""}</motion.p>
         </div>
       ) : <RunBox res={res} expl={expl} runExplain={runExplain} label="Write and check the explanation live" /> },

@@ -87,13 +87,20 @@ async def body(req):
     b = await req.json(); return (b.get("title") or "").strip(), (b.get("text") or "").strip(), b.get("id")
 
 
+# Showcase (LOG.md 2026-11-26): balanced-test reviews where Phase 2 answers alone and is right and Phase 1 is wrong; chosen to show the difference, disclosed on the page.
+SHOWCASE = ["e23_65420", "e23_453782", "e23_307658", "e23_2149989", "e23_1466085"]
+OWN = [{"id": "own_sarcasm", "group": "own", "truth": 1, "title": "Absolutely life-changing, if you love disappointment",
+        "text": "Wow, what a fantastic pair of earbuds. The left one died after three days, which is great because now I only have to charge one. The battery lasts a whole forty minutes, perfect for people who enjoy plugging things in. The noise cancelling cancels everything except noise. Customer support was very helpful and told me to try turning it off and on again, twice. Would definitely buy again if I ever want to waste another $80. Five stars for creativity in failure."}]
+
+
 async def demos(req):
-    if not CACHE or not os.path.exists(PT.D + "eval.jsonl"): return JSONResponse([])
-    rows = {}
+    if not CACHE or not os.path.exists(PT.D + "eval.jsonl"): return JSONResponse(OWN)
+    want = set(SHOWCASE) | set(CACHE["demo_ids"]); rows = {}
     for l in open(PT.D + "eval.jsonl"):
         r = json.loads(l)
-        if r["review_id"] in CACHE["demo_ids"]: rows[r["review_id"]] = r
-    return JSONResponse([{"id": i, "title": rows[i]["title"], "text": rows[i]["review_text"], "truth": rows[i]["gt_rating"]} for i in CACHE["demo_ids"] if i in rows])
+        if r["review_id"] in want: rows[r["review_id"]] = r
+    row = lambda i, g: {"id": i, "group": g, "title": rows[i]["title"], "text": rows[i]["review_text"], "truth": rows[i]["gt_rating"]}
+    return JSONResponse([row(i, "showcase") for i in SHOWCASE if i in rows] + OWN + [row(i, "typical") for i in CACHE["demo_ids"] if i in rows])
 
 
 async def api_rate(req):
@@ -103,6 +110,7 @@ async def api_rate(req):
     try:
         return JSONResponse(await run_in_threadpool(rate, title, text))
     except Exception as ex:
+        if rid in CACHE.get("recorded", {}): return JSONResponse({**CACHE["recorded"][rid], "warning": f"Live run failed ({type(ex).__name__}); recorded result."})
         if rid in CACHE.get("demo_ids", []): return JSONResponse({**cached_rate(rid), "warning": f"Live run failed ({type(ex).__name__}); recorded result."})
         return JSONResponse({"error": f"{type(ex).__name__}: {ex}"}, 500)
 

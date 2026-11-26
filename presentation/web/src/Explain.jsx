@@ -25,6 +25,10 @@ export function HandoffNote({ res, onRun }) {
   );
 }
 
+/** For a range decision, say what the system answered before showing the explanation of the most likely star. */
+export const RangeLine = ({ res }) => res.decision === "range" && res.range[0] !== res.range[1]
+  ? <div className="lab" style={{ marginBottom: 6, color: "var(--ink)" }}>System answer: between {res.range[0]} and {res.range[1]} stars, most likely {res.star}. The explanation covers the most likely star.</div> : null;
+
 export default function Explain({ res, state, run }) {
   const s = state || { drafts: [], critic: [], pack: null, done: false }; const phase = s.phase;
   const pk = s.pack || { for: res.pos, against: res.neg };
@@ -58,7 +62,7 @@ export default function Explain({ res, state, run }) {
             {s.done && (
               <motion.div className="card final" style={{ marginTop: 24 }} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .5, ease }}>
                 <div className="lab" style={{ marginBottom: 6 }}>Final explanation · {passed ? "passed all five checks" : "best draft after four rewrites"} · {s.drafts.length} draft{s.drafts.length > 1 ? "s" : ""}</div>
-                <Highlight text={s.drafts[s.drafts.length - 1]} pos={pk.for} neg={pk.against} />
+                <RangeLine res={res} /><Highlight text={s.drafts[s.drafts.length - 1]} pos={pk.for} neg={pk.against} />
               </motion.div>
             )}
           </AnimatePresence>
